@@ -1,6 +1,6 @@
-const SAVE_KEY = "shadows_unknown_v2";
+const SAVE_KEY = "shadows_unknown_v3";
 
-const state = {
+let state = {
     chapter: 1,
     scene: "start",
 
@@ -19,11 +19,11 @@ const state = {
 };
 
 
-/* ==============================
+/* =========================================
    HELPERS
-============================== */
+========================================= */
 
-const $ = id => document.getElementById(id);
+const $ = (id) => document.getElementById(id);
 
 function clamp(value, min, max) {
     return Math.max(min, Math.min(max, value));
@@ -36,128 +36,93 @@ function getChapter() {
 function getScene() {
     const chapter = getChapter();
 
-    if (!chapter) return null;
+    if (!chapter || !chapter.scenes) {
+        return null;
+    }
 
-    return chapter.scenes[state.scene] || null;
+    return chapter.scenes[state.scene];
 }
 
 
-/* ==============================
-   STARTUP
-============================== */
+/* =========================================
+   INITIALIZATION
+========================================= */
 
 document.addEventListener("DOMContentLoaded", () => {
 
     setupEvents();
 
-    const saved = loadGame();
+    loadGame();
 
-    if (saved) {
-        $("continueBtn").style.display = "block";
-    } else {
-        $("continueBtn").style.display = "none";
-    }
+    updateContinueButton();
 
 });
 
 
-/* ==============================
+/* =========================================
    EVENTS
-============================== */
+========================================= */
 
 function setupEvents() {
 
-    $("continueBtn").addEventListener("click", () => {
+    $("newGameBtn")?.addEventListener(
+        "click",
+        startNewGame
+    );
 
-        if (!loadGame()) return;
+    $("continueBtn")?.addEventListener(
+        "click",
+        continueGame
+    );
 
-        state.started = true;
+    $("menuBtn")?.addEventListener(
+        "click",
+        () => showOverlay("menuOverlay")
+    );
 
-        showScreen("gameScreen");
+    $("closeMenu")?.addEventListener(
+        "click",
+        () => hideOverlay("menuOverlay")
+    );
 
-        renderScene();
-
-    });
-
-
-    $("newGameBtn").addEventListener("click", () => {
-
-        if (hasSave()) {
-
-            const confirmed = confirm(
-                "لديك لعبة محفوظة. هل تريد بدء لعبة جديدة؟"
-            );
-
-            if (!confirmed) return;
-
+    $("saveBtn")?.addEventListener(
+        "click",
+        () => {
+            saveGame();
+            hideOverlay("menuOverlay");
         }
+    );
 
-        startNewGame();
+    $("restartBtn")?.addEventListener(
+        "click",
+        restartGame
+    );
 
-    });
+    $("backHomeBtn")?.addEventListener(
+        "click",
+        goHome
+    );
 
+    $("inventoryBtn")?.addEventListener(
+        "click",
+        () => {
+            renderInventory();
+            showOverlay("inventoryOverlay");
+        }
+    );
 
-    $("menuBtn").addEventListener("click", () => {
+    $("achievementsBtn")?.addEventListener(
+        "click",
+        () => {
+            renderAchievements();
+            showOverlay("achievementsOverlay");
+        }
+    );
 
-        $("menuOverlay").classList.add("show");
-
-    });
-
-
-    $("closeMenu").addEventListener("click", closeMenu);
-
-
-    $("saveBtn").addEventListener("click", () => {
-
-        saveGame();
-
-        closeMenu();
-
-    });
-
-
-    $("restartBtn").addEventListener("click", () => {
-
-        const confirmed = confirm(
-            "هل تريد حذف تقدمك وبدء القصة من البداية؟"
-        );
-
-        if (!confirmed) return;
-
-        clearSave();
-
-        closeMenu();
-
-        startNewGame();
-
-    });
-
-
-    $("backHomeBtn").addEventListener("click", () => {
-
-        closeMenu();
-
-        showScreen("startScreen");
-
-    });
-
-
-    $("inventoryBtn").addEventListener("click", () => {
-
-        renderInventory();
-
-        $("inventoryOverlay").classList.add("show");
-
-    });
-
-
-    $("achievementsBtn").addEventListener("click", () => {
-
-        renderAchievements();
-
-        $("achievementsOverlay").classList.add("show");
-
-    });
+    $("restartFromEnd")?.addEventListener(
+        "click",
+        startNewGame
+    );
 
 
     document
@@ -166,62 +131,86 @@ function setupEvents() {
 
             button.addEventListener("click", () => {
 
-                const overlay =
-                    $(button.dataset.close);
+                const target =
+                    button.dataset.close;
 
-                if (overlay) {
-                    overlay.classList.remove("show");
-                }
+                hideOverlay(target);
 
             });
 
         });
 
 
-    $("restartFromEnd").addEventListener(
-        "click",
-        startNewGame
-    );
+    document
+        .querySelectorAll(".overlay")
+        .forEach(overlay => {
+
+            overlay.addEventListener("click", event => {
+
+                if (event.target === overlay) {
+                    hideOverlay(overlay.id);
+                }
+
+            });
+
+        });
 
 }
 
 
-/* ==============================
-   NEW GAME
-============================== */
+/* =========================================
+   GAME START
+========================================= */
 
 function startNewGame() {
 
-    state.chapter = 1;
-    state.scene = "start";
+    state = {
+        chapter: 1,
+        scene: "start",
 
-    state.health =
-        GAME_DATA.settings.startingHealth;
+        health:
+            GAME_DATA.settings.startingHealth,
 
-    state.coins =
-        GAME_DATA.settings.startingCoins;
+        coins:
+            GAME_DATA.settings.startingCoins,
 
-    state.courage = 0;
-    state.curiosity = 0;
-    state.morality = 0;
+        courage: 0,
+        curiosity: 0,
+        morality: 0,
 
-    state.inventory = [];
-    state.achievements = [];
+        inventory: [],
+        achievements: [],
 
-    state.started = true;
+        started: true,
+        muted: false
+    };
 
     saveGame();
 
     showScreen("gameScreen");
 
     renderScene();
-
 }
 
 
-/* ==============================
-   SCREEN
-============================== */
+function continueGame() {
+
+    if (!loadGame()) {
+        startNewGame();
+        return;
+    }
+
+    state.started = true;
+
+    showScreen("gameScreen");
+
+    renderScene();
+}
+
+
+/* =========================================
+   SCREEN CONTROL
+========================================= */
 
 function showScreen(id) {
 
@@ -242,41 +231,63 @@ function showScreen(id) {
 }
 
 
-/* ==============================
+function showOverlay(id) {
+
+    const overlay = $(id);
+
+    if (overlay) {
+        overlay.classList.add("show");
+    }
+
+}
+
+
+function hideOverlay(id) {
+
+    const overlay = $(id);
+
+    if (overlay) {
+        overlay.classList.remove("show");
+    }
+
+}
+
+
+/* =========================================
    RENDER SCENE
-============================== */
+========================================= */
 
 function renderScene() {
 
+    const chapter = getChapter();
     const scene = getScene();
 
-    if (!scene) {
-
-        console.error(
-            "Scene not found:",
-            state.chapter,
-            state.scene
-        );
-
+    if (!chapter || !scene) {
+        console.error("Scene not found:", state);
         return;
-
     }
 
 
+    const chapterName =
+        chapter.name || `الفصل ${state.chapter}`;
+
+
     $("chapterLabel").textContent =
-        getChapter().name;
+        chapterName;
 
 
-    $("chapter").textContent =
-        state.chapter;
+    if ($("chapter")) {
+        $("chapter").textContent =
+            state.chapter;
+    }
 
 
     $("sceneTitle").textContent =
-        scene.title;
+        scene.title || "";
 
 
     $("storyText").textContent =
-        scene.text;
+        scene.text || "";
 
 
     updateStats();
@@ -290,29 +301,31 @@ function renderScene() {
 }
 
 
-/* ==============================
+/* =========================================
    CHOICES
-============================== */
+========================================= */
 
 function renderChoices() {
 
-    const scene = getScene();
-
     const container = $("choices");
+
+    if (!container) return;
 
     container.innerHTML = "";
 
+    const scene = getScene();
 
-    if (scene.ending) {
+    if (!scene) return;
 
-        finishChapter(scene);
+
+    if (!scene.choices || scene.choices.length === 0) {
+
+        if (scene.ending) {
+            finishChapter(scene);
+        }
 
         return;
-
     }
-
-
-    if (!scene.choices) return;
 
 
     scene.choices.forEach((choice, index) => {
@@ -320,16 +333,12 @@ function renderChoices() {
         const button =
             document.createElement("button");
 
-
-        const number =
-            String(index + 1).padStart(2, "0");
-
+        button.type = "button";
 
         button.innerHTML = `
             <span class="choice-number">
-                ${number}
+                ${index + 1}
             </span>
-
             ${escapeHTML(choice.text)}
         `;
 
@@ -347,26 +356,27 @@ function renderChoices() {
 }
 
 
-/* ==============================
-   CHOICE LOGIC
-============================== */
+/* =========================================
+   CHOOSE
+========================================= */
 
 function choose(choice) {
 
     if (!choice) return;
 
 
-    applyEffects(choice.effects);
+    applyEffects(choice.effects || {});
 
 
     if (state.health <= 0) {
+
+        state.health = 0;
 
         saveGame();
 
         gameOver();
 
         return;
-
     }
 
 
@@ -374,67 +384,66 @@ function choose(choice) {
 
         saveGame();
 
-        return;
+        renderScene();
 
+        return;
     }
 
 
     state.scene = choice.next;
 
-
     saveGame();
-
 
     renderScene();
 
 }
 
 
-/* ==============================
-   EFFECT SYSTEM
-============================== */
+/* =========================================
+   EFFECTS
+========================================= */
 
-function applyEffects(effects = {}) {
+function applyEffects(effects) {
 
-    if (
-        typeof effects.health === "number"
-    ) {
-
-        state.health += effects.health;
-
-    }
+    if (!effects) return;
 
 
-    if (
-        typeof effects.coins === "number"
-    ) {
+    if (typeof effects.health === "number") {
 
-        state.coins += effects.coins;
+        state.health = clamp(
+            state.health + effects.health,
+            0,
+            GAME_DATA.settings.maxHealth
+        );
 
     }
 
 
-    if (
-        typeof effects.courage === "number"
-    ) {
+    if (typeof effects.coins === "number") {
+
+        state.coins = Math.max(
+            0,
+            state.coins + effects.coins
+        );
+
+    }
+
+
+    if (typeof effects.courage === "number") {
 
         state.courage += effects.courage;
 
     }
 
 
-    if (
-        typeof effects.curiosity === "number"
-    ) {
+    if (typeof effects.curiosity === "number") {
 
         state.curiosity += effects.curiosity;
 
     }
 
 
-    if (
-        typeof effects.morality === "number"
-    ) {
+    if (typeof effects.morality === "number") {
 
         state.morality += effects.morality;
 
@@ -457,76 +466,68 @@ function applyEffects(effects = {}) {
     }
 
 
-    state.health = clamp(
-        state.health,
-        0,
-        GAME_DATA.settings.maxHealth
-    );
-
-
-    state.coins =
-        Math.max(0, state.coins);
+    updateStats();
 
 }
 
 
-/* ==============================
+/* =========================================
    INVENTORY
-============================== */
+========================================= */
 
 function addItem(item) {
 
     if (!item) return;
 
-
-    if (!state.inventory.includes(item)) {
-
-        state.inventory.push(item);
-
+    if (state.inventory.includes(item)) {
+        return;
     }
+
+    state.inventory.push(item);
 
 }
 
 
-/* ==============================
+/* =========================================
    ACHIEVEMENTS
-============================== */
+========================================= */
 
 function unlockAchievement(id) {
 
-    const achievement =
-        GAME_DATA.achievements[id];
+    if (!id) return;
 
-
-    if (!achievement) return;
-
-
-    if (
-        !state.achievements.includes(id)
-    ) {
-
-        state.achievements.push(id);
-
-        showAchievementNotification(
-            achievement
-        );
-
+    if (state.achievements.includes(id)) {
+        return;
     }
+
+    if (!GAME_DATA.achievements[id]) {
+        return;
+    }
+
+
+    state.achievements.push(id);
+
+    showAchievementNotification(
+        GAME_DATA.achievements[id]
+    );
 
 }
 
 
-/* ==============================
-   ACHIEVEMENT NOTIFICATION
-============================== */
+function showAchievementNotification(achievement) {
 
-function showAchievementNotification(
-    achievement
-) {
+    const old =
+        document.querySelector(
+            ".achievement-notification"
+        );
+
+    if (old) {
+        old.remove();
+    }
+
 
     const notification =
         document.createElement("div");
-
 
     notification.className =
         "achievement-notification";
@@ -534,67 +535,58 @@ function showAchievementNotification(
 
     notification.innerHTML = `
         <div class="notification-icon">
-            ${achievement.icon}
+            ${achievement.icon || "🏆"}
         </div>
 
         <div>
             <small>إنجاز جديد</small>
-
             <strong>
-                ${escapeHTML(
-                    achievement.title
-                )}
+                ${escapeHTML(achievement.title)}
             </strong>
         </div>
     `;
 
 
-    document.body.appendChild(
-        notification
-    );
+    document.body.appendChild(notification);
 
 
     setTimeout(() => {
 
-        notification.classList.add(
-            "hide"
-        );
+        notification.classList.add("hide");
 
         setTimeout(() => {
             notification.remove();
-        }, 400);
+        }, 450);
 
     }, 2800);
 
 }
 
 
-/* ==============================
-   INVENTORY UI
-============================== */
+/* =========================================
+   INVENTORY RENDER
+========================================= */
 
 function renderInventory() {
 
     const container =
         $("inventoryList");
 
+    if (!container) return;
 
     container.innerHTML = "";
 
 
-    if (
-        state.inventory.length === 0
-    ) {
+    if (state.inventory.length === 0) {
 
         container.innerHTML = `
             <div class="inventory-empty">
-                🎒
-                <p>الحقيبة فارغة</p>
+                <div style="font-size:38px;">🎒</div>
+                <p>الحقيبة فارغة حاليًا.</p>
             </div>
         `;
 
         return;
-
     }
 
 
@@ -602,7 +594,6 @@ function renderInventory() {
 
         const element =
             document.createElement("div");
-
 
         element.className =
             "inventory-item";
@@ -626,206 +617,166 @@ function renderInventory() {
 }
 
 
-/* ==============================
-   ACHIEVEMENTS UI
-============================== */
+/* =========================================
+   ACHIEVEMENTS RENDER
+========================================= */
 
 function renderAchievements() {
 
     const container =
         $("achievementsList");
 
+    if (!container) return;
 
     container.innerHTML = "";
 
 
     Object.entries(
         GAME_DATA.achievements
-    ).forEach(
-        ([id, achievement]) => {
+    ).forEach(([id, achievement]) => {
 
-            const unlocked =
-                state.achievements
-                    .includes(id);
+        const unlocked =
+            state.achievements.includes(id);
 
 
-            const element =
-                document.createElement("div");
+        const element =
+            document.createElement("div");
 
 
-            element.className =
-                "achievement" +
-                (
-                    unlocked
-                        ? ""
-                        : " locked"
-                );
+        element.className =
+            `achievement ${
+                unlocked ? "" : "locked"
+            }`;
 
 
-            element.innerHTML = `
-                <div class="achievement-icon">
-                    ${
-                        unlocked
-                            ? achievement.icon
-                            : "🔒"
-                    }
-                </div>
+        element.innerHTML = `
+            <div class="achievement-icon">
+                ${unlocked
+                    ? achievement.icon
+                    : "?"}
+            </div>
+
+            <div>
+                <strong>
+                    ${unlocked
+                        ? escapeHTML(achievement.title)
+                        : "إنجاز مخفي"}
+                </strong>
 
                 <div>
-                    <strong>
-                        ${escapeHTML(
-                            achievement.title
-                        )}
-                    </strong>
-
-                    <div>
-                        ${
-                            unlocked
-                                ? escapeHTML(
-                                    achievement.description
-                                )
-                                : "إنجاز مقفل"
-                        }
-                    </div>
+                    ${unlocked
+                        ? escapeHTML(
+                            achievement.description
+                          )
+                        : "واصل اللعب لاكتشافه."}
                 </div>
-            `;
+            </div>
+        `;
 
 
-            container.appendChild(element);
+        container.appendChild(element);
 
-        }
-    );
+    });
 
 }
 
 
-/* ==============================
-   PLAYER STATS
-============================== */
+/* =========================================
+   STATS
+========================================= */
 
 function updateStats() {
 
-    $("health").textContent =
-        state.health;
+    if ($("health")) {
+
+        $("health").textContent =
+            state.health;
+
+    }
 
 
-    $("coins").textContent =
-        state.coins;
+    if ($("coins")) {
+
+        $("coins").textContent =
+            state.coins;
+
+    }
 
 
-    $("chapter").textContent =
-        state.chapter;
+    if ($("chapter")) {
+
+        $("chapter").textContent =
+            state.chapter;
+
+    }
 
 }
 
 
-/* ==============================
-   PROGRESS BAR
-============================== */
+/* =========================================
+   PROGRESS
+========================================= */
 
 function updateProgress() {
 
     const chapter =
         getChapter();
 
-
     if (!chapter) return;
 
 
     const scenes =
         Object.keys(
-            chapter.scenes
+            chapter.scenes || {}
         );
 
 
-    const currentIndex =
-        scenes.indexOf(
-            state.scene
+    const index =
+        Math.max(
+            0,
+            scenes.indexOf(state.scene)
         );
-
-
-    if (currentIndex === -1) {
-
-        $("progressBar").style.width =
-            "0%";
-
-        return;
-
-    }
 
 
     const progress =
-        (
-            (currentIndex + 1) /
-            scenes.length
-        ) * 100;
+        scenes.length <= 1
+            ? 0
+            : ((index + 1) / scenes.length) * 100;
 
 
-    $("progressBar").style.width =
-        `${Math.min(100, progress)}%`;
+    const bar =
+        $("progressBar");
+
+
+    if (bar) {
+
+        bar.style.width =
+            `${progress}%`;
+
+    }
 
 }
 
 
-/* ==============================
-   SAVE SYSTEM
-============================== */
+/* =========================================
+   SAVE
+========================================= */
 
 function saveGame() {
 
     try {
 
-        const saveData = {
-
-            version:
-                GAME_DATA.version,
-
-            chapter:
-                state.chapter,
-
-            scene:
-                state.scene,
-
-            health:
-                state.health,
-
-            coins:
-                state.coins,
-
-            courage:
-                state.courage,
-
-            curiosity:
-                state.curiosity,
-
-            morality:
-                state.morality,
-
-            inventory:
-                state.inventory,
-
-            achievements:
-                state.achievements,
-
-            started:
-                state.started
-
-        };
-
-
         localStorage.setItem(
             SAVE_KEY,
-            JSON.stringify(saveData)
+            JSON.stringify(state)
         );
 
-
         updateContinueButton();
-
 
     } catch (error) {
 
         console.error(
-            "Save error:",
+            "Save failed:",
             error
         );
 
@@ -834,94 +785,39 @@ function saveGame() {
 }
 
 
-/* ==============================
-   LOAD SYSTEM
-============================== */
-
 function loadGame() {
 
     try {
 
-        const raw =
+        const saved =
             localStorage.getItem(
                 SAVE_KEY
             );
 
 
-        if (!raw) {
-
+        if (!saved) {
             return false;
-
         }
 
 
-        const data =
-            JSON.parse(raw);
+        const parsed =
+            JSON.parse(saved);
 
 
-        if (!data) return false;
-
-
-        state.chapter =
-            Number(data.chapter) || 1;
-
-
-        state.scene =
-            typeof data.scene === "string"
-                ? data.scene
-                : "start";
-
-
-        state.health =
-            typeof data.health === "number"
-                ? clamp(data.health, 0, 100)
-                : 100;
-
-
-        state.coins =
-            typeof data.coins === "number"
-                ? Math.max(0, data.coins)
-                : 25;
-
-
-        state.courage =
-            Number(data.courage) || 0;
-
-
-        state.curiosity =
-            Number(data.curiosity) || 0;
-
-
-        state.morality =
-            Number(data.morality) || 0;
-
-
-        state.inventory =
-            Array.isArray(data.inventory)
-                ? data.inventory
-                : [];
-
-
-        state.achievements =
-            Array.isArray(data.achievements)
-                ? data.achievements
-                : [];
-
-
-        state.started =
-            Boolean(data.started);
+        state = {
+            ...state,
+            ...parsed
+        };
 
 
         return true;
 
-
     } catch (error) {
 
         console.error(
-            "Load error:",
+            "Load failed:",
             error
         );
-
 
         return false;
 
@@ -930,24 +826,14 @@ function loadGame() {
 }
 
 
-/* ==============================
-   SAVE CHECK
-============================== */
-
 function hasSave() {
 
-    return Boolean(
-        localStorage.getItem(
-            SAVE_KEY
-        )
+    return !!localStorage.getItem(
+        SAVE_KEY
     );
 
 }
 
-
-/* ==============================
-   CLEAR SAVE
-============================== */
 
 function clearSave() {
 
@@ -955,182 +841,214 @@ function clearSave() {
         SAVE_KEY
     );
 
+    updateContinueButton();
+
 }
 
 
-/* ==============================
+/* =========================================
+   CONTINUE BUTTON
+========================================= */
+
+function updateContinueButton() {
+
+    const button =
+        $("continueBtn");
+
+    if (!button) return;
+
+
+    button.style.display =
+        hasSave()
+            ? "block"
+            : "none";
+
+}
+
+
+/* =========================================
+   RESTART
+========================================= */
+
+function restartGame() {
+
+    hideOverlay("menuOverlay");
+
+    clearSave();
+
+    startNewGame();
+
+}
+
+
+/* =========================================
+   HOME
+========================================= */
+
+function goHome() {
+
+    hideOverlay("menuOverlay");
+
+    saveGame();
+
+    showScreen("startScreen");
+
+    updateContinueButton();
+
+}
+
+
+/* =========================================
    GAME OVER
-============================== */
+========================================= */
 
 function gameOver() {
 
-    $("endIcon").textContent =
-        "☁";
+    const container =
+        $("choices");
+
+    if (container) {
+
+        container.innerHTML = "";
+
+    }
 
 
-    $("endTitle").textContent =
+    $("sceneTitle").textContent =
         "انتهت الرحلة";
 
 
-    $("endText").textContent =
-        "لم تستطع مواصلة الطريق هذه المرة. لكن كل قرار يقربك من الحقيقة.";
-
-
-    updateFinalStats();
-
-
-    showScreen(
-        "endScreen"
-    );
+    $("storyText").textContent =
+        "لم تكن مستعدًا لما ينتظرك... لكن القصة لم تنتهِ.";
 
 }
 
 
-/* ==============================
-   CHAPTER END
-============================== */
+/* =========================================
+   ENDING
+========================================= */
 
 function finishChapter(scene) {
 
-    if (scene.effects) {
+    if (!scene) return;
 
-        applyEffects(
-            scene.effects
-        );
 
-    }
+    applyEffects(
+        scene.effects || {}
+    );
 
 
     saveGame();
 
 
-    $("endIcon").textContent =
-        "✦";
+    if ($("endIcon")) {
+        $("endIcon").textContent =
+            scene.endingIcon || "✦";
+    }
 
 
-    $("endTitle").textContent =
-        scene.endingTitle ||
-        "انتهى الفصل";
+    if ($("endTitle")) {
+        $("endTitle").textContent =
+            scene.endingTitle ||
+            "البداية فقط";
+    }
 
 
-    $("endText").textContent =
-        scene.endingText ||
-        "لقد وصلت إلى نهاية هذا الفصل.";
+    if ($("endText")) {
+        $("endText").textContent =
+            scene.endingText ||
+            "لقد أنهيت هذا الفصل.";
+    }
 
 
     updateFinalStats();
 
 
-    showScreen(
-        "endScreen"
-    );
+    showScreen("endScreen");
 
 }
 
 
-/* ==============================
+/* =========================================
    FINAL STATS
-============================== */
+========================================= */
 
 function updateFinalStats() {
 
-    $("finalChapter").textContent =
-        state.chapter;
+    if ($("finalChapter")) {
+
+        $("finalChapter").textContent =
+            state.chapter;
+
+    }
 
 
-    $("finalCoins").textContent =
-        state.coins;
+    if ($("finalCoins")) {
+
+        $("finalCoins").textContent =
+            state.coins;
+
+    }
 
 
-    $("finalAchievements").textContent =
-        state.achievements.length;
+    if ($("finalAchievements")) {
+
+        $("finalAchievements").textContent =
+            state.achievements.length;
+
+    }
 
 }
 
 
-/* ==============================
-   ANIMATION
-============================== */
+/* =========================================
+   STORY ANIMATION
+========================================= */
 
 function animateStory() {
 
     const title =
         $("sceneTitle");
 
-
     const text =
         $("storyText");
 
 
-    title.classList.remove("fade");
+    if (title) {
 
-    text.classList.remove("fade");
+        title.classList.remove("fade");
 
+        void title.offsetWidth;
 
-    void title.offsetWidth;
-    void text.offsetWidth;
+        title.classList.add("fade");
 
-
-    title.classList.add("fade");
-    text.classList.add("fade");
-
-}
+    }
 
 
-/* ==============================
-   CONTINUE BUTTON
-============================== */
+    if (text) {
 
-function updateContinueButton() {
+        text.classList.remove("fade");
 
-    if (
-        hasSave()
-    ) {
+        void text.offsetWidth;
 
-        $("continueBtn").style.display =
-            "block";
-
-    } else {
-
-        $("continueBtn").style.display =
-            "none";
+        text.classList.add("fade");
 
     }
 
 }
 
 
-/* ==============================
-   BASIC HTML SANITIZATION
-============================== */
+/* =========================================
+   SECURITY
+========================================= */
 
 function escapeHTML(value) {
 
     return String(value)
-
-        .replace(
-            /&/g,
-            "&amp;"
-        )
-
-        .replace(
-            /</g,
-            "&lt;"
-        )
-
-        .replace(
-            />/g,
-            "&gt;"
-        )
-
-        .replace(
-            /"/g,
-            "&quot;"
-        )
-
-        .replace(
-            /'/g,
-            "&#039;"
-        );
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
 
 }
