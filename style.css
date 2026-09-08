@@ -5,42 +5,28 @@
 }
 
 :root {
-    --bg: #060810;
-    --bg-soft: #0c101b;
-    --panel: rgba(18, 23, 36, .82);
-    --panel-solid: #121724;
+    --bg: #05070d;
+    --bg2: #0b0f1a;
+    --panel: rgba(17, 22, 35, .88);
+    --panel2: rgba(255,255,255,.045);
     --text: #f5f7ff;
-    --muted: #8d96aa;
-    --accent: #8d7cff;
-    --accent-light: #b7adff;
-    --cyan: #5ee7ce;
-    --danger: #ff667e;
-    --gold: #e8c76b;
+    --muted: #929aae;
+    --purple: #8b7cff;
+    --purple2: #6556e8;
+    --cyan: #5de5d0;
+    --gold: #e7c96a;
+    --red: #ff637b;
     --border: rgba(255,255,255,.09);
-    --shadow: rgba(0,0,0,.5);
 }
 
-html {
+html,
+body {
     min-height: 100%;
     background: var(--bg);
 }
 
 body {
-    min-height: 100vh;
     color: var(--text);
-    background:
-        radial-gradient(
-            circle at 50% -10%,
-            rgba(102, 82, 210, .25),
-            transparent 42%
-        ),
-        radial-gradient(
-            circle at 0% 100%,
-            rgba(47, 154, 154, .08),
-            transparent 35%
-        ),
-        var(--bg);
-
     font-family:
         system-ui,
         -apple-system,
@@ -59,20 +45,9 @@ button {
     -webkit-tap-highlight-color: transparent;
 }
 
-button:focus-visible {
-    outline: 2px solid var(--cyan);
-    outline-offset: 3px;
+button:active {
+    transform: scale(.97);
 }
-
-#app {
-    min-height: 100vh;
-    position: relative;
-}
-
-
-/* =========================================
-   SCREENS
-========================================= */
 
 .screen {
     display: none;
@@ -84,89 +59,88 @@ button:focus-visible {
 }
 
 
-/* =========================================
-   START SCREEN
-========================================= */
+/* =========================
+   START
+========================= */
 
 #startScreen {
     position: relative;
     align-items: center;
     justify-content: center;
     text-align: center;
-    padding: 30px 20px;
+    padding: 25px;
+
     overflow: hidden;
 
     background:
-        linear-gradient(
-            rgba(6, 8, 16, .2),
-            rgba(6, 8, 16, .96)
+        radial-gradient(
+            circle at 50% 30%,
+            rgba(111,94,210,.25),
+            transparent 32%
         ),
         radial-gradient(
-            circle at 50% 38%,
-            rgba(94, 82, 194, .32),
-            transparent 32%
-        );
-}
-
-#startScreen::before,
-#startScreen::after {
-    content: "";
-    position: absolute;
-    border-radius: 50%;
-    filter: blur(2px);
-    pointer-events: none;
+            circle at 10% 90%,
+            rgba(55,185,174,.08),
+            transparent 30%
+        ),
+        var(--bg);
 }
 
 #startScreen::before {
-    width: 300px;
-    height: 300px;
-    top: -120px;
-    right: -100px;
-    background: rgba(141,124,255,.09);
-}
+    content: "";
+    position: absolute;
 
-#startScreen::after {
-    width: 250px;
-    height: 250px;
-    bottom: -120px;
-    left: -100px;
-    background: rgba(94,231,206,.06);
+    width: 320px;
+    height: 320px;
+
+    top: -170px;
+    right: -130px;
+
+    border-radius: 50%;
+
+    background: rgba(139,124,255,.09);
+
+    filter: blur(15px);
 }
 
 .start-content {
     width: min(100%, 560px);
+
     position: relative;
     z-index: 1;
-    animation: rise .9s cubic-bezier(.2,.8,.2,1);
+
+    animation: intro .8s ease;
 }
 
 .logo {
-    width: 86px;
-    height: 86px;
-    margin: 0 auto 28px;
+    width: 88px;
+    height: 88px;
+
+    margin: 0 auto 25px;
 
     display: grid;
     place-items: center;
 
-    border-radius: 26px;
+    border-radius: 27px;
 
     background:
         linear-gradient(
             145deg,
-            rgba(141,124,255,.16),
-            rgba(94,231,206,.04)
+            rgba(139,124,255,.18),
+            rgba(93,229,208,.04)
         );
 
-    border: 1px solid rgba(255,255,255,.13);
+    border: 1px solid var(--border);
 
     box-shadow:
-        0 25px 80px rgba(0,0,0,.4),
-        inset 0 0 35px rgba(141,124,255,.08);
+        0 30px 90px rgba(0,0,0,.5),
+        inset 0 0 35px rgba(139,124,255,.08);
 
     color: var(--cyan);
-    font-size: 38px;
 
-    animation: float 4s ease-in-out infinite;
+    font-size: 39px;
+
+    animation: floating 4s ease-in-out infinite;
 }
 
 .eyebrow {
@@ -174,41 +148,46 @@ button:focus-visible {
 
     color: var(--cyan);
 
-    font-size: 11px;
-    font-weight: 800;
+    font-size: 10px;
+    font-weight: 900;
+
     letter-spacing: 4px;
-    text-transform: uppercase;
 }
 
 .start-content h1,
 .end-content h1 {
-    margin-bottom: 18px;
+    margin-bottom: 17px;
 
     font-size:
-        clamp(43px, 12vw, 82px);
+        clamp(44px, 13vw, 84px);
 
     line-height: .95;
-    letter-spacing: -3px;
+
+    letter-spacing: -4px;
 
     background:
         linear-gradient(
             120deg,
-            #fff,
-            #c6c1ff 55%,
-            #6fe8d3
+            white,
+            #c9c3ff 50%,
+            #70e6d3
         );
 
     -webkit-background-clip: text;
     background-clip: text;
+
     color: transparent;
 }
 
 .subtitle {
     max-width: 430px;
-    margin: 0 auto 38px;
+
+    margin: 0 auto 35px;
 
     color: var(--muted);
-    line-height: 1.8;
+
+    line-height: 1.9;
+
     font-size: 16px;
 }
 
@@ -216,65 +195,62 @@ button:focus-visible {
 .secondary-btn {
     width: 100%;
     min-height: 56px;
+
     margin-top: 10px;
+
     padding: 15px 20px;
 
     border-radius: 17px;
 
     transition:
-        transform .2s ease,
-        box-shadow .2s ease,
-        border-color .2s ease;
+        transform .2s,
+        box-shadow .2s,
+        border-color .2s;
 }
 
 .main-btn {
     background:
         linear-gradient(
             135deg,
-            var(--accent),
-            #6354e9
+            var(--purple),
+            var(--purple2)
         );
 
     box-shadow:
-        0 18px 45px rgba(99,84,233,.25);
+        0 18px 45px rgba(101,86,232,.27);
 }
 
 .main-btn:hover {
     box-shadow:
-        0 22px 55px rgba(99,84,233,.35);
+        0 22px 60px rgba(101,86,232,.4);
 }
 
 .secondary-btn {
     background: rgba(255,255,255,.045);
+
     border: 1px solid var(--border);
 }
 
-.main-btn:active,
-.secondary-btn:active,
-.icon-btn:active,
-.bottom-actions button:active,
-.menu-card > button:active {
-    transform: scale(.97);
-}
 
-
-/* =========================================
-   GAME SCREEN
-========================================= */
+/* =========================
+   GAME
+========================= */
 
 #gameScreen {
     flex-direction: column;
 
     background:
         radial-gradient(
-            circle at 70% 0%,
-            rgba(89,74,180,.13),
+            circle at 80% 0%,
+            rgba(104,87,210,.13),
             transparent 35%
-        );
+        ),
+        var(--bg);
 }
 
 .topbar {
     height: 68px;
+
     flex-shrink: 0;
 
     display: flex;
@@ -282,23 +258,25 @@ button:focus-visible {
     justify-content: space-between;
 
     padding:
-        0 max(18px, env(safe-area-inset-right))
-        0 max(18px, env(safe-area-inset-left));
-
-    border-bottom: 1px solid var(--border);
-
-    background: rgba(6,8,16,.72);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+        0 18px;
 
     position: sticky;
     top: 0;
-    z-index: 5;
+    z-index: 10;
+
+    background:
+        rgba(5,7,13,.78);
+
+    border-bottom:
+        1px solid var(--border);
+
+    backdrop-filter: blur(22px);
+    -webkit-backdrop-filter: blur(22px);
 }
 
 .game-name {
-    font-weight: 850;
-    letter-spacing: -.4px;
+    font-weight: 900;
+    font-size: 14px;
 }
 
 .icon-btn {
@@ -310,101 +288,110 @@ button:focus-visible {
 
     border-radius: 13px;
 
-    background: rgba(255,255,255,.055);
+    background: var(--panel2);
+
     border: 1px solid var(--border);
 
     transition: .2s;
 }
 
 .icon-btn:hover {
-    border-color: rgba(141,124,255,.4);
+    border-color: rgba(139,124,255,.4);
+}
+
+.topbar .chapter-label {
+    margin: 0;
+
+    color: var(--cyan);
+
+    font-size: 10px;
 }
 
 
-/* =========================================
-   PLAYER STATS
-========================================= */
+/* =========================
+   STATS
+========================= */
 
 .player-stats {
     width: min(100%, 760px);
+
     margin: 0 auto;
 
     display: flex;
-    gap: 9px;
 
-    padding:
-        14px 18px 8px;
+    gap: 8px;
+
+    padding: 13px 18px 7px;
 }
 
 .stat {
     flex: 1;
 
+    min-height: 39px;
+
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 7px;
 
-    min-height: 38px;
+    gap: 7px;
 
     border-radius: 13px;
 
-    background: rgba(255,255,255,.035);
+    background:
+        rgba(255,255,255,.035);
+
     border: 1px solid var(--border);
 
     font-size: 13px;
-
-    box-shadow:
-        inset 0 1px rgba(255,255,255,.025);
-}
-
-.stat span {
-    opacity: .85;
 }
 
 .stat strong {
-    font-weight: 800;
+    font-weight: 900;
 }
 
 
-/* =========================================
+/* =========================
    PROGRESS
-========================================= */
+========================= */
 
 .progress-container {
     width: min(calc(100% - 36px), 724px);
+
     height: 3px;
 
     margin: 5px auto 0;
 
     overflow: hidden;
 
-    background: rgba(255,255,255,.06);
     border-radius: 99px;
+
+    background: rgba(255,255,255,.06);
 }
 
 #progressBar {
     width: 0;
     height: 100%;
 
+    border-radius: inherit;
+
     background:
         linear-gradient(
             90deg,
-            var(--accent),
+            var(--purple),
             var(--cyan)
         );
 
-    border-radius: inherit;
-
     box-shadow:
-        0 0 12px rgba(94,231,206,.25);
+        0 0 14px rgba(93,229,208,.3);
 
-    transition: width .7s cubic-bezier(.2,.8,.2,1);
+    transition:
+        width .7s cubic-bezier(.2,.8,.2,1);
 }
 
 
-/* =========================================
+/* =========================
    STORY
-========================================= */
+========================= */
 
 .story-container {
     width: min(calc(100% - 36px), 760px);
@@ -415,25 +402,26 @@ button:focus-visible {
         55px 0 30px;
 }
 
-.chapter-label {
-    margin-bottom: 13px;
+.story-container > .chapter-label {
+    margin-bottom: 12px;
 
     color: var(--cyan);
 
-    font-size: 12px;
-    font-weight: 800;
+    font-size: 11px;
+    font-weight: 900;
 }
 
 #sceneTitle {
     max-width: 700px;
 
-    margin-bottom: 18px;
+    margin-bottom: 17px;
 
     font-size:
-        clamp(29px, 8vw, 53px);
+        clamp(30px, 8vw, 54px);
 
     line-height: 1.08;
-    letter-spacing: -1.5px;
+
+    letter-spacing: -1.7px;
 }
 
 .scene-line {
@@ -447,13 +435,15 @@ button:focus-visible {
     background:
         linear-gradient(
             90deg,
-            var(--accent),
+            var(--purple),
             var(--cyan)
         );
 }
 
 .story-text {
-    color: #c9cfdd;
+    min-height: 150px;
+
+    color: #cbd0dc;
 
     font-size:
         clamp(17px, 4.6vw, 20px);
@@ -461,30 +451,31 @@ button:focus-visible {
     line-height: 2.05;
 
     white-space: pre-line;
-
-    min-height: 150px;
 }
 
 
-/* =========================================
+/* =========================
    CHOICES
-========================================= */
+========================= */
 
 .choices {
     display: grid;
+
     gap: 11px;
 
-    margin-top: 36px;
+    margin-top: 35px;
 }
 
 .choices button {
     width: 100%;
 
+    min-height: 62px;
+
+    padding: 17px;
+
     display: block;
 
     text-align: right;
-
-    padding: 18px 17px;
 
     border-radius: 17px;
 
@@ -495,17 +486,16 @@ button:focus-visible {
             rgba(255,255,255,.025)
         );
 
-    border: 1px solid var(--border);
-
-    color: #edf0f8;
+    border:
+        1px solid var(--border);
 
     line-height: 1.55;
 
     transition:
-        transform .2s ease,
-        background .2s ease,
-        border-color .2s ease,
-        box-shadow .2s ease;
+        transform .2s,
+        background .2s,
+        border-color .2s,
+        box-shadow .2s;
 }
 
 .choices button:hover {
@@ -514,39 +504,51 @@ button:focus-visible {
     background:
         linear-gradient(
             145deg,
-            rgba(141,124,255,.11),
+            rgba(139,124,255,.13),
             rgba(255,255,255,.035)
         );
 
     border-color:
-        rgba(141,124,255,.4);
+        rgba(139,124,255,.42);
 
     box-shadow:
-        0 12px 35px rgba(0,0,0,.18);
+        0 14px 40px rgba(0,0,0,.2);
 }
 
 .choice-number {
-    display: inline-block;
+    display: inline-grid;
 
-    min-width: 29px;
+    place-items: center;
 
-    color: var(--accent-light);
+    width: 29px;
+    height: 29px;
 
+    margin-left: 7px;
+
+    border-radius: 9px;
+
+    background:
+        rgba(139,124,255,.1);
+
+    color: var(--purple);
+
+    font-size: 12px;
     font-weight: 900;
 }
 
 
-/* =========================================
-   BOTTOM ACTIONS
-========================================= */
+/* =========================
+   BOTTOM
+========================= */
 
 .bottom-actions {
     width: min(100%, 760px);
 
-    display: flex;
-    gap: 9px;
-
     margin: 0 auto;
+
+    display: flex;
+
+    gap: 9px;
 
     padding:
         12px 18px
@@ -560,22 +562,21 @@ button:focus-visible {
 
     border-radius: 13px;
 
-    background: rgba(255,255,255,.035);
-    border: 1px solid var(--border);
+    background:
+        rgba(255,255,255,.035);
+
+    border:
+        1px solid var(--border);
 
     font-size: 12px;
 
     transition: .2s;
 }
 
-.bottom-actions button:hover {
-    border-color: rgba(255,255,255,.17);
-}
 
-
-/* =========================================
+/* =========================
    OVERLAYS
-========================================= */
+========================= */
 
 .overlay {
     position: fixed;
@@ -584,31 +585,33 @@ button:focus-visible {
     z-index: 50;
 
     display: none;
+
     align-items: center;
     justify-content: center;
 
     padding: 20px;
 
     background:
-        rgba(0,0,0,.72);
+        rgba(0,0,0,.74);
 
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
 }
 
 .overlay.show {
     display: flex;
 
-    animation: overlayIn .2s ease;
+    animation: overlay .2s ease;
 }
 
 .menu-card {
     width: min(100%, 470px);
+
     max-height: 85vh;
 
-    position: relative;
-
     overflow: auto;
+
+    position: relative;
 
     padding: 30px 21px;
 
@@ -617,16 +620,18 @@ button:focus-visible {
     background:
         linear-gradient(
             145deg,
-            rgba(24,30,46,.97),
-            rgba(12,16,26,.97)
+            rgba(24,30,46,.98),
+            rgba(10,14,23,.98)
         );
 
-    border: 1px solid var(--border);
+    border:
+        1px solid var(--border);
 
     box-shadow:
-        0 35px 100px rgba(0,0,0,.55);
+        0 35px 110px rgba(0,0,0,.6);
 
-    animation: modalIn .3s cubic-bezier(.2,.8,.2,1);
+    animation:
+        modal .3s cubic-bezier(.2,.8,.2,1);
 }
 
 .menu-card h2 {
@@ -649,8 +654,11 @@ button:focus-visible {
 
     border-radius: 12px;
 
-    background: rgba(255,255,255,.055);
-    border: 1px solid var(--border);
+    background:
+        rgba(255,255,255,.055);
+
+    border:
+        1px solid var(--border);
 
     font-size: 22px;
 }
@@ -659,45 +667,57 @@ button:focus-visible {
     width: 100%;
 
     margin-top: 9px;
+
     padding: 15px;
 
     text-align: right;
 
     border-radius: 14px;
 
-    background: rgba(255,255,255,.045);
-    border: 1px solid var(--border);
+    background:
+        rgba(255,255,255,.045);
+
+    border:
+        1px solid var(--border);
 
     transition: .2s;
 }
 
 .menu-card > button:not(.close-btn):hover {
-    background: rgba(141,124,255,.09);
-    border-color: rgba(141,124,255,.3);
+    background:
+        rgba(139,124,255,.1);
+
+    border-color:
+        rgba(139,124,255,.3);
 }
 
 
-/* =========================================
+/* =========================
    INVENTORY
-========================================= */
+========================= */
 
 .inventory-item {
     display: flex;
     align-items: center;
+
     gap: 12px;
 
     margin-top: 10px;
+
     padding: 14px;
 
     border-radius: 15px;
 
-    background: rgba(255,255,255,.04);
-    border: 1px solid var(--border);
+    background:
+        rgba(255,255,255,.04);
+
+    border:
+        1px solid var(--border);
 }
 
 .inventory-icon {
-    width: 40px;
-    height: 40px;
+    width: 42px;
+    height: 42px;
 
     flex-shrink: 0;
 
@@ -706,15 +726,16 @@ button:focus-visible {
 
     border-radius: 12px;
 
-    background: rgba(141,124,255,.1);
+    background:
+        rgba(139,124,255,.1);
 
-    color: var(--accent-light);
+    color: var(--purple);
 }
 
 .inventory-empty {
-    text-align: center;
-
     padding: 30px;
+
+    text-align: center;
 
     color: var(--muted);
 }
@@ -724,22 +745,27 @@ button:focus-visible {
 }
 
 
-/* =========================================
+/* =========================
    ACHIEVEMENTS
-========================================= */
+========================= */
 
 .achievement {
     display: flex;
     align-items: center;
+
     gap: 12px;
 
     margin-top: 10px;
+
     padding: 14px;
 
     border-radius: 15px;
 
-    background: rgba(255,255,255,.04);
-    border: 1px solid var(--border);
+    background:
+        rgba(255,255,255,.04);
+
+    border:
+        1px solid var(--border);
 }
 
 .achievement-icon {
@@ -753,7 +779,8 @@ button:focus-visible {
 
     border-radius: 12px;
 
-    background: rgba(232,199,107,.09);
+    background:
+        rgba(231,201,106,.1);
 }
 
 .achievement strong {
@@ -764,18 +791,20 @@ button:focus-visible {
 
 .achievement div:last-child {
     color: var(--muted);
+
     font-size: 12px;
+
     line-height: 1.5;
 }
 
 .achievement.locked {
-    opacity: .35;
+    opacity: .32;
 }
 
 
-/* =========================================
-   ACHIEVEMENT NOTIFICATION
-========================================= */
+/* =========================
+   ACHIEVEMENT POPUP
+========================= */
 
 .achievement-notification {
     position: fixed;
@@ -792,6 +821,7 @@ button:focus-visible {
 
     display: flex;
     align-items: center;
+
     gap: 12px;
 
     padding: 13px 15px;
@@ -801,22 +831,23 @@ button:focus-visible {
     border-radius: 17px;
 
     background:
-        rgba(17,22,34,.96);
+        rgba(17,22,34,.97);
 
-    border: 1px solid rgba(94,231,206,.22);
+    border:
+        1px solid rgba(93,229,208,.25);
 
     box-shadow:
-        0 20px 70px rgba(0,0,0,.5);
+        0 20px 70px rgba(0,0,0,.55);
 
     backdrop-filter: blur(15px);
 
     animation:
-        notificationIn .45s cubic-bezier(.2,.8,.2,1);
+        popupIn .45s cubic-bezier(.2,.8,.2,1);
 }
 
 .achievement-notification.hide {
     animation:
-        notificationOut .4s ease forwards;
+        popupOut .4s ease forwards;
 }
 
 .notification-icon {
@@ -826,19 +857,19 @@ button:focus-visible {
     display: grid;
     place-items: center;
 
+    flex-shrink: 0;
+
     border-radius: 13px;
 
-    background: rgba(94,231,206,.08);
+    background:
+        rgba(93,229,208,.08);
 
     font-size: 21px;
 }
 
-.achievement-notification small,
-.achievement-notification strong {
-    display: block;
-}
-
 .achievement-notification small {
+    display: block;
+
     margin-bottom: 3px;
 
     color: var(--cyan);
@@ -851,9 +882,9 @@ button:focus-visible {
 }
 
 
-/* =========================================
-   END SCREEN
-========================================= */
+/* =========================
+   END
+========================= */
 
 #endScreen {
     align-items: center;
@@ -866,42 +897,46 @@ button:focus-visible {
     background:
         radial-gradient(
             circle at center,
-            rgba(67,57,125,.25),
-            transparent 42%
-        );
+            rgba(75,64,150,.27),
+            transparent 45%
+        ),
+        var(--bg);
 }
 
 .end-content {
     width: min(100%, 620px);
 
     animation:
-        rise .7s cubic-bezier(.2,.8,.2,1);
+        intro .7s cubic-bezier(.2,.8,.2,1);
 }
 
 .end-icon {
-    margin-bottom: 18px;
+    margin-bottom: 17px;
 
     color: var(--cyan);
 
     font-size: 58px;
 
     animation:
-        float 4s ease-in-out infinite;
+        floating 4s ease-in-out infinite;
 }
 
 #endText {
     max-width: 520px;
 
-    margin: 0 auto 30px;
+    margin:
+        0 auto 30px;
 
     color: var(--muted);
 
-    line-height: 1.85;
+    line-height: 1.9;
 }
 
 .end-stats {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+
+    grid-template-columns:
+        repeat(3, 1fr);
 
     gap: 9px;
 
@@ -913,9 +948,11 @@ button:focus-visible {
 
     border-radius: 15px;
 
-    background: rgba(255,255,255,.04);
+    background:
+        rgba(255,255,255,.04);
 
-    border: 1px solid var(--border);
+    border:
+        1px solid var(--border);
 }
 
 .end-stats span {
@@ -933,16 +970,16 @@ button:focus-visible {
 }
 
 
-/* =========================================
+/* =========================
    ANIMATIONS
-========================================= */
+========================= */
 
 .fade {
     animation:
-        textIn .45s ease;
+        textAppear .45s ease;
 }
 
-@keyframes rise {
+@keyframes intro {
     from {
         opacity: 0;
         transform: translateY(25px);
@@ -954,7 +991,7 @@ button:focus-visible {
     }
 }
 
-@keyframes textIn {
+@keyframes textAppear {
     from {
         opacity: 0;
         transform: translateY(10px);
@@ -966,7 +1003,7 @@ button:focus-visible {
     }
 }
 
-@keyframes float {
+@keyframes floating {
     0%, 100% {
         transform: translateY(0);
     }
@@ -976,7 +1013,7 @@ button:focus-visible {
     }
 }
 
-@keyframes overlayIn {
+@keyframes overlay {
     from {
         opacity: 0;
     }
@@ -986,19 +1023,23 @@ button:focus-visible {
     }
 }
 
-@keyframes modalIn {
+@keyframes modal {
     from {
         opacity: 0;
-        transform: translateY(18px) scale(.97);
+        transform:
+            translateY(20px)
+            scale(.97);
     }
 
     to {
         opacity: 1;
-        transform: translateY(0) scale(1);
+        transform:
+            translateY(0)
+            scale(1);
     }
 }
 
-@keyframes notificationIn {
+@keyframes popupIn {
     from {
         opacity: 0;
         transform:
@@ -1014,7 +1055,7 @@ button:focus-visible {
     }
 }
 
-@keyframes notificationOut {
+@keyframes popupOut {
     from {
         opacity: 1;
         transform:
@@ -1031,9 +1072,9 @@ button:focus-visible {
 }
 
 
-/* =========================================
+/* =========================
    DESKTOP
-========================================= */
+========================= */
 
 @media (min-width: 700px) {
 
@@ -1042,19 +1083,51 @@ button:focus-visible {
     }
 
     .choices {
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns:
+            repeat(2, 1fr);
     }
 
     .choices button {
-        min-height: 78px;
+        min-height: 80px;
     }
 
 }
 
 
-/* =========================================
+/* =========================
+   SMALL PHONES
+========================= */
+
+@media (max-width: 360px) {
+
+    .player-stats {
+        padding-left: 12px;
+        padding-right: 12px;
+    }
+
+    .story-container {
+        width: calc(100% - 28px);
+    }
+
+    .bottom-actions {
+        padding-left: 12px;
+        padding-right: 12px;
+    }
+
+    .stat {
+        font-size: 11px;
+    }
+
+    .story-text {
+        font-size: 16px;
+    }
+
+}
+
+
+/* =========================
    REDUCED MOTION
-========================================= */
+========================= */
 
 @media (prefers-reduced-motion: reduce) {
 
