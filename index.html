@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
+
 <head>
+
     <meta charset="UTF-8">
 
     <meta
@@ -21,17 +23,23 @@
     <title>ظلال المجهول</title>
 
     <link rel="stylesheet" href="style.css">
+
 </head>
+
 
 <body>
 
 <div id="app">
 
-    <!-- ==============================
-         START SCREEN
-    =============================== -->
 
-    <section id="startScreen" class="screen active">
+    <!-- =====================================================
+         START SCREEN
+    ====================================================== -->
+
+    <section
+        id="startScreen"
+        class="screen active"
+    >
 
         <div class="start-content">
 
@@ -43,12 +51,16 @@
                 STORY • ADVENTURE
             </div>
 
-            <h1>ظلال المجهول</h1>
+            <h1>
+                ظلال المجهول
+            </h1>
 
             <p class="subtitle">
                 كل اختيار له أثر...
+                <br>
                 وكل باب يخفي قصة.
             </p>
+
 
             <button
                 id="continueBtn"
@@ -57,6 +69,7 @@
             >
                 متابعة الرحلة
             </button>
+
 
             <button
                 id="newGameBtn"
@@ -70,25 +83,35 @@
     </section>
 
 
-    <!-- ==============================
-         GAME SCREEN
-    =============================== -->
 
-    <section id="gameScreen" class="screen">
+    <!-- =====================================================
+         GAME SCREEN
+    ====================================================== -->
+
+    <section
+        id="gameScreen"
+        class="screen"
+    >
+
+
+        <!-- TOP BAR -->
 
         <header class="topbar">
 
             <button
                 id="menuBtn"
                 class="icon-btn"
+                type="button"
                 aria-label="القائمة"
             >
                 ☰
             </button>
 
+
             <div class="game-name">
                 ظلال المجهول
             </div>
+
 
             <div
                 id="chapterLabel"
@@ -100,52 +123,96 @@
         </header>
 
 
-        <!-- PLAYER STATS -->
+
+        <!-- =================================================
+             PLAYER STATS
+        ================================================== -->
 
         <div class="player-stats">
 
-            <div class="stat">
-                <span>❤</span>
-                <strong id="health">100</strong>
-            </div>
 
             <div class="stat">
-                <span>◆</span>
-                <strong id="coins">25</strong>
+
+                <span>
+                    ❤
+                </span>
+
+                <strong id="health">
+                    100
+                </strong>
+
             </div>
 
+
             <div class="stat">
-                <span>الفصل</span>
-                <strong id="chapter">1</strong>
+
+                <span>
+                    ◆
+                </span>
+
+                <strong id="coins">
+                    25
+                </strong>
+
+            </div>
+
+
+            <div class="stat">
+
+                <span>
+                    الفصل
+                </span>
+
+                <strong id="chapterNumber">
+                    1
+                </strong>
+
             </div>
 
         </div>
 
 
-        <!-- PROGRESS -->
 
-        <div class="progress-container">
-            <div id="progressBar"></div>
+        <!-- =================================================
+             STORY PROGRESS
+        ================================================== -->
+
+        <div
+            class="progress-container"
+            aria-label="تقدم القصة"
+        >
+
+            <div
+                id="progressBar"
+            ></div>
+
         </div>
 
 
-        <!-- STORY -->
+
+        <!-- =================================================
+             STORY
+        ================================================== -->
 
         <main class="story-container">
 
+
             <div
-                id="chapter"
+                id="storyChapterLabel"
                 class="chapter-label"
                 style="display:none;"
             >
                 الفصل الأول
             </div>
 
+
             <h1 id="sceneTitle">
                 البداية
             </h1>
 
+
             <div class="scene-line"></div>
+
 
             <div
                 id="storyText"
@@ -154,20 +221,38 @@
                 ...
             </div>
 
-            <div id="choices" class="choices"></div>
+
+            <!-- CHOICES -->
+
+            <div
+                id="choices"
+                class="choices"
+            ></div>
+
 
         </main>
 
 
-        <!-- BOTTOM ACTIONS -->
+
+        <!-- =================================================
+             BOTTOM ACTIONS
+        ================================================== -->
 
         <nav class="bottom-actions">
 
-            <button id="inventoryBtn">
+
+            <button
+                id="inventoryBtn"
+                type="button"
+            >
                 🎒 الحقيبة
             </button>
 
-            <button id="achievementsBtn">
+
+            <button
+                id="achievementsBtn"
+                type="button"
+            >
                 🏆 الإنجازات
             </button>
 
@@ -176,9 +261,10 @@
     </section>
 
 
-    <!-- ==============================
+
+    <!-- =====================================================
          MENU OVERLAY
-    =============================== -->
+    ====================================================== -->
 
     <div
         id="menuOverlay"
@@ -187,25 +273,42 @@
 
         <div class="menu-card">
 
+
             <button
                 id="closeMenu"
                 class="close-btn"
+                type="button"
                 aria-label="إغلاق"
             >
                 ×
             </button>
 
-            <h2>القائمة</h2>
 
-            <button id="saveBtn">
+            <h2>
+                القائمة
+            </h2>
+
+
+            <button
+                id="saveBtn"
+                type="button"
+            >
                 💾 حفظ اللعبة
             </button>
 
-            <button id="restartBtn">
+
+            <button
+                id="restartBtn"
+                type="button"
+            >
                 🔄 إعادة البداية
             </button>
 
-            <button id="backHomeBtn">
+
+            <button
+                id="backHomeBtn"
+                type="button"
+            >
                 🏠 الصفحة الرئيسية
             </button>
 
@@ -214,9 +317,10 @@
     </div>
 
 
-    <!-- ==============================
+
+    <!-- =====================================================
          INVENTORY OVERLAY
-    =============================== -->
+    ====================================================== -->
 
     <div
         id="inventoryOverlay"
@@ -225,26 +329,35 @@
 
         <div class="menu-card">
 
+
             <button
                 class="close-btn"
+                type="button"
                 data-close="inventoryOverlay"
                 aria-label="إغلاق"
             >
                 ×
             </button>
 
-            <h2>🎒 الحقيبة</h2>
 
-            <div id="inventoryList"></div>
+            <h2>
+                🎒 الحقيبة
+            </h2>
+
+
+            <div
+                id="inventoryList"
+            ></div>
 
         </div>
 
     </div>
 
 
-    <!-- ==============================
+
+    <!-- =====================================================
          ACHIEVEMENTS OVERLAY
-    =============================== -->
+    ====================================================== -->
 
     <div
         id="achievementsOverlay"
@@ -253,30 +366,43 @@
 
         <div class="menu-card">
 
+
             <button
                 class="close-btn"
+                type="button"
                 data-close="achievementsOverlay"
                 aria-label="إغلاق"
             >
                 ×
             </button>
 
-            <h2>🏆 الإنجازات</h2>
 
-            <div id="achievementsList"></div>
+            <h2>
+                🏆 الإنجازات
+            </h2>
+
+
+            <div
+                id="achievementsList"
+            ></div>
 
         </div>
 
     </div>
 
 
-    <!-- ==============================
-         END SCREEN
-    =============================== -->
 
-    <section id="endScreen" class="screen">
+    <!-- =====================================================
+         END SCREEN
+    ====================================================== -->
+
+    <section
+        id="endScreen"
+        class="screen"
+    >
 
         <div class="end-content">
+
 
             <div
                 id="endIcon"
@@ -285,48 +411,74 @@
                 ✦
             </div>
 
+
             <div class="eyebrow">
-                CHAPTER COMPLETE
+                STORY COMPLETE
             </div>
+
 
             <h1 id="endTitle">
                 البداية فقط
             </h1>
 
+
             <p id="endText">
-                لقد أنهيت الفصل الأول.
+                لقد أنهيت الرحلة.
             </p>
 
 
+
+            <!-- FINAL STATS -->
+
             <div class="end-stats">
 
+
                 <div>
-                    <span>الفصل</span>
+
+                    <span>
+                        الفصل
+                    </span>
+
                     <strong id="finalChapter">
                         1
                     </strong>
+
                 </div>
 
+
                 <div>
-                    <span>العملات</span>
+
+                    <span>
+                        العملات
+                    </span>
+
                     <strong id="finalCoins">
                         25
                     </strong>
+
                 </div>
 
+
                 <div>
-                    <span>الإنجازات</span>
+
+                    <span>
+                        الإنجازات
+                    </span>
+
                     <strong id="finalAchievements">
                         0
                     </strong>
+
                 </div>
 
             </div>
 
 
+
             <button
                 id="restartFromEnd"
                 class="main-btn"
+                type="button"
             >
                 العب من جديد
             </button>
@@ -338,17 +490,21 @@
 </div>
 
 
-<!-- ==============================
+
+<!-- =========================================================
      GAME DATA
-=============================== -->
+========================================================= -->
 
 <script src="data.js"></script>
 
-<!-- ==============================
+
+<!-- =========================================================
      GAME ENGINE
-=============================== -->
+========================================================= -->
 
 <script src="script.js"></script>
 
+
 </body>
+
 </html>
