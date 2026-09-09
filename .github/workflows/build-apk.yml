@@ -32,13 +32,24 @@ jobs:
       - name: Prepare Android project
         run: |
           rm -rf app/src/main/java
-          rm -rf app/src/main/res
           rm -rf app/src/main/assets
 
           mkdir -p app/src/main/java/com/shadowsunknown/game
           mkdir -p app/src/main/assets
           mkdir -p app/src/main/res/values
           mkdir -p app/src/main/res/drawable
+
+      - name: Check application icon
+        run: |
+          if [ ! -f "app/src/main/res/drawable/app_icon.png" ]; then
+            echo "ERROR: app_icon.png not found!"
+            echo "Expected location:"
+            echo "app/src/main/res/drawable/app_icon.png"
+            exit 1
+          fi
+
+          echo "Icon found successfully:"
+          ls -lh app/src/main/res/drawable/app_icon.png
 
       - name: Copy game files
         run: |
@@ -50,15 +61,6 @@ jobs:
           if [ -d "assets" ]; then
             cp -r assets/. app/src/main/assets/
           fi
-
-      - name: Copy icon
-        run: |
-          if [ ! -f "app/src/main/res/drawable/app_icon.png" ]; then
-            echo "ERROR: app_icon.png not found"
-            exit 1
-          fi
-
-          cp app/src/main/res/drawable/app_icon.png app/src/main/res/drawable/app_icon.png
 
       - name: Create settings.gradle
         run: |
@@ -205,17 +207,32 @@ jobs:
 
       - name: Verify project
         run: |
-          echo "===== JAVA ====="
+          echo "=============================="
+          echo "JAVA FILES"
+          echo "=============================="
+
           find app/src/main/java -type f -name "*.java" -print
 
-          echo "===== RESOURCES ====="
+          echo ""
+          echo "=============================="
+          echo "RESOURCES"
+          echo "=============================="
+
           find app/src/main/res -type f -print
 
-          echo "===== ASSETS ====="
-          find app/src/main/assets -type f -print
+          echo ""
+          echo "=============================="
+          echo "ICON"
+          echo "=============================="
 
-          echo "===== ICON ====="
           ls -lh app/src/main/res/drawable/app_icon.png
+
+          echo ""
+          echo "=============================="
+          echo "GAME ASSETS"
+          echo "=============================="
+
+          find app/src/main/assets -type f -print
 
       - name: Build APK
         run: |
@@ -226,11 +243,14 @@ jobs:
           APK=$(find app/build/outputs/apk/debug -type f -name "*.apk" | head -n 1)
 
           if [ -z "$APK" ]; then
-            echo "ERROR: APK was not generated"
+            echo "ERROR: APK was not generated!"
             exit 1
           fi
 
-          echo "APK:"
+          echo "=============================="
+          echo "APK GENERATED SUCCESSFULLY"
+          echo "=============================="
+
           ls -lh "$APK"
 
       - name: Upload APK
