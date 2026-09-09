@@ -1,3406 +1,3293 @@
 /* =========================================================
-   ظلال المجهول
-   SCRIPT.JS — STORY ENGINE ULTRA
-   Compatible with data.js
+   ظلال المجهول — SHADOWS OF THE UNKNOWN
+   script.js — Game Engine
    ========================================================= */
 
-"use strict";
+(() => {
+  "use strict";
 
+  /* =========================================================
+     CONFIG
+     ========================================================= */
 
-/* =========================================================
-   SAVE
-========================================================= */
+  const SAVE_KEY = "shadows_unknown_v4";
+  const SETTINGS_KEY = "shadows_unknown_settings_v4";
 
-const SAVE_KEY = "shadows_unknown_v4";
+  const $ = (id) => document.getElementById(id);
 
+  const GAME = GAME_DATA?.game || {
+    title: "ظلال المجهول",
+    version: "1.0.0",
+    protagonist: "آدم",
+    startingHealth: 100,
+    maxHealth: 100,
+    startingCoins: 25,
+    chaptersCount: 12
+  };
 
-/* =========================================================
-   DEFAULT STATE
-========================================================= */
+  /* =========================================================
+     DOM
+     ========================================================= */
 
-const DEFAULT_STATE = {
+  const DOM = {
+    loadingScreen: $("loadingScreen"),
+    loadingProgress: $("loadingProgress"),
+    loadingStatus: $("loadingStatus"),
 
-    chapter: 1,
-    scene: "c1_start",
+    startScreen: $("startScreen"),
+    gameLogo: $("gameLogo"),
+    gameSubtitle: $("gameSubtitle"),
+    continueBtn: $("continueBtn"),
+    newGameBtn: $("newGameBtn"),
+    howToPlayBtn: $("howToPlayBtn"),
+    versionText: $("versionText"),
 
-    health: 100,
-    coins: 25,
+    howToPlayOverlay: $("howToPlayOverlay"),
 
-    courage: 0,
-    curiosity: 0,
-    morality: 0,
+    gameScreen: $("gameScreen"),
 
-    inventory: [],
-    achievements: [],
+    menuBtn: $("menuBtn"),
+    chapterLabel: $("chapterLabel"),
+    chapterTitleTop: $("chapterTitleTop"),
+    soundBtn: $("soundBtn"),
+    soundIcon: $("soundIcon"),
 
-    decisions: [],
+    progressBar: $("progressBar"),
+    progressText: $("progressText"),
 
-    flags: {},
+    health: $("health"),
+    coins: $("coins"),
+    chapter: $("chapter"),
 
-    relationships: {
-        lian: 0,
-        youssef: 0,
-        stranger: 0
-    },
+    sceneArea: $("sceneArea"),
+    sceneVisual: $("sceneVisual"),
+    sceneImage: $("sceneImage"),
+    sceneWeather: $("sceneWeather"),
+    sceneParticles: $("sceneParticles"),
+    sceneTime: $("sceneTime"),
 
-    evidence: 0,
-    memories: 0,
-    secrets: 0,
+    storyPanel: $("storyPanel"),
+    sceneChapterTag: $("sceneChapterTag"),
+    sceneLocation: $("sceneLocation"),
+    sceneTitle: $("sceneTitle"),
+    storyText: $("storyText"),
+    skipTextBtn: $("skipTextBtn"),
 
-    endingsSeen: [],
+    choicesArea: $("choicesArea"),
+    choices: $("choices"),
 
-    started: false,
-    muted: false,
+    inventoryBtn: $("inventoryBtn"),
+    inventoryCount: $("inventoryCount"),
 
-    completed: false,
+    achievementsBtn: $("achievementsBtn"),
+    achievementCount: $("achievementCount"),
 
-    startedAt: null,
-    lastPlayed: null
-};
+    journalBtn: $("journalBtn"),
 
+    menuOverlay: $("menuOverlay"),
+    closeMenuBtn: $("closeMenuBtn"),
 
-/* =========================================================
-   CURRENT STATE
-========================================================= */
+    inventoryOverlay: $("inventoryOverlay"),
+    inventoryContent: $("inventoryContent"),
 
-let state = clone(DEFAULT_STATE);
+    achievementsOverlay: $("achievementsOverlay"),
+    achievementUnlocked: $("achievementUnlocked"),
+    achievementTotal: $("achievementTotal"),
+    achievementsContent: $("achievementsContent"),
 
+    journalOverlay: $("journalOverlay"),
+    journalContent: $("journalContent"),
 
-/* =========================================================
-   DOM SHORTCUT
-========================================================= */
+    settingsOverlay: $("settingsOverlay"),
+    sfxToggle: $("sfxToggle"),
+    musicToggle: $("musicToggle"),
+    motionToggle: $("motionToggle"),
 
-const $ = id => document.getElementById(id);
+    saveBtn: $("saveBtn"),
+    exitBtn: $("exitBtn"),
 
+    sceneTransition: $("sceneTransition"),
+    transitionChapter: $("transitionChapter"),
+    transitionTitle: $("transitionTitle"),
 
-/* =========================================================
-   CLONE
-========================================================= */
+    cinematicOverlay: $("cinematicOverlay"),
+    cinematicLabel: $("cinematicLabel"),
+    cinematicTitle: $("cinematicTitle"),
+    cinematicText: $("cinematicText"),
+    cinematicContinueBtn: $("cinematicContinueBtn"),
 
-function clone(object) {
+    itemToast: $("itemToast"),
+    achievementToast: $("achievementToast"),
+    notification: $("notification"),
 
-    return JSON.parse(
-        JSON.stringify(object)
-    );
+    endScreen: $("endScreen"),
+    endIcon: $("endIcon"),
+    endTitle: $("endTitle"),
+    endText: $("endText"),
 
-}
+    finalStats: $("finalStats"),
+    finalChoices: $("finalChoices"),
+    finalEvidence: $("finalEvidence"),
+    finalMemories: $("finalMemories"),
 
+    restartBtn: $("restartBtn"),
+    titleBtn: $("titleBtn"),
 
-/* =========================================================
-   NUMBER HELPERS
-========================================================= */
+    bgMusic: $("bgMusic"),
+    sfxAudio: $("sfxAudio"),
 
-function clamp(value, min, max) {
+    screenFlash: $("screenFlash")
+  };
 
-    return Math.max(
-        min,
-        Math.min(max, value)
-    );
+  /* =========================================================
+     HELPERS
+     ========================================================= */
 
-}
+  function clone(value) {
+    return JSON.parse(JSON.stringify(value));
+  }
 
+  function clamp(value, min, max) {
+    return Math.max(min, Math.min(max, value));
+  }
 
-/* =========================================================
-   GAME SETTINGS
-========================================================= */
+  function safeNumber(value, fallback = 0) {
+    const n = Number(value);
+    return Number.isFinite(n) ? n : fallback;
+  }
 
-function getMaxHealth() {
+  function hasElement(el) {
+    return !!el;
+  }
 
-    return Number(
-        GAME_DATA?.game?.maxHealth || 100
-    );
+  /* =========================================================
+     FLAGS
+     ========================================================= */
 
-}
+  const defaultFlags = clone(GAME_DATA.flags || {});
 
+  const EXTRA_FLAGS = {
+    metStranger: false,
+    discoveredLab: false,
+    discoveredFile: false,
+    knowsTruth: false,
+    knowsWhoIsLian: false,
+    knowsWhoIsAdam: false,
+    openedFinalDoor: false,
+    refusedExperiment: false,
+    acceptedTruth: false,
+    completedArchive: false,
+    foundFinalMessage: false,
+    openedSecretRoom: false,
+    foundBasement: false,
+    enteredForbiddenArea: false,
+    escapedVillage: false,
+    finalTruth: false,
+    metLian: false,
+    trustedLian: false,
+    trustedYoussef: false,
+    trustedDoctor: false,
+    trustedStranger: false,
+    foundPhotograph: false,
+    foundDiary: false,
+    heardTape: false,
+    liedToLian: false,
+    liedToYoussef: false,
+    helpedLian: false,
+    abandonedLian: false,
+    sawMemory1: false,
+    sawMemory2: false,
+    sawMemory3: false,
+    knowsNumber0317: false,
+    knowsAboutExperiment: false,
+    knowsAboutAdam: false,
+    collectedEvidence1: false,
+    collectedEvidence2: false,
+    collectedEvidence3: false,
+    collectedEvidence4: false,
+    collectedEvidence5: false
+  };
 
-function getStartingHealth() {
+  Object.assign(defaultFlags, EXTRA_FLAGS);
 
-    return Number(
-        GAME_DATA?.game?.startingHealth || 100
-    );
+  /* =========================================================
+     STATE
+     ========================================================= */
 
-}
+  function createInitialState() {
+    return {
+      version: 4,
 
+      started: false,
 
-function getStartingCoins() {
+      chapter: 1,
+      scene: "c1_start",
 
-    return Number(
-        GAME_DATA?.game?.startingCoins || 25
-    );
+      health: safeNumber(
+        GAME.startingHealth,
+        GAME.maxHealth || 100
+      ),
 
-}
+      coins: safeNumber(GAME.startingCoins, 25),
 
+      inventory: [],
 
-/* =========================================================
-   CHAPTER FINDER
-========================================================= */
+      flags: clone(defaultFlags),
 
-function getChapter(chapterId = state.chapter) {
+      achievements: [],
 
-    if (!GAME_DATA || !Array.isArray(GAME_DATA.chapters)) {
-        return null;
+      stats: {
+        choices: 0,
+        scenes: 0,
+        evidence: 0,
+        memories: 0,
+        startTime: Date.now()
+      },
+
+      history: [],
+
+      settings: {
+        sfx: true,
+        music: true,
+        motion: true
+      }
+    };
+  }
+
+  let state = createInitialState();
+
+  let typingTimer = null;
+  let currentTypingText = "";
+  let typingFinished = false;
+
+  let transitionBusy = false;
+  let cinematicNext = null;
+
+  /* =========================================================
+     SETTINGS
+     ========================================================= */
+
+  function loadSettings() {
+    try {
+      const saved = JSON.parse(
+        localStorage.getItem(SETTINGS_KEY)
+      );
+
+      if (saved && typeof saved === "object") {
+        state.settings.sfx =
+          saved.sfx !== false;
+
+        state.settings.music =
+          saved.music !== false;
+
+        state.settings.motion =
+          saved.motion !== false;
+      }
+    } catch (_) {}
+
+    updateSettingsUI();
+  }
+
+  function saveSettings() {
+    try {
+      localStorage.setItem(
+        SETTINGS_KEY,
+        JSON.stringify(state.settings)
+      );
+    } catch (_) {}
+  }
+
+  function updateSettingsUI() {
+    if (DOM.sfxToggle) {
+      DOM.sfxToggle.checked = !!state.settings.sfx;
     }
 
-    return GAME_DATA.chapters.find(
-        chapter =>
-            Number(chapter.id) === Number(chapterId)
-    ) || null;
-
-}
-
-
-/* =========================================================
-   SCENE FINDER
-========================================================= */
-
-function getScene(
-    chapterId = state.chapter,
-    sceneId = state.scene
-) {
-
-    const chapter = getChapter(chapterId);
-
-    if (!chapter || !Array.isArray(chapter.scenes)) {
-        return null;
+    if (DOM.musicToggle) {
+      DOM.musicToggle.checked = !!state.settings.music;
     }
 
-    return chapter.scenes.find(
-        scene =>
-            scene.id === sceneId
-    ) || null;
-
-}
-
-
-/* =========================================================
-   GLOBAL SCENE FINDER
-   يسمح بالانتقال بين الفصول باستخدام next
-========================================================= */
-
-function findSceneEverywhere(sceneId) {
-
-    if (!GAME_DATA?.chapters) {
-        return null;
+    if (DOM.motionToggle) {
+      DOM.motionToggle.checked = !!state.settings.motion;
     }
 
-    for (const chapter of GAME_DATA.chapters) {
+    updateSoundIcon();
+  }
 
-        if (!Array.isArray(chapter.scenes)) {
-            continue;
-        }
+  /* =========================================================
+     SAVE / LOAD
+     ========================================================= */
 
-        const scene =
-            chapter.scenes.find(
-                item => item.id === sceneId
-            );
+  function saveGame(showMessage = true) {
+    try {
+      state.started = true;
 
-        if (scene) {
+      localStorage.setItem(
+        SAVE_KEY,
+        JSON.stringify(state)
+      );
 
-            return {
-                chapter,
-                scene
-            };
+      if (showMessage) {
+        notify("تم حفظ تقدمك بنجاح.");
+      }
 
-        }
+      updateContinueButton();
 
+      return true;
+    } catch (error) {
+      console.error(error);
+
+      notify(
+        "تعذر حفظ اللعبة على هذا الجهاز."
+      );
+
+      return false;
     }
+  }
 
-    return null;
+  function loadGame() {
+    try {
+      const raw = localStorage.getItem(SAVE_KEY);
 
-}
+      if (!raw) {
+        return false;
+      }
 
+      const saved = JSON.parse(raw);
 
-/* =========================================================
-   ITEM FINDER
-========================================================= */
+      if (!saved || typeof saved !== "object") {
+        return false;
+      }
 
-function getItem(itemId) {
+      const fresh = createInitialState();
 
-    if (!GAME_DATA?.items) {
-        return null;
+      state = {
+        ...fresh,
+        ...saved,
+
+        flags: {
+          ...fresh.flags,
+          ...(saved.flags || {})
+        },
+
+        settings: {
+          ...fresh.settings,
+          ...(saved.settings || {})
+        },
+
+        stats: {
+          ...fresh.stats,
+          ...(saved.stats || {})
+        },
+
+        inventory: Array.isArray(saved.inventory)
+          ? saved.inventory
+          : [],
+
+        achievements: Array.isArray(saved.achievements)
+          ? saved.achievements
+          : [],
+
+        history: Array.isArray(saved.history)
+          ? saved.history
+          : []
+      };
+
+      normalizeState();
+
+      updateSettingsUI();
+
+      return true;
+
+    } catch (error) {
+      console.error(error);
+      return false;
     }
+  }
 
-    return GAME_DATA.items[itemId] || null;
+  function deleteSave() {
+    try {
+      localStorage.removeItem(SAVE_KEY);
+    } catch (_) {}
 
-}
+    updateContinueButton();
+  }
 
-
-/* =========================================================
-   ACHIEVEMENT FINDER
-========================================================= */
-
-function getAchievement(id) {
-
-    if (!Array.isArray(GAME_DATA?.achievements)) {
-        return null;
+  function hasSave() {
+    try {
+      return !!localStorage.getItem(SAVE_KEY);
+    } catch (_) {
+      return false;
     }
+  }
 
-    return GAME_DATA.achievements.find(
-        achievement =>
-            achievement.id === id
-    ) || null;
+  function updateContinueButton() {
+    if (!DOM.continueBtn) return;
 
-}
+    DOM.continueBtn.style.display =
+      hasSave() ? "" : "none";
+  }
 
+  /* =========================================================
+     NORMALIZE
+     ========================================================= */
 
-/* =========================================================
-   ENDING FINDER
-========================================================= */
-
-function getEnding(id) {
-
-    if (!GAME_DATA?.endings) {
-        return null;
-    }
-
-    return GAME_DATA.endings[id] || null;
-
-}
-
-
-/* =========================================================
-   INITIALIZATION
-========================================================= */
-
-document.addEventListener(
-    "DOMContentLoaded",
-    () => {
-
-        normalizeState();
-
-        setupEvents();
-
-        loadGame();
-
-        updateContinueButton();
-
-    }
-);
-
-
-/* =========================================================
-   EVENTS
-========================================================= */
-
-function setupEvents() {
-
-    $("newGameBtn")?.addEventListener(
-        "click",
-        startNewGame
+  function normalizeState() {
+    state.health = clamp(
+      safeNumber(state.health, GAME.startingHealth),
+      0,
+      safeNumber(GAME.maxHealth, 100)
     );
 
-
-    $("continueBtn")?.addEventListener(
-        "click",
-        continueGame
+    state.coins = Math.max(
+      0,
+      safeNumber(state.coins, GAME.startingCoins)
     );
 
-
-    $("menuBtn")?.addEventListener(
-        "click",
-        () => showOverlay("menuOverlay")
-    );
-
-
-    $("closeMenu")?.addEventListener(
-        "click",
-        () => hideOverlay("menuOverlay")
-    );
-
-
-    $("saveBtn")?.addEventListener(
-        "click",
-        () => {
-
-            saveGame();
-
-            hideOverlay("menuOverlay");
-
-            toast(
-                "تم حفظ اللعبة ✓"
-            );
-
-        }
-    );
-
-
-    $("restartBtn")?.addEventListener(
-        "click",
-        restartGame
-    );
-
-
-    $("backHomeBtn")?.addEventListener(
-        "click",
-        goHome
-    );
-
-
-    $("inventoryBtn")?.addEventListener(
-        "click",
-        () => {
-
-            renderInventory();
-
-            showOverlay(
-                "inventoryOverlay"
-            );
-
-        }
-    );
-
-
-    $("achievementsBtn")?.addEventListener(
-        "click",
-        () => {
-
-            renderAchievements();
-
-            showOverlay(
-                "achievementsOverlay"
-            );
-
-        }
-    );
-
-
-    $("restartFromEnd")?.addEventListener(
-        "click",
-        startNewGame
-    );
-
-
-    document
-        .querySelectorAll("[data-close]")
-        .forEach(button => {
-
-            button.addEventListener(
-                "click",
-                () => {
-
-                    const target =
-                        button.dataset.close;
-
-                    hideOverlay(target);
-
-                }
-            );
-
-        });
-
-
-    document
-        .querySelectorAll(".overlay")
-        .forEach(overlay => {
-
-            overlay.addEventListener(
-                "click",
-                event => {
-
-                    if (
-                        event.target === overlay
-                    ) {
-
-                        hideOverlay(
-                            overlay.id
-                        );
-
-                    }
-
-                }
-            );
-
-        });
-
-
-    document.addEventListener(
-        "keydown",
-        event => {
-
-            if (event.key === "Escape") {
-
-                document
-                    .querySelectorAll(".overlay.show")
-                    .forEach(overlay => {
-
-                        hideOverlay(
-                            overlay.id
-                        );
-
-                    });
-
-            }
-
-        }
-    );
-
-}
-
-
-/* =========================================================
-   NEW GAME
-========================================================= */
-
-function startNewGame() {
-
-    state = clone(DEFAULT_STATE);
-
-    state.health =
-        getStartingHealth();
-
-    state.coins =
-        getStartingCoins();
-
-    state.started = true;
-
-    state.startedAt =
-        Date.now();
-
-    state.lastPlayed =
-        Date.now();
-
-    state.chapter = 1;
-
-    state.scene = "c1_start";
-
-    saveGame();
-
-    showScreen("gameScreen");
-
-    renderScene();
-
-}
-
-
-/* =========================================================
-   CONTINUE
-========================================================= */
-
-function continueGame() {
-
-    const loaded =
-        loadGame();
-
-    if (!loaded) {
-
-        startNewGame();
-
-        return;
-
+    if (!Array.isArray(state.inventory)) {
+      state.inventory = [];
     }
 
-    state.started = true;
-
-    state.lastPlayed =
-        Date.now();
-
-    saveGame();
-
-    showScreen("gameScreen");
-
-    renderScene();
-
-}
-
-
-/* =========================================================
-   SCREEN CONTROL
-========================================================= */
-
-function showScreen(id) {
-
-    document
-        .querySelectorAll(".screen")
-        .forEach(screen => {
-
-            screen.classList.remove(
-                "active"
-            );
-
-        });
-
-
-    const screen = $(id);
-
-    if (screen) {
-
-        screen.classList.add(
-            "active"
-        );
-
+    if (!Array.isArray(state.achievements)) {
+      state.achievements = [];
     }
 
-}
-
-
-/* =========================================================
-   OVERLAY
-========================================================= */
-
-function showOverlay(id) {
-
-    const overlay = $(id);
-
-    if (!overlay) return;
-
-    overlay.classList.add("show");
-
-}
-
-
-function hideOverlay(id) {
-
-    const overlay = $(id);
-
-    if (!overlay) return;
-
-    overlay.classList.remove("show");
-
-}
-
-
-/* =========================================================
-   RENDER SCENE
-========================================================= */
-
-function renderScene() {
-
-    normalizeState();
-
-
-    const result =
-        getSceneWithRecovery();
-
-
-    if (!result) {
-
-        console.error(
-            "Unable to find scene:",
-            state
-        );
-
-        return;
-
+    if (!state.flags || typeof state.flags !== "object") {
+      state.flags = {};
     }
 
+    Object.keys(defaultFlags).forEach(flag => {
+      if (!(flag in state.flags)) {
+        state.flags[flag] =
+          defaultFlags[flag];
+      }
+    });
+  }
 
-    const chapter =
-        result.chapter;
+  /* =========================================================
+     DATA SEARCH
+     ========================================================= */
 
-    const scene =
-        result.scene;
+  function allChapters() {
+    return Array.isArray(GAME_DATA.chapters)
+      ? GAME_DATA.chapters
+      : [];
+  }
 
+  function findChapterByNumber(number) {
+    return allChapters().find(
+      chapter =>
+        Number(chapter.number || chapter.id) ===
+        Number(number)
+    );
+  }
 
-    /* -----------------------------------------
-       CHAPTER
-    ----------------------------------------- */
+  function findScene(sceneId) {
+    for (const chapter of allChapters()) {
+      if (!Array.isArray(chapter.scenes)) {
+        continue;
+      }
 
-    if ($("chapterLabel")) {
+      const scene = chapter.scenes.find(
+        s => s && s.id === sceneId
+      );
 
-        $("chapterLabel").textContent =
-            chapter.title ||
-            chapter.name ||
-            `الفصل ${chapter.id}`;
-
-    }
-
-
-    if ($("chapter")) {
-
-        $("chapter").textContent =
-            chapter.id;
-
-    }
-
-
-    /* -----------------------------------------
-       TITLE
-    ----------------------------------------- */
-
-    if ($("sceneTitle")) {
-
-        $("sceneTitle").textContent =
-            scene.title || "";
-
-    }
-
-
-    /* -----------------------------------------
-       TEXT
-    ----------------------------------------- */
-
-    if ($("storyText")) {
-
-        $("storyText").textContent =
-            scene.text || "";
-
-    }
-
-
-    updateStats();
-
-    updateProgress();
-
-    renderChoices();
-
-    animateStory();
-
-    checkAutomaticAchievements();
-
-    checkSecrets();
-
-    saveGame();
-
-}
-
-
-/* =========================================================
-   SCENE RECOVERY
-========================================================= */
-
-function getSceneWithRecovery() {
-
-    let chapter =
-        getChapter();
-
-    let scene =
-        getScene();
-
-
-    if (chapter && scene) {
-
+      if (scene) {
         return {
-            chapter,
-            scene
+          scene,
+          chapter
         };
-
+      }
     }
-
-
-    /* البحث في كل الفصول */
-
-    const found =
-        findSceneEverywhere(
-            state.scene
-        );
-
-
-    if (found) {
-
-        state.chapter =
-            Number(found.chapter.id);
-
-        return found;
-
-    }
-
 
     return null;
+  }
 
-}
+  function currentSceneData() {
+    return findScene(state.scene);
+  }
 
+  /* =========================================================
+     REQUIREMENTS
+     ========================================================= */
 
-/* =========================================================
-   RENDER CHOICES
-========================================================= */
+  function checkRequirement(requirement) {
+    if (!requirement) {
+      return true;
+    }
 
-function renderChoices() {
+    if (typeof requirement === "boolean") {
+      return requirement;
+    }
 
-    const container =
-        $("choices");
+    if (typeof requirement !== "object") {
+      return true;
+    }
 
-    if (!container) return;
+    if (requirement.flags) {
+      for (const [key, expected] of Object.entries(
+        requirement.flags
+      )) {
+        if (
+          Boolean(state.flags[key]) !==
+          Boolean(expected)
+        ) {
+          return false;
+        }
+      }
+    }
 
-    container.innerHTML = "";
+    if (Array.isArray(requirement.items)) {
+      for (const item of requirement.items) {
+        if (!state.inventory.includes(item)) {
+          return false;
+        }
+      }
+    }
 
+    if (Array.isArray(requirement.notItems)) {
+      for (const item of requirement.notItems) {
+        if (state.inventory.includes(item)) {
+          return false;
+        }
+      }
+    }
 
-    const result =
-        getSceneWithRecovery();
-
-
-    if (!result) return;
-
-
-    const scene =
-        result.scene;
-
+    if (Array.isArray(requirement.notFlags)) {
+      for (const flag of requirement.notFlags) {
+        if (state.flags[flag]) {
+          return false;
+        }
+      }
+    }
 
     if (
-        !Array.isArray(
-            scene.choices
-        ) ||
-        scene.choices.length === 0
+      requirement.minHealth != null &&
+      state.health <
+        safeNumber(requirement.minHealth)
     ) {
-
-        return;
-
+      return false;
     }
-
-
-    scene.choices.forEach(
-        (choice, index) => {
-
-            if (
-                !checkConditions(
-                    choice.conditions
-                )
-            ) {
-
-                return;
-
-            }
-
-
-            const button =
-                document.createElement(
-                    "button"
-                );
-
-
-            button.type =
-                "button";
-
-
-            button.className =
-                "story-choice";
-
-
-            button.innerHTML = `
-
-                <span class="choice-number">
-                    ${index + 1}
-                </span>
-
-                <span class="choice-text">
-                    ${escapeHTML(
-                        choice.text || ""
-                    )}
-                </span>
-
-            `;
-
-
-            button.addEventListener(
-                "click",
-                () => choose(choice)
-            );
-
-
-            container.appendChild(
-                button
-            );
-
-        }
-    );
-
-}
-
-
-/* =========================================================
-   CONDITIONS
-========================================================= */
-
-function checkConditions(
-    conditions
-) {
-
-    if (!conditions) {
-        return true;
-    }
-
-
-    /* عنصر مطلوب */
-
-    if (conditions.item) {
-
-        if (
-            !hasItem(
-                conditions.item
-            )
-        ) {
-
-            return false;
-
-        }
-
-    }
-
-
-    /* Flag مطلوب */
-
-    if (conditions.flag) {
-
-        if (
-            !state.flags[
-                conditions.flag
-            ]
-        ) {
-
-            return false;
-
-        }
-
-    }
-
-
-    /* Flag يجب ألا يكون موجودًا */
-
-    if (conditions.notFlag) {
-
-        if (
-            state.flags[
-                conditions.notFlag
-            ]
-        ) {
-
-            return false;
-
-        }
-
-    }
-
-
-    /* صحة */
 
     if (
-        typeof conditions.minHealth ===
-        "number"
+      requirement.minCoins != null &&
+      state.coins <
+        safeNumber(requirement.minCoins)
     ) {
-
-        if (
-            state.health <
-            conditions.minHealth
-        ) {
-
-            return false;
-
-        }
-
+      return false;
     }
-
-
-    /* عملات */
 
     if (
-        typeof conditions.minCoins ===
-        "number"
+      requirement.minChapter != null &&
+      state.chapter <
+        safeNumber(requirement.minChapter)
     ) {
-
-        if (
-            state.coins <
-            conditions.minCoins
-        ) {
-
-            return false;
-
-        }
-
+      return false;
     }
-
-
-    /* مستوى الفضول */
-
-    if (
-        typeof conditions.minCuriosity ===
-        "number"
-    ) {
-
-        if (
-            state.curiosity <
-            conditions.minCuriosity
-        ) {
-
-            return false;
-
-        }
-
-    }
-
-
-    /* مستوى الشجاعة */
-
-    if (
-        typeof conditions.minCourage ===
-        "number"
-    ) {
-
-        if (
-            state.courage <
-            conditions.minCourage
-        ) {
-
-            return false;
-
-        }
-
-    }
-
 
     return true;
+  }
 
-}
+  function choiceAvailable(choice) {
+    if (!choice) return false;
 
-
-/* =========================================================
-   CHOOSE
-========================================================= */
-
-function choose(choice) {
-
-    if (!choice) return;
-
-
-    /* منع الضغط المكرر */
-
-    if (
-        document.body.dataset.choiceLocked ===
-        "true"
-    ) {
-
-        return;
-
+    if (choice.requires) {
+      return checkRequirement(choice.requires);
     }
 
+    if (choice.condition) {
+      if (typeof choice.condition === "function") {
+        try {
+          return !!choice.condition(state);
+        } catch (_) {
+          return false;
+        }
+      }
 
-    document.body.dataset.choiceLocked =
-        "true";
-
-
-    setTimeout(() => {
-
-        document.body.dataset.choiceLocked =
-            "false";
-
-    }, 350);
-
-
-    /* تسجيل القرار */
-
-    state.decisions.push({
-
-        chapter:
-            state.chapter,
-
-        scene:
-            state.scene,
-
-        choice:
-            choice.text || "",
-
-        timestamp:
-            Date.now()
-
-    });
-
-
-    /* تطبيق التأثيرات */
-
-    applyEffects(
-        choice.effects || {}
-    );
-
-
-    /* خسارة الصحة */
-
-    if (state.health <= 0) {
-
-        state.health = 0;
-
-        saveGame();
-
-        gameOver();
-
-        return;
-
-    }
-
-
-    /* لا يوجد انتقال */
-
-    if (!choice.next) {
-
-        saveGame();
-
-        renderScene();
-
-        return;
-
-    }
-
-
-    /* -----------------------------------------
-       ENDING
-    ----------------------------------------- */
-
-    if (
-        typeof choice.next ===
-        "string" &&
-        choice.next.startsWith(
-            "ending_"
-        )
-    ) {
-
-        showEnding(
-            choice.next
+      if (typeof choice.condition === "object") {
+        return checkRequirement(
+          choice.condition
         );
-
-        return;
-
+      }
     }
 
+    return true;
+  }
 
-    /* -----------------------------------------
-       الانتقال إلى مشهد
-    ----------------------------------------- */
+  /* =========================================================
+     ITEMS
+     ========================================================= */
 
-    const target =
-        findSceneEverywhere(
-            choice.next
-        );
+  function itemData(id) {
+    return GAME_DATA.items?.[id] || {
+      id,
+      name: id,
+      description:
+        "غرض غامض لا تعرف حقيقته بعد.",
+      icon: "◈"
+    };
+  }
 
+  function addItem(id) {
+    if (!id) return false;
 
-    if (!target) {
-
-        console.error(
-            "Target scene not found:",
-            choice.next
-        );
-
-        toast(
-            "حدث خطأ في انتقال القصة."
-        );
-
-        return;
-
+    if (state.inventory.includes(id)) {
+      return false;
     }
 
+    state.inventory.push(id);
 
-    const oldChapter =
-        state.chapter;
+    showItemToast(id);
 
+    return true;
+  }
 
-    state.chapter =
-        Number(target.chapter.id);
+  function removeItem(id) {
+    const index =
+      state.inventory.indexOf(id);
 
-
-    state.scene =
-        target.scene.id;
-
-
-    state.lastPlayed =
-        Date.now();
-
-
-    /* تغيير الفصل */
-
-    if (
-        Number(oldChapter) !==
-        Number(state.chapter)
-    ) {
-
-        onChapterChanged(
-            oldChapter,
-            state.chapter
-        );
-
+    if (index === -1) {
+      return false;
     }
 
+    state.inventory.splice(index, 1);
 
-    saveGame();
+    return true;
+  }
 
-    renderScene();
-
-}
-
-
-/* =========================================================
-   EFFECTS ENGINE
-========================================================= */
-
-function applyEffects(
-    effects = {}
-) {
-
-    if (!effects) return;
-
-
-    /* -----------------------------------------
-       HEALTH
-    ----------------------------------------- */
-
-    if (
-        typeof effects.health ===
-        "number"
-    ) {
-
-        state.health =
-            clamp(
-                state.health +
-                effects.health,
-                0,
-                getMaxHealth()
-            );
-
+  function addItems(items) {
+    if (!Array.isArray(items)) {
+      return;
     }
 
+    items.forEach(addItem);
+  }
 
-    /* -----------------------------------------
-       COINS
-    ----------------------------------------- */
-
-    if (
-        typeof effects.coins ===
-        "number"
-    ) {
-
-        state.coins =
-            Math.max(
-                0,
-                state.coins +
-                effects.coins
-            );
-
+  function removeItems(items) {
+    if (!Array.isArray(items)) {
+      return;
     }
 
+    items.forEach(removeItem);
+  }
 
-    /* -----------------------------------------
-       COURAGE
-    ----------------------------------------- */
+  /* =========================================================
+     EFFECTS
+     ========================================================= */
 
-    if (
-        typeof effects.courage ===
-        "number"
-    ) {
-
-        state.courage +=
-            effects.courage;
-
+  function applyEffects(effects = {}) {
+    if (!effects || typeof effects !== "object") {
+      return;
     }
 
+    /* Health */
 
-    /* -----------------------------------------
-       CURIOSITY
-    ----------------------------------------- */
-
-    if (
-        typeof effects.curiosity ===
-        "number"
-    ) {
-
-        state.curiosity +=
-            effects.curiosity;
-
+    if (effects.health != null) {
+      state.health += safeNumber(
+        effects.health
+      );
     }
 
+    /* Coins */
 
-    /* -----------------------------------------
-       MORALITY
-    ----------------------------------------- */
-
-    if (
-        typeof effects.morality ===
-        "number"
-    ) {
-
-        state.morality +=
-            effects.morality;
-
+    if (effects.coins != null) {
+      state.coins += safeNumber(
+        effects.coins
+      );
     }
 
-
-    /* -----------------------------------------
-       ITEM
-    ----------------------------------------- */
-
-    if (effects.item) {
-
-        addItem(
-            effects.item
-        );
-
-    }
-
-
-    /* دعم addItem الموجود في data.js
-    ----------------------------------------- */
+    /* Items */
 
     if (effects.addItem) {
-
-        addItem(
-            effects.addItem
-        );
-
+      addItem(effects.addItem);
     }
-
 
     if (effects.addItem2) {
-
-        addItem(
-            effects.addItem2
-        );
-
+      addItem(effects.addItem2);
     }
 
-
-    if (effects.addItem3) {
-
-        addItem(
-            effects.addItem3
-        );
-
+    if (effects.item) {
+      addItem(effects.item);
     }
 
-
-    /* -----------------------------------------
-       REMOVE ITEM
-    ----------------------------------------- */
-
-    if (effects.removeItem) {
-
-        removeItem(
-            effects.removeItem
-        );
-
+    if (effects.addItems) {
+      addItems(effects.addItems);
     }
 
-
-    /* -----------------------------------------
-       FLAG
-    ----------------------------------------- */
-
-    if (effects.flag) {
-
-        setFlag(
-            effects.flag,
-            true
-        );
-
+    if (effects.removeItems) {
+      removeItems(effects.removeItems);
     }
 
+    /* Flags */
 
-    if (effects.flag2) {
-
-        setFlag(
-            effects.flag2,
-            true
-        );
-
+    if (effects.setFlags) {
+      Object.entries(
+        effects.setFlags
+      ).forEach(([flag, value]) => {
+        state.flags[flag] = !!value;
+      });
     }
 
+    /*
+      دعم الصيغ القديمة الموجودة في بعض نسخ data.js
+    */
 
-    if (effects.flag3) {
+    [
+      "flag",
+      "flag2",
+      "flag3",
+      "flag4"
+    ].forEach(key => {
+      if (
+        typeof effects[key] === "string"
+      ) {
+        state.flags[
+          effects[key]
+        ] = true;
+      }
+    });
 
-        setFlag(
-            effects.flag3,
-            true
-        );
+    /* Evidence */
 
+    if (effects.evidence) {
+      const evidenceList =
+        Array.isArray(effects.evidence)
+          ? effects.evidence
+          : [effects.evidence];
+
+      evidenceList.forEach(id => {
+        state.flags[id] = true;
+      });
     }
 
+    /* Memories */
 
-    /* -----------------------------------------
-       SET FLAG
-    ----------------------------------------- */
+    if (effects.memory) {
+      const memoryList =
+        Array.isArray(effects.memory)
+          ? effects.memory
+          : [effects.memory];
 
-    if (
-        effects.setFlag &&
-        typeof effects.setFlag ===
-        "object"
-    ) {
-
-        Object.entries(
-            effects.setFlag
-        ).forEach(
-            ([key, value]) => {
-
-                state.flags[key] =
-                    value;
-
-            }
-        );
-
+      memoryList.forEach(id => {
+        state.flags[id] = true;
+      });
     }
 
-
-    /* -----------------------------------------
-       ACHIEVEMENT
-    ----------------------------------------- */
+    /* Achievements */
 
     if (effects.achievement) {
+      const list =
+        Array.isArray(effects.achievement)
+          ? effects.achievement
+          : [effects.achievement];
 
-        unlockAchievement(
-            effects.achievement
-        );
-
+      list.forEach(unlockAchievement);
     }
 
-
-    /* -----------------------------------------
-       RELATIONSHIP
-    ----------------------------------------- */
-
-    if (
-        effects.relationship &&
-        typeof effects.relationship ===
-        "object"
-    ) {
-
-        Object.entries(
-            effects.relationship
-        ).forEach(
-            ([person, amount]) => {
-
-                if (
-                    typeof amount !==
-                    "number"
-                ) {
-
-                    return;
-
-                }
-
-
-                if (
-                    typeof state.relationships[
-                        person
-                    ] !== "number"
-                ) {
-
-                    state.relationships[
-                        person
-                    ] = 0;
-
-                }
-
-
-                state.relationships[
-                    person
-                ] += amount;
-
-            }
-        );
-
-    }
-
-
-    /* -----------------------------------------
-       EVIDENCE
-    ----------------------------------------- */
-
-    if (
-        typeof effects.evidence ===
-        "number"
-    ) {
-
-        state.evidence =
-            Math.max(
-                0,
-                state.evidence +
-                effects.evidence
-            );
-
-    }
-
-
-    /* -----------------------------------------
-       MEMORIES
-    ----------------------------------------- */
-
-    if (
-        typeof effects.memory ===
-        "number"
-    ) {
-
-        state.memories =
-            Math.max(
-                0,
-                state.memories +
-                effects.memory
-            );
-
-    }
-
-
-    updateStats();
-
-}
-
-
-/* =========================================================
-   FLAGS
-========================================================= */
-
-function setFlag(
-    flag,
-    value = true
-) {
-
-    if (!flag) return;
-
-    state.flags[flag] =
-        value;
-
-}
-
-
-/* =========================================================
-   ITEM MANAGEMENT
-========================================================= */
-
-function addItem(itemId) {
-
-    if (!itemId) return;
-
-
-    if (
-        !Array.isArray(
-            state.inventory
+    if (effects.unlockAchievement) {
+      const list =
+        Array.isArray(
+          effects.unlockAchievement
         )
-    ) {
+          ? effects.unlockAchievement
+          : [effects.unlockAchievement];
 
-        state.inventory = [];
-
+      list.forEach(unlockAchievement);
     }
 
+    /* Clamp */
 
-    if (
-        state.inventory.includes(
-            itemId
-        )
-    ) {
-
-        return;
-
-    }
-
-
-    state.inventory.push(
-        itemId
+    state.health = clamp(
+      state.health,
+      0,
+      safeNumber(GAME.maxHealth, 100)
     );
 
+    state.coins = Math.max(
+      0,
+      state.coins
+    );
 
-    const item =
-        getItem(itemId);
+    calculateStats();
+  }
 
+  /* =========================================================
+     STATS
+     ========================================================= */
 
-    if (item) {
+  function calculateStats() {
+    let evidence = 0;
 
-        toast(
-            `حصلت على: ${item.name}`
-        );
-
+    for (let i = 1; i <= 5; i++) {
+      if (
+        state.flags[
+          `collectedEvidence${i}`
+        ]
+      ) {
+        evidence++;
+      }
     }
 
-}
+    let memories = 0;
 
-
-function removeItem(itemId) {
-
-    if (
-        !Array.isArray(
-            state.inventory
-        )
-    ) {
-
-        return;
-
+    for (let i = 1; i <= 3; i++) {
+      if (
+        state.flags[
+          `sawMemory${i}`
+        ]
+      ) {
+        memories++;
+      }
     }
 
+    state.stats.evidence = evidence;
+    state.stats.memories = memories;
+  }
 
-    state.inventory =
-        state.inventory.filter(
-            id => id !== itemId
-        );
+  /* =========================================================
+     ACHIEVEMENTS
+     ========================================================= */
 
-}
-
-
-function hasItem(itemId) {
-
+  function getAchievements() {
     return Array.isArray(
-        state.inventory
-    ) &&
-    state.inventory.includes(
-        itemId
+      GAME_DATA.achievements
+    )
+      ? GAME_DATA.achievements
+      : [];
+  }
+
+  function getAchievement(id) {
+    return getAchievements().find(
+      achievement =>
+        achievement.id === id
     );
+  }
 
-}
-
-
-/* =========================================================
-   INVENTORY
-========================================================= */
-
-function renderInventory() {
-
-    const container =
-        $("inventoryList");
-
-    if (!container) return;
-
-    container.innerHTML = "";
-
-
-    if (
-        !Array.isArray(
-            state.inventory
-        ) ||
-        state.inventory.length === 0
-    ) {
-
-        container.innerHTML = `
-
-            <div class="inventory-empty">
-
-                <div style="font-size:38px;">
-                    🎒
-                </div>
-
-                <p>
-                    الحقيبة فارغة حاليًا.
-                </p>
-
-            </div>
-
-        `;
-
-        return;
-
-    }
-
-
-    state.inventory.forEach(
-        itemId => {
-
-            const item =
-                getItem(itemId);
-
-
-            if (!item) return;
-
-
-            const element =
-                document.createElement(
-                    "div"
-                );
-
-
-            element.className =
-                "inventory-item";
-
-
-            element.innerHTML = `
-
-                <div class="inventory-icon">
-                    ${item.icon || "◆"}
-                </div>
-
-                <div>
-
-                    <strong>
-                        ${escapeHTML(
-                            item.name
-                        )}
-                    </strong>
-
-                    <div>
-                        ${escapeHTML(
-                            item.description ||
-                            ""
-                        )}
-                    </div>
-
-                </div>
-
-            `;
-
-
-            container.appendChild(
-                element
-            );
-
-        }
-    );
-
-}
-
-
-/* =========================================================
-   ACHIEVEMENTS
-========================================================= */
-
-function unlockAchievement(id) {
-
+  function unlockAchievement(id) {
     if (!id) return;
 
-
     if (
-        !Array.isArray(
-            state.achievements
-        )
+      state.achievements.includes(id)
     ) {
-
-        state.achievements = [];
-
+      return;
     }
 
-
-    if (
-        state.achievements.includes(
-            id
-        )
-    ) {
-
-        return;
-
-    }
-
+    state.achievements.push(id);
 
     const achievement =
-        getAchievement(id);
+      getAchievement(id);
 
-
-    if (!achievement) {
-
-        return;
-
-    }
-
-
-    state.achievements.push(
-        id
-    );
-
-
-    showAchievementNotification(
+    if (achievement) {
+      showAchievementToast(
         achievement
-    );
+      );
+    }
 
+    updateHUD();
+  }
 
-    saveGame();
-
-}
-
-
-function showAchievementNotification(
-    achievement
-) {
-
-    document
-        .querySelectorAll(
-            ".achievement-notification"
-        )
-        .forEach(
-            element =>
-                element.remove()
-        );
-
-
-    const notification =
-        document.createElement(
-            "div"
-        );
-
-
-    notification.className =
-        "achievement-notification";
-
-
-    notification.innerHTML = `
-
-        <div class="notification-icon">
-
-            ${achievement.icon || "🏆"}
-
-        </div>
-
-        <div>
-
-            <small>
-                إنجاز جديد
-            </small>
-
-            <strong>
-                ${escapeHTML(
-                    achievement.title
-                )}
-            </strong>
-
-        </div>
-
-    `;
-
-
-    document.body.appendChild(
-        notification
-    );
-
-
-    setTimeout(
-        () => {
-
-            notification.classList.add(
-                "hide"
-            );
-
-
-            setTimeout(
-                () => {
-
-                    notification.remove();
-
-                },
-                450
-            );
-
-        },
-        2800
-    );
-
-}
-
-
-/* =========================================================
-   ACHIEVEMENT RENDER
-========================================================= */
-
-function renderAchievements() {
-
-    const container =
-        $("achievementsList");
-
-    if (!container) return;
-
-    container.innerHTML = "";
-
+  function checkAchievements() {
+    calculateStats();
 
     if (
-        !Array.isArray(
-            GAME_DATA.achievements
-        )
+      state.stats.scenes >= 1
     ) {
-
-        return;
-
+      unlockAchievement("first_step");
     }
-
-
-    GAME_DATA.achievements.forEach(
-        achievement => {
-
-            const unlocked =
-                state.achievements.includes(
-                    achievement.id
-                );
-
-
-            const element =
-                document.createElement(
-                    "div"
-                );
-
-
-            element.className =
-                unlocked
-                    ? "achievement"
-                    : "achievement locked";
-
-
-            element.innerHTML = `
-
-                <div class="achievement-icon">
-
-                    ${
-                        unlocked
-                            ? achievement.icon || "🏆"
-                            : "?"
-                    }
-
-                </div>
-
-                <div>
-
-                    <strong>
-
-                        ${
-                            unlocked
-                                ? escapeHTML(
-                                    achievement.title
-                                )
-                                : "إنجاز مخفي"
-                        }
-
-                    </strong>
-
-                    <div>
-
-                        ${
-                            unlocked
-                                ? escapeHTML(
-                                    achievement.description
-                                )
-                                : "واصل اللعب لاكتشافه."
-                        }
-
-                    </div>
-
-                </div>
-
-            `;
-
-
-            container.appendChild(
-                element
-            );
-
-        }
-    );
-
-}
-
-
-/* =========================================================
-   AUTOMATIC ACHIEVEMENTS
-========================================================= */
-
-function checkAutomaticAchievements() {
 
     if (
-        state.chapter >= 1
+      state.stats.evidence >= 1
     ) {
-
-        unlockAchievement(
-            "first_step"
-        );
-
+      unlockAchievement("detective");
     }
-
 
     if (
-        state.evidence >= 1 ||
-        state.inventory.length >= 1
+      state.flags.foundPhotograph
     ) {
-
-        unlockAchievement(
-            "detective"
-        );
-
+      unlockAchievement(
+        "photographer"
+      );
     }
-
 
     if (
-        hasItem("photograph")
+      state.flags.foundBasement
     ) {
-
-        unlockAchievement(
-            "photographer"
-        );
-
+      unlockAchievement(
+        "basement"
+      );
     }
-
 
     if (
-        state.flags.foundBasement
+      state.flags.heardTape
     ) {
-
-        unlockAchievement(
-            "basement"
-        );
-
+      unlockAchievement(
+        "listener"
+      );
     }
-
 
     if (
-        state.flags.heardTape
+      state.flags.knowsTruth ||
+      state.flags.knowsAboutExperiment
     ) {
-
-        unlockAchievement(
-            "listener"
-        );
-
+      unlockAchievement(
+        "truth_seeker"
+      );
     }
-
 
     if (
-        state.flags.discoveredFile ||
-        state.flags.knowsAboutExperiment
+      state.flags.openedSecretRoom
     ) {
-
-        unlockAchievement(
-            "truth_seeker"
-        );
-
-    }
-
-
-    if (
-        state.flags.trustedLian ||
-        state.flags.trustedYoussef ||
-        state.flags.trustedStranger
-    ) {
-
-        unlockAchievement(
-            "trust"
-        );
-
-    }
-
-
-    if (
-        state.flags.openedSecretRoom
-    ) {
-
-        unlockAchievement(
-            "secret_room"
-        );
-
-    }
-
-
-    if (
-        state.flags.sawMemory1 &&
-        state.flags.sawMemory2 &&
-        state.flags.sawMemory3
-    ) {
-
-        unlockAchievement(
-            "complete_memory"
-        );
-
-    }
-
-
-    if (
-        state.inventory.length >= 5
-    ) {
-
-        unlockAchievement(
-            "collector"
-        );
-
-    }
-
-}
-
-
-/* =========================================================
-   SECRETS
-========================================================= */
-
-function checkSecrets() {
-
-    if (
-        !Array.isArray(
-            GAME_DATA.secrets
-        )
-    ) {
-
-        return;
-
-    }
-
-
-    GAME_DATA.secrets.forEach(
-        secret => {
-
-            if (
-                state.flags[
-                    `secret_${secret.id}`
-                ]
-            ) {
-
-                return;
-
-            }
-
-
-            if (
-                !checkSecretRequirement(
-                    secret.requirement
-                )
-            ) {
-
-                return;
-
-            }
-
-
-            revealSecret(
-                secret
-            );
-
-        }
-    );
-
-}
-
-
-/* =========================================================
-   SECRET REQUIREMENTS
-========================================================= */
-
-function checkSecretRequirement(
-    requirement
-) {
-
-    if (!requirement) {
-        return false;
-    }
-
-
-    if (requirement.item) {
-
-        return hasItem(
-            requirement.item
-        );
-
-    }
-
-
-    if (requirement.flag) {
-
-        return !!state.flags[
-            requirement.flag
-        ];
-
-    }
-
-
-    return false;
-
-}
-
-
-/* =========================================================
-   REVEAL SECRET
-========================================================= */
-
-function revealSecret(secret) {
-
-    if (!secret) return;
-
-
-    state.flags[
-        `secret_${secret.id}`
-    ] = true;
-
-
-    state.secrets += 1;
-
-
-    if (
-        secret.id ===
-        "secret_17"
-    ) {
-
-        state.flags.openedSecretRoom =
-            true;
-
-    }
-
-
-    unlockAchievement(
+      unlockAchievement(
         "secret_room"
-    );
-
-
-    saveGame();
-
-
-    showSecretNotification(
-        secret
-    );
-
-}
-
-
-/* =========================================================
-   SECRET NOTIFICATION
-========================================================= */
-
-function showSecretNotification(
-    secret
-) {
-
-    const notification =
-        document.createElement(
-            "div"
-        );
-
-
-    notification.className =
-        "achievement-notification";
-
-
-    notification.innerHTML = `
-
-        <div class="notification-icon">
-            🔐
-        </div>
-
-        <div>
-
-            <small>
-                سر مكتشف
-            </small>
-
-            <strong>
-                ${escapeHTML(
-                    secret.title
-                )}
-            </strong>
-
-        </div>
-
-    `;
-
-
-    document.body.appendChild(
-        notification
-    );
-
-
-    setTimeout(
-        () => {
-
-            notification.classList.add(
-                "hide"
-            );
-
-            setTimeout(
-                () => notification.remove(),
-                450
-            );
-
-        },
-        3000
-    );
-
-}
-
-
-/* =========================================================
-   STATS
-========================================================= */
-
-function updateStats() {
-
-    if ($("health")) {
-
-        $("health").textContent =
-            Math.round(
-                state.health
-            );
-
+      );
     }
 
-
-    if ($("coins")) {
-
-        $("coins").textContent =
-            Math.round(
-                state.coins
-            );
-
+    if (
+      state.flags.sawMemory1 &&
+      state.flags.sawMemory2 &&
+      state.flags.sawMemory3
+    ) {
+      unlockAchievement(
+        "complete_memory"
+      );
     }
 
-
-    if ($("chapter")) {
-
-        $("chapter").textContent =
-            state.chapter;
-
+    if (
+      state.stats.evidence >= 5
+    ) {
+      unlockAchievement(
+        "collector"
+      );
     }
 
-}
+    if (
+      state.flags.trustedLian ||
+      state.flags.trustedYoussef ||
+      state.flags.trustedDoctor ||
+      state.flags.trustedStranger
+    ) {
+      unlockAchievement(
+        "trust"
+      );
+    }
+  }
 
+  /* =========================================================
+     HUD
+     ========================================================= */
 
-/* =========================================================
-   PROGRESS
-========================================================= */
-
-function updateProgress() {
+  function updateHUD() {
+    const result =
+      currentSceneData();
 
     const chapter =
-        getChapter();
+      result?.chapter;
 
-
-    const bar =
-        $("progressBar");
-
-
-    if (!chapter || !bar) {
-        return;
+    if (DOM.health) {
+      DOM.health.textContent =
+        Math.round(state.health);
     }
 
+    if (DOM.coins) {
+      DOM.coins.textContent =
+        Math.round(state.coins);
+    }
 
-    const scenes =
-        Array.isArray(
-            chapter.scenes
-        )
-            ? chapter.scenes
-            : [];
+    if (DOM.chapter) {
+      DOM.chapter.textContent =
+        state.chapter;
+    }
 
+    if (DOM.inventoryCount) {
+      DOM.inventoryCount.textContent =
+        state.inventory.length;
+    }
+
+    if (DOM.achievementCount) {
+      DOM.achievementCount.textContent =
+        state.achievements.length;
+    }
+
+    if (DOM.chapterLabel) {
+      DOM.chapterLabel.textContent =
+        chapter?.number
+          ? `الفصل ${chapter.number}`
+          : `الفصل ${state.chapter}`;
+    }
+
+    if (DOM.chapterTitleTop) {
+      DOM.chapterTitleTop.textContent =
+        chapter?.title || "";
+    }
+
+    updateProgress();
+  }
+
+  function updateProgress() {
+    const chapters =
+      allChapters();
+
+    const total =
+      chapters.length ||
+      safeNumber(
+        GAME.chaptersCount,
+        12
+      );
+
+    const current =
+      clamp(
+        safeNumber(state.chapter, 1),
+        1,
+        total
+      );
+
+    const percent =
+      ((current - 1) / Math.max(1, total - 1)) *
+      100;
+
+    if (DOM.progressBar) {
+      DOM.progressBar.style.width =
+        `${percent}%`;
+    }
+
+    if (DOM.progressText) {
+      DOM.progressText.textContent =
+        `${current} / ${total}`;
+    }
+  }
+
+  /* =========================================================
+     SOUND
+     ========================================================= */
+
+  function updateSoundIcon() {
+    if (!DOM.soundIcon) return;
+
+    DOM.soundIcon.textContent =
+      state.settings.sfx ||
+      state.settings.music
+        ? "🔊"
+        : "🔇";
+  }
+
+  function playSfx(type = "click") {
+    if (!state.settings.sfx) {
+      return;
+    }
+
+    /*
+      إذا وضعت ملفات صوتية لاحقًا داخل:
+      assets/audio/
+      يمكنك تعديل المسارات هنا.
+    */
+
+    const sources = {
+      click: "assets/audio/click.mp3",
+      choice: "assets/audio/choice.mp3",
+      item: "assets/audio/item.mp3",
+      achievement:
+        "assets/audio/achievement.mp3",
+      transition:
+        "assets/audio/transition.mp3",
+      ending:
+        "assets/audio/ending.mp3"
+    };
+
+    const src = sources[type];
 
     if (
-        scenes.length <= 1
+      !src ||
+      !DOM.sfxAudio
     ) {
-
-        bar.style.width =
-            "100%";
-
-        return;
-
+      return;
     }
 
+    try {
+      DOM.sfxAudio.src = src;
+      DOM.sfxAudio.currentTime = 0;
 
-    const index =
-        scenes.findIndex(
-            scene =>
-                scene.id ===
-                state.scene
-        );
+      const promise =
+        DOM.sfxAudio.play();
 
+      if (
+        promise &&
+        typeof promise.catch ===
+          "function"
+      ) {
+        promise.catch(() => {});
+      }
+    } catch (_) {}
+  }
 
-    const safeIndex =
-        index < 0
-            ? 0
-            : index;
+  function toggleSound() {
+    const currentlyOn =
+      state.settings.sfx ||
+      state.settings.music;
 
+    state.settings.sfx =
+      !currentlyOn;
 
-    const progress =
-        (
-            (safeIndex + 1) /
-            scenes.length
-        ) * 100;
+    state.settings.music =
+      !currentlyOn;
 
+    updateSettingsUI();
+    saveSettings();
 
-    bar.style.width =
-        `${clamp(
-            progress,
-            0,
-            100
-        )}%`;
+    if (
+      state.settings.music
+    ) {
+      startMusic();
+    } else {
+      stopMusic();
+    }
+  }
 
-}
+  function startMusic() {
+    if (
+      !state.settings.music ||
+      !DOM.bgMusic ||
+      !DOM.bgMusic.src
+    ) {
+      return;
+    }
 
+    try {
+      DOM.bgMusic.loop = true;
 
-/* =========================================================
-   CHAPTER CHANGE
-========================================================= */
+      const promise =
+        DOM.bgMusic.play();
 
-function onChapterChanged(
-    oldChapter,
-    newChapter
-) {
+      if (
+        promise &&
+        typeof promise.catch ===
+          "function"
+      ) {
+        promise.catch(() => {});
+      }
+    } catch (_) {}
+  }
 
-    toast(
-        `الفصل ${newChapter}`
+  function stopMusic() {
+    if (!DOM.bgMusic) return;
+
+    try {
+      DOM.bgMusic.pause();
+    } catch (_) {}
+  }
+
+  /* =========================================================
+     TOASTS
+     ========================================================= */
+
+  function notify(message, duration = 2400) {
+    if (!DOM.notification) {
+      return;
+    }
+
+    DOM.notification.textContent =
+      message;
+
+    DOM.notification.classList.add(
+      "show"
     );
 
+    clearTimeout(
+      notify.timer
+    );
 
-    /* -----------------------------------------
-       مكافأة بسيطة
-    ----------------------------------------- */
+    notify.timer =
+      setTimeout(() => {
+        DOM.notification.classList.remove(
+          "show"
+        );
+      }, duration);
+  }
 
-    if (
-        Number(newChapter) >
-        Number(oldChapter)
-    ) {
-
-        state.coins += 10;
-
+  function showItemToast(id) {
+    if (!DOM.itemToast) {
+      return;
     }
 
+    const item = itemData(id);
 
-    /* -----------------------------------------
-       حفظ
-    ----------------------------------------- */
+    DOM.itemToast.textContent =
+      `تم العثور على: ${item.name || id}`;
 
-    saveGame();
+    DOM.itemToast.classList.add(
+      "show"
+    );
 
-}
+    playSfx("item");
 
+    clearTimeout(
+      showItemToast.timer
+    );
 
-/* =========================================================
-   RANDOM EVENTS
-========================================================= */
+    showItemToast.timer =
+      setTimeout(() => {
+        DOM.itemToast.classList.remove(
+          "show"
+        );
+      }, 2800);
+  }
 
-function triggerRandomEvent() {
-
-    if (
-        !GAME_DATA?.randomEvents
-    ) {
-
-        return;
-
+  function showAchievementToast(
+    achievement
+  ) {
+    if (!DOM.achievementToast) {
+      return;
     }
 
+    const name =
+      achievement.name ||
+      achievement.title ||
+      "إنجاز جديد";
 
-    if (
-        !Array.isArray(
-            GAME_DATA.randomEvents
-        )
-    ) {
+    DOM.achievementToast.textContent =
+      `🏆 إنجاز جديد: ${name}`;
 
-        return;
+    DOM.achievementToast.classList.add(
+      "show"
+    );
 
+    playSfx("achievement");
+
+    clearTimeout(
+      showAchievementToast.timer
+    );
+
+    showAchievementToast.timer =
+      setTimeout(() => {
+        DOM.achievementToast.classList.remove(
+          "show"
+        );
+      }, 3500);
+  }
+
+  /* =========================================================
+     TYPING
+     ========================================================= */
+
+  function stopTyping() {
+    clearInterval(typingTimer);
+
+    typingTimer = null;
+
+    if (DOM.storyText) {
+      DOM.storyText.textContent =
+        currentTypingText;
     }
 
+    typingFinished = true;
 
-    const roll =
-        Math.random() * 100;
+    if (DOM.skipTextBtn) {
+      DOM.skipTextBtn.style.display =
+        "none";
+    }
+  }
 
+  function typeText(text) {
+    clearInterval(typingTimer);
 
-    let accumulated =
-        0;
+    currentTypingText =
+      String(text || "");
 
+    typingFinished = false;
 
-    for (
-        const event
-        of GAME_DATA.randomEvents
+    if (!DOM.storyText) {
+      return;
+    }
+
+    DOM.storyText.textContent = "";
+
+    if (
+      !currentTypingText.length
     ) {
+      typingFinished = true;
+      return;
+    }
 
-        accumulated +=
-            Number(event.chance || 0);
+    if (
+      DOM.skipTextBtn
+    ) {
+      DOM.skipTextBtn.style.display =
+        "";
+    }
 
+    let index = 0;
 
+    const speed =
+      state.settings.motion
+        ? 18
+        : 1;
+
+    typingTimer =
+      setInterval(() => {
         if (
-            roll <= accumulated
+          index >=
+          currentTypingText.length
         ) {
-
-            showRandomEvent(
-                event
-            );
-
-            return;
-
+          stopTyping();
+          return;
         }
 
-    }
+        DOM.storyText.textContent +=
+          currentTypingText[index];
 
-}
+        index++;
+      }, speed);
+  }
 
+  /* =========================================================
+     VISUAL SCENE
+     ========================================================= */
 
-/* =========================================================
-   RANDOM EVENT DISPLAY
-========================================================= */
+  function updateSceneVisual(scene) {
+    if (!scene) return;
 
-function showRandomEvent(event) {
+    if (DOM.sceneImage) {
+      const image =
+        scene.image ||
+        scene.background ||
+        "";
 
-    if (!event) return;
+      if (image) {
+        DOM.sceneImage.src =
+          image;
 
-
-    const box =
-        document.createElement(
-            "div"
+        DOM.sceneImage.style.display =
+          "";
+      } else {
+        DOM.sceneImage.removeAttribute(
+          "src"
         );
 
+        DOM.sceneImage.style.display =
+          "none";
+      }
+    }
 
-    box.className =
-        "achievement-notification";
+    if (DOM.sceneWeather) {
+      DOM.sceneWeather.textContent =
+        scene.weather ||
+        "";
+    }
 
+    if (DOM.sceneTime) {
+      DOM.sceneTime.textContent =
+        scene.time ||
+        "";
+    }
 
-    box.innerHTML = `
+    if (DOM.sceneVisual) {
+      DOM.sceneVisual.dataset.scene =
+        scene.id || "";
 
-        <div class="notification-icon">
-            ◈
-        </div>
+      DOM.sceneVisual.dataset.time =
+        scene.time || "";
 
-        <div>
+      DOM.sceneVisual.dataset.weather =
+        scene.weather || "";
+    }
 
-            <small>
-                حدث غامض
-            </small>
+    if (
+      DOM.sceneParticles
+    ) {
+      DOM.sceneParticles.innerHTML =
+        "";
 
-            <strong>
-                ${escapeHTML(
-                    event.text
-                )}
-            </strong>
+      if (
+        state.settings.motion
+      ) {
+        createParticles(
+          scene
+        );
+      }
+    }
+  }
 
-        </div>
+  function createParticles(scene) {
+    const weather =
+      String(
+        scene.weather || ""
+      ).toLowerCase();
 
-    `;
+    let count = 0;
+    let symbol = "·";
 
+    if (
+      weather.includes("مطر")
+    ) {
+      count = 25;
+      symbol = "│";
+    } else if (
+      weather.includes("ضباب")
+    ) {
+      count = 15;
+      symbol = "•";
+    } else if (
+      weather.includes("ثلج")
+    ) {
+      count = 22;
+      symbol = "❄";
+    } else {
+      count = 8;
+      symbol = "·";
+    }
 
-    document.body.appendChild(
-        box
+    for (
+      let i = 0;
+      i < count;
+      i++
+    ) {
+      const particle =
+        document.createElement(
+          "span"
+        );
+
+      particle.textContent =
+        symbol;
+
+      particle.className =
+        "scene-particle";
+
+      particle.style.left =
+        `${Math.random() * 100}%`;
+
+      particle.style.animationDelay =
+        `${Math.random() * 4}s`;
+
+      particle.style.animationDuration =
+        `${3 + Math.random() * 5}s`;
+
+      DOM.sceneParticles.appendChild(
+        particle
+      );
+    }
+  }
+
+  /* =========================================================
+     SCENE TRANSITION
+     ========================================================= */
+
+  function transitionToScene(
+    nextScene,
+    callback
+  ) {
+    if (
+      transitionBusy ||
+      !nextScene
+    ) {
+      callback?.();
+      return;
+    }
+
+    if (
+      !DOM.sceneTransition ||
+      !state.settings.motion
+    ) {
+      callback?.();
+      return;
+    }
+
+    transitionBusy = true;
+
+    const target =
+      findScene(nextScene);
+
+    if (
+      DOM.transitionChapter
+    ) {
+      DOM.transitionChapter.textContent =
+        target?.chapter?.number
+          ? `الفصل ${target.chapter.number}`
+          : "";
+    }
+
+    if (
+      DOM.transitionTitle
+    ) {
+      DOM.transitionTitle.textContent =
+        target?.chapter?.title ||
+        "";
+    }
+
+    DOM.sceneTransition.classList.add(
+      "active"
     );
 
+    playSfx("transition");
 
-    setTimeout(
-        () => {
+    setTimeout(() => {
+      callback?.();
 
-            box.classList.add(
-                "hide"
-            );
+      setTimeout(() => {
+        DOM.sceneTransition.classList.remove(
+          "active"
+        );
 
-            setTimeout(
-                () => box.remove(),
-                450
-            );
+        transitionBusy = false;
+      }, 450);
+    }, 550);
+  }
 
-        },
-        4000
-    );
+  /* =========================================================
+     CINEMATIC
+     ========================================================= */
 
-}
-
-
-/* =========================================================
-   STORY ANIMATION
-========================================================= */
-
-function animateStory() {
+  function showCinematic(
+    chapter,
+    callback
+  ) {
+    if (
+      !DOM.cinematicOverlay
+    ) {
+      callback?.();
+      return;
+    }
 
     const title =
-        $("sceneTitle");
+      chapter?.title ||
+      `الفصل ${chapter?.number || ""}`;
 
-
-    const text =
-        $("storyText");
-
-
-    if (title) {
-
-        title.classList.remove(
-            "fade"
-        );
-
-        void title.offsetWidth;
-
-        title.classList.add(
-            "fade"
-        );
-
+    if (DOM.cinematicLabel) {
+      DOM.cinematicLabel.textContent =
+        `الفصل ${chapter?.number || ""}`;
     }
 
-
-    if (text) {
-
-        text.classList.remove(
-            "fade"
-        );
-
-        void text.offsetWidth;
-
-        text.classList.add(
-            "fade"
-        );
-
+    if (DOM.cinematicTitle) {
+      DOM.cinematicTitle.textContent =
+        title;
     }
 
+    if (DOM.cinematicText) {
+      DOM.cinematicText.textContent =
+        chapter?.intro ||
+        chapter?.description ||
+        "";
+    }
+
+    cinematicNext =
+      callback;
+
+    DOM.cinematicOverlay.classList.add(
+      "active"
+    );
+  }
+
+  function closeCinematic() {
+    if (
+      DOM.cinematicOverlay
+    ) {
+      DOM.cinematicOverlay.classList.remove(
+        "active"
+      );
+    }
+
+    const callback =
+      cinematicNext;
+
+    cinematicNext = null;
+
+    callback?.();
+  }
+
+  /* =========================================================
+     SCENE RENDER
+     ========================================================= */
+
+  function renderScene(
+    useTransition = false
+  ) {
+    const result =
+      currentSceneData();
+
+    if (!result) {
+      console.error(
+        "Scene not found:",
+        state.scene
+      );
+
+      notify(
+        "حدث خطأ في تحميل المشهد."
+      );
+
+      return;
+    }
+
+    const {
+      scene,
+      chapter
+    } = result;
+
+    state.chapter =
+      safeNumber(
+        chapter.number ||
+        chapter.id ||
+        state.chapter,
+        state.chapter
+      );
+
+    updateHUD();
+
+    const render = () => {
+      if (
+        DOM.chapterLabel
+      ) {
+        DOM.chapterLabel.textContent =
+          `الفصل ${chapter.number || state.chapter}`;
+      }
+
+      if (
+        DOM.chapterTitleTop
+      ) {
+        DOM.chapterTitleTop.textContent =
+          chapter.title || "";
+      }
+
+      if (
+        DOM.sceneChapterTag
+      ) {
+        DOM.sceneChapterTag.textContent =
+          `الفصل ${chapter.number || state.chapter}`;
+      }
+
+      if (
+        DOM.sceneLocation
+      ) {
+        DOM.sceneLocation.textContent =
+          scene.location ||
+          chapter.location ||
+          "";
+      }
+
+      if (
+        DOM.sceneTitle
+      ) {
+        DOM.sceneTitle.textContent =
+          scene.title ||
+          "";
+      }
+
+      if (
+        DOM.sceneTime
+      ) {
+        DOM.sceneTime.textContent =
+          scene.time ||
+          "";
+      }
+
+      updateSceneVisual(scene);
+
+      typeText(
+        scene.text ||
+        scene.story ||
+        scene.description ||
+        ""
+      );
+
+      renderChoices(scene);
+
+      updateHUD();
+
+      checkAchievements();
+
+      saveGame(false);
+    };
+
+    if (useTransition) {
+      transitionToScene(
+        state.scene,
+        render
+      );
+    } else {
+      render();
+    }
+  }
+
+  /* =========================================================
+     SECRET ENDING
+     ========================================================= */
+
+  function canUnlockSecretEnding() {
+    const f = state.flags;
+
+    return (
+      !!f.finalTruth &&
+      !!f.sawMemory1 &&
+      !!f.sawMemory2 &&
+      !!f.sawMemory3 &&
+      !!f.discoveredFile &&
+      !!f.completedArchive &&
+      !!f.foundFinalMessage &&
+      state.inventory.includes(
+        "blackFile"
+      ) &&
+      state.inventory.includes(
+        "letter"
+      )
+    );
+  }
+
+  function getSceneChoices(scene) {
+    const original =
+      Array.isArray(scene?.choices)
+        ? scene.choices
+        : [];
 
     const choices =
-        $("choices");
+      original.filter(
+        choice =>
+          choiceAvailable(choice)
+      );
 
-
-    if (choices) {
-
-        choices.classList.remove(
-            "fade"
-        );
-
-        void choices.offsetWidth;
-
-        choices.classList.add(
-            "fade"
-        );
-
-    }
-
-}
-
-
-/* =========================================================
-   ENDINGS
-========================================================= */
-
-function showEnding(
-    endingId
-) {
-
-    const ending =
-        getEnding(
-            endingId
-        );
-
-
-    if (!ending) {
-
-        console.error(
-            "Ending not found:",
-            endingId
-        );
-
-        return;
-
-    }
-
-
-    /* تسجيل النهاية */
+    /*
+      النهاية السرية:
+      تظهر فقط إذا جمع اللاعب الأدلة
+      وقطع شوطًا كبيرًا في كشف الحقيقة.
+    */
 
     if (
-        !Array.isArray(
-            state.endingsSeen
-        )
+      scene?.id === "c12_final" &&
+      canUnlockSecretEnding()
     ) {
-
-        state.endingsSeen = [];
-
+      choices.push({
+        id: "secret_ending",
+        text:
+          "تقرأ الحقيقة الأخيرة المخفية خلف الملف الأسود.",
+        next: "ending_secret",
+        effects: {
+          setFlags: {
+            finalTruth: true
+          }
+        }
+      });
     }
 
+    return choices;
+  }
 
-    if (
-        !state.endingsSeen.includes(
-            endingId
-        )
-    ) {
+  /* =========================================================
+     CHOICES
+     ========================================================= */
 
-        state.endingsSeen.push(
-            endingId
+  function renderChoices(scene) {
+    if (!DOM.choices) {
+      return;
+    }
+
+    DOM.choices.innerHTML = "";
+
+    const choices =
+      getSceneChoices(scene);
+
+    if (!choices.length) {
+      const empty =
+        document.createElement(
+          "div"
         );
 
+      empty.className =
+        "choices-empty";
+
+      empty.textContent =
+        "لا يوجد قرار متاح الآن...";
+
+      DOM.choices.appendChild(
+        empty
+      );
+
+      return;
     }
 
+    choices.forEach(
+      (choice, index) => {
+        const button =
+          document.createElement(
+            "button"
+          );
 
-    state.completed = true;
+        button.type = "button";
 
+        button.className =
+          "choice-btn";
 
-    /* إنجاز النهاية */
+        button.dataset.index =
+          index + 1;
 
-    if (
-        ending.achievement
-    ) {
+        const number =
+          document.createElement(
+            "span"
+          );
 
-        unlockAchievement(
-            ending.achievement
+        number.className =
+          "choice-number";
+
+        number.textContent =
+          index + 1;
+
+        const text =
+          document.createElement(
+            "span"
+          );
+
+        text.className =
+          "choice-text";
+
+        text.textContent =
+          choice.text ||
+          `الخيار ${index + 1}`;
+
+        button.appendChild(
+          number
         );
 
-    }
-
-
-    if (
-        endingId ===
-        "ending_true"
-    ) {
-
-        unlockAchievement(
-            "true_ending"
+        button.appendChild(
+          text
         );
 
+        button.addEventListener(
+          "click",
+          () => {
+            choose(
+              choice
+            );
+          }
+        );
+
+        DOM.choices.appendChild(
+          button
+        );
+      }
+    );
+  }
+
+  function choose(choice) {
+    if (
+      !choice ||
+      transitionBusy
+    ) {
+      return;
     }
 
+    stopTyping();
 
-    state.lastPlayed =
-        Date.now();
+    playSfx("choice");
 
+    state.stats.choices++;
 
-    saveGame();
+    state.history.push({
+      scene: state.scene,
+      choice: choice.id ||
+        choice.text ||
+        "",
+      time: Date.now()
+    });
 
-
-    /* -----------------------------------------
-       END SCREEN
-    ----------------------------------------- */
-
-    if ($("endIcon")) {
-
-        $("endIcon").textContent =
-            ending.icon ||
-            "✦";
-
+    if (choice.effects) {
+      applyEffects(
+        choice.effects
+      );
     }
 
+    /*
+      دعم بعض الصيغ القديمة
+    */
 
-    if ($("endTitle")) {
-
-        $("endTitle").textContent =
-            ending.title ||
-            "النهاية";
-
+    if (choice.addItem) {
+      addItem(
+        choice.addItem
+      );
     }
 
-
-    if ($("endText")) {
-
-        $("endText").textContent =
-            ending.text ||
-            "";
-
+    if (choice.addItems) {
+      addItems(
+        choice.addItems
+      );
     }
 
+    if (choice.setFlags) {
+      Object.entries(
+        choice.setFlags
+      ).forEach(
+        ([flag, value]) => {
+          state.flags[flag] =
+            !!value;
+        }
+      );
+    }
+
+    const next =
+      choice.next ||
+      choice.scene ||
+      choice.goto;
+
+    calculateStats();
+    checkAchievements();
+
+    saveGame(false);
+
+    if (!next) {
+      notify(
+        "توقفت القصة هنا مؤقتًا."
+      );
+      return;
+    }
+
+    handleNext(
+      next
+    );
+  }
+
+  /* =========================================================
+     NEXT SCENE / ENDINGS
+     ========================================================= */
+
+  function handleNext(next) {
+    if (
+      typeof next !== "string"
+    ) {
+      return;
+    }
+
+    if (
+      next.startsWith("END_")
+    ) {
+      finishGame(next);
+      return;
+    }
+
+    if (
+      next === "GAME_OVER"
+    ) {
+      gameOver();
+      return;
+    }
+
+    const target =
+      findScene(next);
+
+    if (!target) {
+      console.error(
+        "Next scene not found:",
+        next
+      );
+
+      notify(
+        "تعذر الانتقال إلى المشهد التالي."
+      );
+
+      return;
+    }
+
+    const previousChapter =
+      state.chapter;
+
+    state.scene = next;
+
+    state.chapter =
+      safeNumber(
+        target.chapter.number ||
+        target.chapter.id,
+        state.chapter
+      );
+
+    state.stats.scenes++;
+
+    const changedChapter =
+      previousChapter !==
+      state.chapter;
+
+    if (
+      changedChapter
+    ) {
+      showCinematic(
+        target.chapter,
+        () => {
+          renderScene(true);
+        }
+      );
+
+      return;
+    }
+
+    renderScene(true);
+  }
+
+  /* =========================================================
+     GAME OVER
+     ========================================================= */
+
+  function gameOver() {
+    if (
+      DOM.gameScreen
+    ) {
+      DOM.gameScreen.classList.add(
+        "hidden"
+      );
+    }
+
+    if (
+      DOM.endScreen
+    ) {
+      DOM.endScreen.classList.remove(
+        "hidden"
+      );
+    }
+
+    if (DOM.endIcon) {
+      DOM.endIcon.textContent =
+        "◌";
+    }
+
+    if (DOM.endTitle) {
+      DOM.endTitle.textContent =
+        "انتهت رحلتك";
+    }
+
+    if (DOM.endText) {
+      DOM.endText.textContent =
+        "لم تعد تملك القدرة على متابعة الطريق. لكن الحقيقة ما زالت هناك... تنتظر من يعود إليها.";
+    }
 
     updateFinalStats();
 
+    saveGame(false);
+  }
 
-    showScreen(
-        "endScreen"
+  /* =========================================================
+     ENDINGS
+     ========================================================= */
+
+  function finishGame(type) {
+    stopTyping();
+
+    state.flags.escapedVillage =
+      type === "END_ESCAPE";
+
+    if (
+      type === "END_TRUE"
+    ) {
+      state.flags.finalTruth =
+        true;
+
+      unlockAchievement(
+        "true_ending"
+      );
+    }
+
+    unlockAchievement(
+      "survivor"
     );
 
-}
+    saveGame(false);
 
+    playSfx("ending");
 
-/* =========================================================
-   FINAL STATS
-========================================================= */
-
-function updateFinalStats() {
-
-    if ($("finalChapter")) {
-
-        $("finalChapter").textContent =
-            state.chapter;
-
+    if (
+      DOM.gameScreen
+    ) {
+      DOM.gameScreen.classList.add(
+        "hidden"
+      );
     }
 
-
-    if ($("finalCoins")) {
-
-        $("finalCoins").textContent =
-            state.coins;
-
+    if (
+      DOM.endScreen
+    ) {
+      DOM.endScreen.classList.remove(
+        "hidden"
+      );
     }
 
+    const endings = {
+      END_TRUE: {
+        icon: "◈",
+        title:
+          "الحقيقة التي لم يكن يجب أن تُعرف",
+        text:
+          "الآن فهمت لماذا بدأت كل هذه الأحداث. لم تكن تبحث عن الحقيقة فقط... كانت الحقيقة تبحث عنك منذ البداية."
+      },
 
-    if ($("finalAchievements")) {
+      END_ESCAPE: {
+        icon: "↗",
+        title:
+          "الخروج من الظلال",
+        text:
+          "غادرت المكان، لكن الصمت الذي حملته معك لم يكن طبيعيًا. بعض الأبواب تُغلق، وبعض الأسرار تبقى مفتوحة."
+      },
 
-        $("finalAchievements").textContent =
-            state.achievements.length;
+      END_DESTROY: {
+        icon: "✦",
+        title:
+          "نهاية التجربة",
+        text:
+          "اتخذت قرارًا لا رجعة فيه. انتهت التجربة، لكن السؤال الأهم بقي بلا جواب: من كان يراقب من؟"
+      },
 
+      END_SECRET: {
+        icon: "◇",
+        title:
+          "الحقيقة الأخيرة",
+        text:
+          "كل الأدلة كانت تقود إلى شيء واحد. لم تكن هذه القصة مجرد تجربة... لقد كانت نسخة من قصة بدأت قبل أن تتذكرها."
+      }
+    };
+
+    const ending =
+      endings[type] ||
+      endings.END_ESCAPE;
+
+    if (DOM.endIcon) {
+      DOM.endIcon.textContent =
+        ending.icon;
     }
 
-}
-
-
-/* =========================================================
-   GAME OVER
-========================================================= */
-
-function gameOver() {
-
-    const container =
-        $("choices");
-
-
-    if (container) {
-
-        container.innerHTML = `
-
-            <button
-                class="story-choice"
-                onclick="restartAfterGameOver()"
-            >
-
-                <span class="choice-number">
-                    ↻
-                </span>
-
-                <span class="choice-text">
-                    حاول مرة أخرى
-                </span>
-
-            </button>
-
-        `;
-
+    if (DOM.endTitle) {
+      DOM.endTitle.textContent =
+        ending.title;
     }
 
-
-    if ($("sceneTitle")) {
-
-        $("sceneTitle").textContent =
-            "انتهت الرحلة";
-
+    if (DOM.endText) {
+      DOM.endText.textContent =
+        ending.text;
     }
 
+    updateFinalStats();
 
-    if ($("storyText")) {
+    checkAchievements();
+  }
 
-        $("storyText").textContent =
-            "لقد استنفدت قدرتك على الاستمرار... لكن القصة لم تنتهِ.";
+  function updateFinalStats() {
+    calculateStats();
 
+    if (
+      DOM.finalChoices
+    ) {
+      DOM.finalChoices.textContent =
+        state.stats.choices;
     }
 
-}
+    if (
+      DOM.finalEvidence
+    ) {
+      DOM.finalEvidence.textContent =
+        state.stats.evidence;
+    }
 
+    if (
+      DOM.finalMemories
+    ) {
+      DOM.finalMemories.textContent =
+        state.stats.memories;
+    }
 
-function restartAfterGameOver() {
+    if (
+      DOM.finalStats
+    ) {
+      DOM.finalStats.textContent =
+        `${state.stats.choices} قرارًا • ${state.stats.evidence} أدلة • ${state.stats.memories} ذكريات`;
+    }
+  }
 
+  /* =========================================================
+     NEW GAME
+     ========================================================= */
+
+  function startNewGame() {
+    const confirmed =
+      !hasSave() ||
+      confirm(
+        "هل تريد بدء قصة جديدة؟ سيتم استبدال التقدم الحالي."
+      );
+
+    if (!confirmed) {
+      return;
+    }
+
+    const oldSettings =
+      state.settings;
+
+    state =
+      createInitialState();
+
+    state.settings =
+      oldSettings;
+
+    state.started = true;
+
+    deleteSave();
+
+    if (
+      DOM.startScreen
+    ) {
+      DOM.startScreen.classList.add(
+        "hidden"
+      );
+    }
+
+    if (
+      DOM.endScreen
+    ) {
+      DOM.endScreen.classList.add(
+        "hidden"
+      );
+    }
+
+    if (
+      DOM.gameScreen
+    ) {
+      DOM.gameScreen.classList.remove(
+        "hidden"
+      );
+    }
+
+    state.scene =
+      "c1_start";
+
+    state.chapter = 1;
+
+    state.stats.scenes = 1;
+
+    updateHUD();
+
+    showCinematic(
+      findChapterByNumber(1),
+      () => {
+        renderScene();
+      }
+    );
+
+    saveGame(false);
+
+    startMusic();
+  }
+
+  function continueGame() {
+    if (!loadGame()) {
+      notify(
+        "لا يوجد حفظ سابق."
+      );
+      return;
+    }
+
+    state.started = true;
+
+    if (
+      DOM.startScreen
+    ) {
+      DOM.startScreen.classList.add(
+        "hidden"
+      );
+    }
+
+    if (
+      DOM.endScreen
+    ) {
+      DOM.endScreen.classList.add(
+        "hidden"
+      );
+    }
+
+    if (
+      DOM.gameScreen
+    ) {
+      DOM.gameScreen.classList.remove(
+        "hidden"
+      );
+    }
+
+    updateHUD();
+
+    renderScene();
+
+    startMusic();
+  }
+
+  function returnToTitle() {
+    saveGame(false);
+
+    stopMusic();
+
+    if (
+      DOM.gameScreen
+    ) {
+      DOM.gameScreen.classList.add(
+        "hidden"
+      );
+    }
+
+    if (
+      DOM.endScreen
+    ) {
+      DOM.endScreen.classList.add(
+        "hidden"
+      );
+    }
+
+    if (
+      DOM.startScreen
+    ) {
+      DOM.startScreen.classList.remove(
+        "hidden"
+      );
+    }
+
+    updateContinueButton();
+  }
+
+  function restartAfterEnding() {
     startNewGame();
+  }
 
-}
+  /* =========================================================
+     INVENTORY
+     ========================================================= */
 
-
-/* =========================================================
-   SAVE GAME
-========================================================= */
-
-function saveGame() {
-
-    try {
-
-        state.lastPlayed =
-            Date.now();
-
-
-        localStorage.setItem(
-            SAVE_KEY,
-            JSON.stringify(state)
-        );
-
-
-        updateContinueButton();
-
-
-        return true;
-
-    } catch (error) {
-
-        console.error(
-            "Save failed:",
-            error
-        );
-
-        return false;
-
+  function renderInventory() {
+    if (
+      !DOM.inventoryContent
+    ) {
+      return;
     }
 
-}
+    DOM.inventoryContent.innerHTML =
+      "";
 
+    if (
+      !state.inventory.length
+    ) {
+      const empty =
+        document.createElement(
+          "div"
+        );
 
-/* =========================================================
-   LOAD GAME
-========================================================= */
+      empty.className =
+        "empty-state";
 
-function loadGame() {
+      empty.textContent =
+        "لا تحمل أي أدلة حتى الآن.";
 
-    try {
+      DOM.inventoryContent.appendChild(
+        empty
+      );
 
-        const saved =
-            localStorage.getItem(
-                SAVE_KEY
-            );
+      return;
+    }
 
+    state.inventory.forEach(
+      id => {
+        const item =
+          itemData(id);
 
-        if (!saved) {
+        const card =
+          document.createElement(
+            "div"
+          );
 
-            return false;
+        card.className =
+          "inventory-item";
 
+        const icon =
+          document.createElement(
+            "div"
+          );
+
+        icon.className =
+          "inventory-icon";
+
+        icon.textContent =
+          item.icon || "◈";
+
+        const body =
+          document.createElement(
+            "div"
+          );
+
+        body.className =
+          "inventory-body";
+
+        const name =
+          document.createElement(
+            "div"
+          );
+
+        name.className =
+          "inventory-name";
+
+        name.textContent =
+          item.name || id;
+
+        const description =
+          document.createElement(
+            "div"
+          );
+
+        description.className =
+          "inventory-description";
+
+        description.textContent =
+          item.description ||
+          "دليل غامض.";
+
+        body.appendChild(name);
+        body.appendChild(
+          description
+        );
+
+        card.appendChild(icon);
+        card.appendChild(body);
+
+        DOM.inventoryContent.appendChild(
+          card
+        );
+      }
+    );
+  }
+
+  /* =========================================================
+     ACHIEVEMENTS UI
+     ========================================================= */
+
+  function renderAchievements() {
+    if (
+      !DOM.achievementsContent
+    ) {
+      return;
+    }
+
+    const achievements =
+      getAchievements();
+
+    DOM.achievementsContent.innerHTML =
+      "";
+
+    if (
+      DOM.achievementUnlocked
+    ) {
+      DOM.achievementUnlocked.textContent =
+        state.achievements.length;
+    }
+
+    if (
+      DOM.achievementTotal
+    ) {
+      DOM.achievementTotal.textContent =
+        achievements.length;
+    }
+
+    achievements.forEach(
+      achievement => {
+        const unlocked =
+          state.achievements.includes(
+            achievement.id
+          );
+
+        const card =
+          document.createElement(
+            "div"
+          );
+
+        card.className =
+          "achievement-item";
+
+        if (unlocked) {
+          card.classList.add(
+            "unlocked"
+          );
         }
 
+        const icon =
+          document.createElement(
+            "div"
+          );
 
-        const parsed =
-            JSON.parse(saved);
+        icon.className =
+          "achievement-icon";
 
+        icon.textContent =
+          unlocked
+            ? (
+                achievement.icon ||
+                "🏆"
+              )
+            : "🔒";
+
+        const body =
+          document.createElement(
+            "div"
+          );
+
+        body.className =
+          "achievement-body";
+
+        const title =
+          document.createElement(
+            "div"
+          );
+
+        title.className =
+          "achievement-title";
+
+        title.textContent =
+          achievement.name ||
+          achievement.title ||
+          "إنجاز";
+
+        const description =
+          document.createElement(
+            "div"
+          );
+
+        description.className =
+          "achievement-description";
+
+        description.textContent =
+          unlocked
+            ? (
+                achievement.description ||
+                "إنجاز مكتمل."
+              )
+            : (
+                achievement.hiddenDescription ||
+                "إنجاز مخفي."
+              );
+
+        body.appendChild(title);
+        body.appendChild(
+          description
+        );
+
+        card.appendChild(icon);
+        card.appendChild(body);
+
+        DOM.achievementsContent.appendChild(
+          card
+        );
+      }
+    );
+  }
+
+  /* =========================================================
+     JOURNAL
+     ========================================================= */
+
+  function journalEntries() {
+    const entries = [];
+
+    const f = state.flags;
+
+    entries.push({
+      title: "البداية",
+      text:
+        "استيقظ آدم في مكان لا يتذكر كيف وصل إليه. كان هناك شيء واحد واضح: المكان يعرفه أكثر مما يعرف نفسه."
+    });
+
+    if (
+      f.foundPhotograph
+    ) {
+      entries.push({
+        title: "الصورة",
+        text:
+          "ظهرت صورة قديمة تحمل تفصيلًا لم يكن من المفترض أن يكون موجودًا."
+      });
+    }
+
+    if (
+      f.foundDiary
+    ) {
+      entries.push({
+        title: "المذكرات",
+        text:
+          "كلمات مجهولة كشفت أن ما يحدث ليس وليد هذه الليلة."
+      });
+    }
+
+    if (
+      f.foundBasement
+    ) {
+      entries.push({
+        title: "القبو",
+        text:
+          "وجد آدم طريقًا إلى مكان أخفي عن الجميع."
+      });
+    }
+
+    if (
+      f.discoveredFile
+    ) {
+      entries.push({
+        title: "الملف الأسود",
+        text:
+          "الملف يحمل معلومات لا تتعلق بشخص غريب... بل بآدم نفسه."
+      });
+    }
+
+    if (
+      f.sawMemory1
+    ) {
+      entries.push({
+        title: "الذكرى الأولى",
+        text:
+          "بدأت أجزاء من الماضي بالعودة، لكن كل إجابة جلبت سؤالًا جديدًا."
+      });
+    }
+
+    if (
+      f.sawMemory2
+    ) {
+      entries.push({
+        title: "الذكرى الثانية",
+        text:
+          "هناك أحداث في الماضي تم إخفاؤها عمدًا."
+      });
+    }
+
+    if (
+      f.sawMemory3
+    ) {
+      entries.push({
+        title: "الذكرى الثالثة",
+        text:
+          "الحقيقة أصبحت قريبة جدًا... وربما أخطر مما توقع."
+      });
+    }
+
+    if (
+      f.knowsWhoIsAdam
+    ) {
+      entries.push({
+        title: "من هو آدم؟",
+        text:
+          "السؤال الذي بدأ القصة تغيّر معناه بالكامل."
+      });
+    }
+
+    if (
+      f.finalTruth
+    ) {
+      entries.push({
+        title: "الحقيقة",
+        text:
+          "لم تكن الأحداث مصادفة. كل خطوة قادت إلى الخطوة التالية."
+      });
+    }
+
+    return entries;
+  }
+
+  function renderJournal() {
+    if (
+      !DOM.journalContent
+    ) {
+      return;
+    }
+
+    DOM.journalContent.innerHTML =
+      "";
+
+    const entries =
+      journalEntries();
+
+    entries.forEach(
+      entry => {
+        const card =
+          document.createElement(
+            "article"
+          );
+
+        card.className =
+          "journal-entry";
+
+        const title =
+          document.createElement(
+            "h3"
+          );
+
+        title.textContent =
+          entry.title;
+
+        const text =
+          document.createElement(
+            "p"
+          );
+
+        text.textContent =
+          entry.text;
+
+        card.appendChild(title);
+        card.appendChild(text);
+
+        DOM.journalContent.appendChild(
+          card
+        );
+      }
+    );
+  }
+
+  /* =========================================================
+     OVERLAYS
+     ========================================================= */
+
+  function openOverlay(
+    overlay
+  ) {
+    if (!overlay) return;
+
+    overlay.classList.add(
+      "active"
+    );
+  }
+
+  function closeOverlay(
+    overlay
+  ) {
+    if (!overlay) return;
+
+    overlay.classList.remove(
+      "active"
+    );
+  }
+
+  function closeAllOverlays() {
+    [
+      DOM.howToPlayOverlay,
+      DOM.menuOverlay,
+      DOM.inventoryOverlay,
+      DOM.achievementsOverlay,
+      DOM.journalOverlay,
+      DOM.settingsOverlay
+    ].forEach(
+      closeOverlay
+    );
+  }
+
+  /* =========================================================
+     EVENT BINDING
+     ========================================================= */
+
+  function bindEvents() {
+    /* Start */
+
+    DOM.newGameBtn?.addEventListener(
+      "click",
+      startNewGame
+    );
+
+    DOM.continueBtn?.addEventListener(
+      "click",
+      continueGame
+    );
+
+    DOM.howToPlayBtn?.addEventListener(
+      "click",
+      () =>
+        openOverlay(
+          DOM.howToPlayOverlay
+        )
+    );
+
+    /* How to play */
+
+    DOM.howToPlayOverlay
+      ?.querySelectorAll(
+        "[data-close], .close-btn, .overlay-close"
+      )
+      .forEach(button => {
+        button.addEventListener(
+          "click",
+          () =>
+            closeOverlay(
+              DOM.howToPlayOverlay
+            )
+        );
+      });
+
+    /* Menu */
+
+    DOM.menuBtn?.addEventListener(
+      "click",
+      () =>
+        openOverlay(
+          DOM.menuOverlay
+        )
+    );
+
+    DOM.closeMenuBtn?.addEventListener(
+      "click",
+      () =>
+        closeOverlay(
+          DOM.menuOverlay
+        )
+    );
+
+    /* Inventory */
+
+    DOM.inventoryBtn?.addEventListener(
+      "click",
+      () => {
+        renderInventory();
+
+        openOverlay(
+          DOM.inventoryOverlay
+        );
+      }
+    );
+
+    /* Achievements */
+
+    DOM.achievementsBtn?.addEventListener(
+      "click",
+      () => {
+        renderAchievements();
+
+        openOverlay(
+          DOM.achievementsOverlay
+        );
+      }
+    );
+
+    /* Journal */
+
+    DOM.journalBtn?.addEventListener(
+      "click",
+      () => {
+        renderJournal();
+
+        openOverlay(
+          DOM.journalOverlay
+        );
+      }
+    );
+
+    /* Generic close buttons */
+
+    document
+      .querySelectorAll(
+        "[data-close-overlay]"
+      )
+      .forEach(button => {
+        button.addEventListener(
+          "click",
+          () => {
+            const target =
+              button.dataset
+                .closeOverlay;
+
+            closeOverlay(
+              $(target)
+            );
+          }
+        );
+      });
+
+    /* Settings */
+
+    DOM.sfxToggle?.addEventListener(
+      "change",
+      event => {
+        state.settings.sfx =
+          event.target.checked;
+
+        saveSettings();
+        updateSoundIcon();
+      }
+    );
+
+    DOM.musicToggle?.addEventListener(
+      "change",
+      event => {
+        state.settings.music =
+          event.target.checked;
+
+        saveSettings();
 
         if (
-            !parsed ||
-            typeof parsed !== "object"
+          state.settings.music
         ) {
-
-            return false;
-
+          startMusic();
+        } else {
+          stopMusic();
         }
 
-
-        state = mergeState(
-            DEFAULT_STATE,
-            parsed
-        );
-
-
-        normalizeState();
-
-
-        return true;
-
-    } catch (error) {
-
-        console.error(
-            "Load failed:",
-            error
-        );
-
-        return false;
-
-    }
-
-}
-
-
-/* =========================================================
-   MERGE STATE
-========================================================= */
-
-function mergeState(
-    defaults,
-    saved
-) {
-
-    const result = {
-        ...clone(defaults),
-        ...saved
-    };
-
-
-    result.relationships = {
-
-        ...clone(
-            defaults.relationships
-        ),
-
-        ...(saved.relationships || {})
-
-    };
-
-
-    result.flags = {
-
-        ...(saved.flags || {})
-
-    };
-
-
-    result.inventory =
-        Array.isArray(
-            saved.inventory
-        )
-            ? saved.inventory
-            : [];
-
-
-    result.achievements =
-        Array.isArray(
-            saved.achievements
-        )
-            ? saved.achievements
-            : [];
-
-
-    result.decisions =
-        Array.isArray(
-            saved.decisions
-        )
-            ? saved.decisions
-            : [];
-
-
-    result.endingsSeen =
-        Array.isArray(
-            saved.endingsSeen
-        )
-            ? saved.endingsSeen
-            : [];
-
-
-    return result;
-
-}
-
-
-/* =========================================================
-   NORMALIZE STATE
-========================================================= */
-
-function normalizeState() {
-
-    if (
-        typeof state.health !==
-        "number"
-    ) {
-
-        state.health =
-            getStartingHealth();
-
-    }
-
-
-    state.health =
-        clamp(
-            state.health,
-            0,
-            getMaxHealth()
-        );
-
-
-    if (
-        typeof state.coins !==
-        "number"
-    ) {
-
-        state.coins =
-            getStartingCoins();
-
-    }
-
-
-    state.coins =
-        Math.max(
-            0,
-            state.coins
-        );
-
-
-    if (
-        !Number.isFinite(
-            Number(state.chapter)
-        )
-    ) {
-
-        state.chapter = 1;
-
-    }
-
-
-    state.chapter =
-        Number(state.chapter);
-
-
-    if (!state.scene) {
-
-        state.scene =
-            "c1_start";
-
-    }
-
-
-    if (
-        !Array.isArray(
-            state.inventory
-        )
-    ) {
-
-        state.inventory = [];
-
-    }
-
-
-    if (
-        !Array.isArray(
-            state.achievements
-        )
-    ) {
-
-        state.achievements = [];
-
-    }
-
-
-    if (
-        !Array.isArray(
-            state.decisions
-        )
-    ) {
-
-        state.decisions = [];
-
-    }
-
-
-    if (
-        !state.flags ||
-        typeof state.flags !==
-        "object"
-    ) {
-
-        state.flags = {};
-
-    }
-
-
-    if (
-        !state.relationships ||
-        typeof state.relationships !==
-        "object"
-    ) {
-
-        state.relationships = {
-
-            lian: 0,
-            youssef: 0,
-            stranger: 0
-
-        };
-
-    }
-
-
-    if (
-        !Array.isArray(
-            state.endingsSeen
-        )
-    ) {
-
-        state.endingsSeen = [];
-
-    }
-
-
-    if (
-        typeof state.evidence !==
-        "number"
-    ) {
-
-        state.evidence = 0;
-
-    }
-
-
-    if (
-        typeof state.memories !==
-        "number"
-    ) {
-
-        state.memories = 0;
-
-    }
-
-
-    if (
-        typeof state.secrets !==
-        "number"
-    ) {
-
-        state.secrets = 0;
-
-    }
-
-}
-
-
-/* =========================================================
-   HAS SAVE
-========================================================= */
-
-function hasSave() {
-
-    try {
-
-        return !!localStorage.getItem(
-            SAVE_KEY
-        );
-
-    } catch {
-
-        return false;
-
-    }
-
-}
-
-
-/* =========================================================
-   CLEAR SAVE
-========================================================= */
-
-function clearSave() {
-
-    try {
-
-        localStorage.removeItem(
-            SAVE_KEY
-        );
-
-    } catch (error) {
-
-        console.error(
-            "Clear save failed:",
-            error
-        );
-
-    }
-
-
-    updateContinueButton();
-
-}
-
-
-/* =========================================================
-   CONTINUE BUTTON
-========================================================= */
-
-function updateContinueButton() {
-
-    const button =
-        $("continueBtn");
-
-
-    if (!button) return;
-
-
-    button.style.display =
-        hasSave()
-            ? "block"
-            : "none";
-
-}
-
-
-/* =========================================================
-   RESTART
-========================================================= */
-
-function restartGame() {
-
-    hideOverlay(
-        "menuOverlay"
+        updateSoundIcon();
+      }
     );
 
-
-    clearSave();
-
-
-    startNewGame();
-
-}
-
-
-/* =========================================================
-   HOME
-========================================================= */
-
-function goHome() {
-
-    hideOverlay(
-        "menuOverlay"
-    );
-
-
-    saveGame();
-
-
-    showScreen(
-        "startScreen"
-    );
-
-
-    updateContinueButton();
-
-}
-
-
-/* =========================================================
-   TOAST
-========================================================= */
-
-function toast(message) {
-
-    if (!message) return;
-
-
-    const old =
-        document.querySelector(
-            ".game-toast"
-        );
-
-
-    if (old) {
-
-        old.remove();
-
-    }
-
-
-    const element =
-        document.createElement(
-            "div"
-        );
-
-
-    element.className =
-        "game-toast";
-
-
-    element.textContent =
-        message;
-
-
-    document.body.appendChild(
-        element
-    );
-
-
-    setTimeout(
-        () => {
-
-            element.classList.add(
-                "hide"
-            );
-
-
-            setTimeout(
-                () => {
-
-                    element.remove();
-
-                },
-                350
-            );
-
-        },
-        1800
-    );
-
-}
-
-
-/* =========================================================
-   ESCAPE HTML
-========================================================= */
-
-function escapeHTML(value) {
-
-    return String(value ?? "")
-        .replace(
-            /&/g,
-            "&amp;"
-        )
-        .replace(
-            /</g,
-            "&lt;"
-        )
-        .replace(
-            />/g,
-            "&gt;"
-        )
-        .replace(
-            /"/g,
-            "&quot;"
-        )
-        .replace(
-            /'/g,
-            "&#039;"
-        );
-
-}
-
-
-/* =========================================================
-   DEBUG API
-   مفيد أثناء تطوير اللعبة
-========================================================= */
-
-window.ShadowsGame = {
-
-    getState() {
-
-        return state;
-
-    },
-
-
-    save() {
-
-        return saveGame();
-
-    },
-
-
-    load() {
-
-        return loadGame();
-
-    },
-
-
-    reset() {
-
-        clearSave();
-
-        startNewGame();
-
-    },
-
-
-    addItem(item) {
-
-        addItem(item);
-
-        saveGame();
-
-    },
-
-
-    unlock(id) {
-
-        unlockAchievement(id);
-
-        saveGame();
-
-    },
-
-
-    setFlag(flag, value = true) {
-
-        state.flags[flag] =
-            value;
-
-        saveGame();
-
-    },
-
-
-    go(chapter, scene) {
-
-        state.chapter =
-            Number(chapter);
-
-        state.scene =
-            scene;
-
-        saveGame();
-
-        showScreen(
-            "gameScreen"
-        );
+    DOM.motionToggle?.addEventListener(
+      "change",
+      event => {
+        state.settings.motion =
+          event.target.checked;
+
+        saveSettings();
 
         renderScene();
+      }
+    );
 
+    /* Sound */
+
+    DOM.soundBtn?.addEventListener(
+      "click",
+      toggleSound
+    );
+
+    /* Skip text */
+
+    DOM.skipTextBtn?.addEventListener(
+      "click",
+      stopTyping
+    );
+
+    /* Cinematic */
+
+    DOM.cinematicContinueBtn?.addEventListener(
+      "click",
+      closeCinematic
+    );
+
+    /* Save */
+
+    DOM.saveBtn?.addEventListener(
+      "click",
+      () => {
+        saveGame(true);
+
+        closeAllOverlays();
+      }
+    );
+
+    /* Exit */
+
+    DOM.exitBtn?.addEventListener(
+      "click",
+      () => {
+        saveGame(false);
+
+        closeAllOverlays();
+
+        returnToTitle();
+      }
+    );
+
+    /* End */
+
+    DOM.restartBtn?.addEventListener(
+      "click",
+      restartAfterEnding
+    );
+
+    DOM.titleBtn?.addEventListener(
+      "click",
+      returnToTitle
+    );
+
+    /* Close overlays by clicking outside */
+
+    document
+      .querySelectorAll(
+        ".overlay"
+      )
+      .forEach(overlay => {
+        overlay.addEventListener(
+          "click",
+          event => {
+            if (
+              event.target ===
+              overlay
+            ) {
+              closeOverlay(
+                overlay
+              );
+            }
+          }
+        );
+      });
+
+    /* Keyboard */
+
+    document.addEventListener(
+      "keydown",
+      event => {
+        if (
+          event.key ===
+          "Escape"
+        ) {
+          closeAllOverlays();
+
+          if (
+            DOM.cinematicOverlay?.classList.contains(
+              "active"
+            )
+          ) {
+            closeCinematic();
+          }
+
+          return;
+        }
+
+        if (
+          event.key ===
+          " " &&
+          !typingFinished
+        ) {
+          event.preventDefault();
+          stopTyping();
+          return;
+        }
+
+        const number =
+          Number(event.key);
+
+        if (
+          number >= 1 &&
+          number <= 9 &&
+          DOM.choices
+        ) {
+          const button =
+            DOM.choices.querySelector(
+              `.choice-btn[data-index="${number}"]`
+            );
+
+          button?.click();
+        }
+      }
+    );
+  }
+
+  /* =========================================================
+     LOADING
+     ========================================================= */
+
+  function runLoading() {
+    if (
+      !DOM.loadingScreen
+    ) {
+      showTitleScreen();
+      return;
     }
 
-};
+    let progress = 0;
 
+    const messages = [
+      "تهيئة الذاكرة...",
+      "جمع شظايا القصة...",
+      "فتح الملفات القديمة...",
+      "إخفاء الحقيقة...",
+      "إعداد الظلال...",
+      "اكتمل التحميل."
+    ];
 
-/* =========================================================
-   STARTUP LOG
-========================================================= */
+    const interval =
+      setInterval(() => {
+        progress +=
+          Math.random() * 16 + 7;
 
-console.log(
-    "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-);
+        if (
+          progress >= 100
+        ) {
+          progress = 100;
+        }
 
-console.log(
-    "ظلال المجهول — Story Engine"
-);
+        if (
+          DOM.loadingProgress
+        ) {
+          DOM.loadingProgress.style.width =
+            `${progress}%`;
+        }
 
-console.log(
-    "✓ Data loaded"
-);
+        const index =
+          Math.min(
+            messages.length - 1,
+            Math.floor(
+              (progress / 100) *
+                messages.length
+            )
+          );
 
-console.log(
-    `✓ Chapters: ${
-        GAME_DATA?.chapters?.length || 0
-    }`
-);
+        if (
+          DOM.loadingStatus
+        ) {
+          DOM.loadingStatus.textContent =
+            messages[index];
+        }
 
-console.log(
-    `✓ Achievements: ${
-        GAME_DATA?.achievements?.length || 0
-    }`
-);
+        if (
+          progress >= 100
+        ) {
+          clearInterval(interval);
 
-console.log(
-    `✓ Items: ${
-        GAME_DATA?.items
-            ? Object.keys(
-                GAME_DATA.items
-            ).length
-            : 0
-    }`
-);
+          setTimeout(
+            showTitleScreen,
+            450
+          );
+        }
+      }, 180);
+  }
 
-console.log(
-    "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-);
+  function showTitleScreen() {
+    DOM.loadingScreen?.classList.add(
+      "hidden"
+    );
+
+    DOM.startScreen?.classList.remove(
+      "hidden"
+    );
+
+    DOM.gameScreen?.classList.add(
+      "hidden"
+    );
+
+    DOM.endScreen?.classList.add(
+      "hidden"
+    );
+
+    if (DOM.versionText) {
+      DOM.versionText.textContent =
+        `الإصدار ${GAME.version || "1.0.0"}`;
+    }
+
+    if (DOM.gameLogo) {
+      DOM.gameLogo.textContent =
+        GAME.title ||
+        "ظلال المجهول";
+    }
+
+    if (DOM.gameSubtitle) {
+      DOM.gameSubtitle.textContent =
+        GAME.intro?.subtitle ||
+        "كل اختيار له أثر... وكل باب يخفي قصة.";
+    }
+
+    updateContinueButton();
+  }
+
+  /* =========================================================
+     AUTO SAVE
+     ========================================================= */
+
+  setInterval(() => {
+    if (
+      state.started &&
+      !DOM.gameScreen?.classList.contains(
+        "hidden"
+      )
+    ) {
+      saveGame(false);
+    }
+  }, 20000);
+
+  /* =========================================================
+     VISIBILITY SAVE
+     ========================================================= */
+
+  document.addEventListener(
+    "visibilitychange",
+    () => {
+      if (
+        document.hidden &&
+        state.started
+      ) {
+        saveGame(false);
+      }
+    }
+  );
+
+  window.addEventListener(
+    "beforeunload",
+    () => {
+      if (state.started) {
+        saveGame(false);
+      }
+    }
+  );
+
+  /* =========================================================
+     DEBUG API
+     ========================================================= */
+
+  window.ShadowsGame = {
+    getState() {
+      return clone(state);
+    },
+
+    getScene() {
+      return currentSceneData();
+    },
+
+    save() {
+      return saveGame(true);
+    },
+
+    reset() {
+      deleteSave();
+
+      state =
+        createInitialState();
+
+      showTitleScreen();
+    },
+
+    addItem,
+
+    setFlag(flag, value = true) {
+      state.flags[flag] =
+        !!value;
+
+      checkAchievements();
+      saveGame(false);
+      updateHUD();
+    },
+
+    go(sceneId) {
+      if (
+        findScene(sceneId)
+      ) {
+        state.scene =
+          sceneId;
+
+        const result =
+          findScene(sceneId);
+
+        state.chapter =
+          safeNumber(
+            result.chapter.number ||
+            result.chapter.id,
+            state.chapter
+          );
+
+        renderScene();
+      }
+    },
+
+    ending(type) {
+      finishGame(type);
+    }
+  };
+
+  /* =========================================================
+     INIT
+     ========================================================= */
+
+  function init() {
+    normalizeState();
+
+    loadSettings();
+
+    bindEvents();
+
+    updateContinueButton();
+
+    calculateStats();
+
+    /*
+      لا نحمّل الحفظ تلقائيًا.
+      اللاعب يختار "متابعة".
+    */
+
+    runLoading();
+  }
+
+  init();
+
+})();
