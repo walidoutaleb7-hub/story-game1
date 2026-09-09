@@ -1,37 +1,26 @@
-package com.shadows.unknown;
+<?xml version="1.0" encoding="utf-8"?>
 
-import android.app.Activity;
-import android.os.Bundle;
-import android.webkit.WebView;
-import android.webkit.WebSettings;
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-public class MainActivity extends Activity {
+    <application
+        android:allowBackup="true"
+        android:supportsRtl="true"
+        android:label="ظلال المجهول"
+        android:icon="@drawable/app_icon"
+        android:roundIcon="@drawable/app_icon"
+        android:theme="@style/Theme.App">
 
-    private WebView webView;
+        <activity
+            android:name="com.shadows.unknown.MainActivity"
+            android:exported="true">
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
 
-        webView = new WebView(this);
+        </activity>
 
-        WebSettings settings = webView.getSettings();
-        settings.setJavaScriptEnabled(true);
-        settings.setDomStorageEnabled(true);
-        settings.setAllowFileAccess(true);
-        settings.setAllowContentAccess(true);
+    </application>
 
-        webView.loadUrl("file:///android_asset/index.html");
-
-        setContentView(webView);
-    }
-
-    @Override
-    public void onBackPressed() {
-        if (webView != null && webView.canGoBack()) {
-            webView.goBack();
-        } else {
-            super.onBackPressed();
-        }
-    }
-}
+</manifest>
