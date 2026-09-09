@@ -6,8 +6,8 @@
         android:allowBackup="true"
         android:supportsRtl="true"
         android:label="ظلال المجهول"
-        android:icon="@drawable/app_icon"
-        android:roundIcon="@drawable/app_icon"
+        android:icon="@drawable/file_000000002d5081f5ab2793ec4c460a11"
+        android:roundIcon="@drawable/file_000000002d5081f5ab2793ec4c460a11"
         android:theme="@style/Theme.App">
 
         <activity
@@ -16,11 +16,9 @@
 
             <intent-filter>
 
-                <action
-                    android:name="android.intent.action.MAIN" />
+                <action android:name="android.intent.action.MAIN" />
 
-                <category
-                    android:name="android.intent.category.LAUNCHER" />
+                <category android:name="android.intent.category.LAUNCHER" />
 
             </intent-filter>
 
