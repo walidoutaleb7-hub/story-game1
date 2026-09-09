@@ -15,7 +15,11 @@
 
   const $ = (id) => document.getElementById(id);
 
-  const GAME = GAME_DATA?.game || {
+  const GAME = (
+    typeof GAME_DATA !== "undefined" &&
+    GAME_DATA &&
+    GAME_DATA.game
+  ) ? GAME_DATA.game : {
     title: "ظلال المجهول",
     version: "1.0.0",
     protagonist: "آدم",
@@ -164,7 +168,13 @@
      FLAGS
      ========================================================= */
 
-  const defaultFlags = clone(GAME_DATA.flags || {});
+  const defaultFlags = clone(
+    (
+      typeof GAME_DATA !== "undefined" &&
+      GAME_DATA &&
+      GAME_DATA.flags
+    ) || {}
+  );
 
   const EXTRA_FLAGS = {
     metStranger: false,
@@ -468,7 +478,10 @@
      ========================================================= */
 
   function allChapters() {
-    return Array.isArray(GAME_DATA.chapters)
+    return (
+      typeof GAME_DATA !== "undefined" &&
+      Array.isArray(GAME_DATA.chapters)
+    )
       ? GAME_DATA.chapters
       : [];
   }
@@ -618,7 +631,13 @@
      ========================================================= */
 
   function itemData(id) {
-    return GAME_DATA.items?.[id] || {
+    return (
+      (
+        typeof GAME_DATA !== "undefined" &&
+        GAME_DATA &&
+        GAME_DATA.items
+      )?.[id]
+    ) || {
       id,
       name: id,
       description:
@@ -848,8 +867,9 @@
      ========================================================= */
 
   function getAchievements() {
-    return Array.isArray(
-      GAME_DATA.achievements
+    return (
+      typeof GAME_DATA !== "undefined" &&
+      Array.isArray(GAME_DATA.achievements)
     )
       ? GAME_DATA.achievements
       : [];
@@ -1740,12 +1760,6 @@
           choiceAvailable(choice)
       );
 
-    /*
-      النهاية السرية:
-      تظهر فقط إذا جمع اللاعب الأدلة
-      وقطع شوطًا كبيرًا في كشف الحقيقة.
-    */
-
     if (
       scene?.id === "c12_final" &&
       canUnlockSecretEnding()
@@ -1888,10 +1902,6 @@
         choice.effects
       );
     }
-
-    /*
-      دعم بعض الصيغ القديمة
-    */
 
     if (choice.addItem) {
       addItem(
@@ -3123,6 +3133,35 @@
           );
         }
       }, 180);
+
+    /*
+      حماية إضافية:
+      إذا علقت عملية التحميل لأي سبب،
+      لا تبقى الشاشة عالقة للأبد.
+    */
+
+    setTimeout(() => {
+      clearInterval(interval);
+
+      if (
+        DOM.loadingScreen &&
+        !DOM.loadingScreen.classList.contains(
+          "hidden"
+        )
+      ) {
+        if (DOM.loadingProgress) {
+          DOM.loadingProgress.style.width =
+            "100%";
+        }
+
+        if (DOM.loadingStatus) {
+          DOM.loadingStatus.textContent =
+            "تم تجهيز اللعبة";
+        }
+
+        showTitleScreen();
+      }
+    }, 5000);
   }
 
   function showTitleScreen() {
@@ -3270,20 +3309,50 @@
      ========================================================= */
 
   function init() {
-    normalizeState();
+    try {
+      normalizeState();
+    } catch (error) {
+      console.error(
+        "normalizeState error:",
+        error
+      );
+    }
 
-    loadSettings();
+    try {
+      loadSettings();
+    } catch (error) {
+      console.error(
+        "loadSettings error:",
+        error
+      );
+    }
 
-    bindEvents();
+    try {
+      bindEvents();
+    } catch (error) {
+      console.error(
+        "bindEvents error:",
+        error
+      );
+    }
 
-    updateContinueButton();
+    try {
+      updateContinueButton();
+    } catch (error) {
+      console.error(
+        "updateContinueButton error:",
+        error
+      );
+    }
 
-    calculateStats();
-
-    /*
-      لا نحمّل الحفظ تلقائيًا.
-      اللاعب يختار "متابعة".
-    */
+    try {
+      calculateStats();
+    } catch (error) {
+      console.error(
+        "calculateStats error:",
+        error
+      );
+    }
 
     runLoading();
   }
