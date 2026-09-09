@@ -47,10 +47,14 @@
     versionText: $("versionText"),
 
     howToPlayOverlay: $("howToPlayOverlay"),
+    closeHowToPlayBtn: $("closeHowToPlayBtn"),
+    tutorialOkBtn: $("tutorialOkBtn"),
 
     gameScreen: $("gameScreen"),
 
     menuBtn: $("menuBtn"),
+    closeMenuBtn: $("closeMenuBtn"),
+
     chapterLabel: $("chapterLabel"),
     chapterTitleTop: $("chapterTitleTop"),
     soundBtn: $("soundBtn"),
@@ -89,26 +93,40 @@
     journalBtn: $("journalBtn"),
 
     menuOverlay: $("menuOverlay"),
-    closeMenuBtn: $("closeMenuBtn"),
+    menuInventoryBtn: $("menuInventoryBtn"),
+    menuAchievementsBtn: $("menuAchievementsBtn"),
+    menuJournalBtn: $("menuJournalBtn"),
+    menuSettingsBtn: $("menuSettingsBtn"),
 
     inventoryOverlay: $("inventoryOverlay"),
     inventoryContent: $("inventoryContent"),
+    closeInventoryBtn: $("closeInventoryBtn"),
 
     achievementsOverlay: $("achievementsOverlay"),
     achievementUnlocked: $("achievementUnlocked"),
     achievementTotal: $("achievementTotal"),
     achievementsContent: $("achievementsContent"),
+    closeAchievementsBtn: $("closeAchievementsBtn"),
 
     journalOverlay: $("journalOverlay"),
     journalContent: $("journalContent"),
+    closeJournalBtn: $("closeJournalBtn"),
 
     settingsOverlay: $("settingsOverlay"),
     sfxToggle: $("sfxToggle"),
     musicToggle: $("musicToggle"),
     motionToggle: $("motionToggle"),
+    closeSettingsBtn: $("closeSettingsBtn"),
+    settingsDoneBtn: $("settingsDoneBtn"),
 
-    saveBtn: $("saveBtn"),
-    exitBtn: $("exitBtn"),
+    /* أسماء HTML الحقيقية + توافق مع الأسماء القديمة */
+    saveBtn:
+      $("saveGameBtn") ||
+      $("saveBtn"),
+
+    exitBtn:
+      $("exitToTitleBtn") ||
+      $("exitBtn"),
 
     sceneTransition: $("sceneTransition"),
     transitionChapter: $("transitionChapter"),
@@ -121,8 +139,16 @@
     cinematicContinueBtn: $("cinematicContinueBtn"),
 
     itemToast: $("itemToast"),
+    itemToastIcon: $("itemToastIcon"),
+    itemToastName: $("itemToastName"),
+
     achievementToast: $("achievementToast"),
+    achievementToastIcon: $("achievementToastIcon"),
+    achievementToastTitle: $("achievementToastTitle"),
+
     notification: $("notification"),
+    notificationIcon: $("notificationIcon"),
+    notificationText: $("notificationText"),
 
     endScreen: $("endScreen"),
     endIcon: $("endIcon"),
@@ -134,8 +160,14 @@
     finalEvidence: $("finalEvidence"),
     finalMemories: $("finalMemories"),
 
-    restartBtn: $("restartBtn"),
-    titleBtn: $("titleBtn"),
+    /* أسماء HTML الحقيقية */
+    restartBtn:
+      $("restartFromEnd") ||
+      $("restartBtn"),
+
+    titleBtn:
+      $("endToTitleBtn") ||
+      $("titleBtn"),
 
     bgMusic: $("bgMusic"),
     sfxAudio: $("sfxAudio"),
@@ -148,16 +180,31 @@
      ========================================================= */
 
   function clone(value) {
-    return JSON.parse(JSON.stringify(value));
+    try {
+      return JSON.parse(
+        JSON.stringify(value)
+      );
+    } catch (_) {
+      return value;
+    }
   }
 
   function clamp(value, min, max) {
-    return Math.max(min, Math.min(max, value));
+    return Math.max(
+      min,
+      Math.min(max, value)
+    );
   }
 
-  function safeNumber(value, fallback = 0) {
+  function safeNumber(
+    value,
+    fallback = 0
+  ) {
     const n = Number(value);
-    return Number.isFinite(n) ? n : fallback;
+
+    return Number.isFinite(n)
+      ? n
+      : fallback;
   }
 
   /* =========================================================
@@ -214,7 +261,10 @@
     collectedEvidence5: false
   };
 
-  Object.assign(defaultFlags, EXTRA_FLAGS);
+  Object.assign(
+    defaultFlags,
+    EXTRA_FLAGS
+  );
 
   /* =========================================================
      STATE
@@ -239,7 +289,9 @@
 
       inventory: [],
 
-      flags: clone(defaultFlags),
+      flags: clone(
+        defaultFlags
+      ),
 
       achievements: [],
 
@@ -261,7 +313,8 @@
     };
   }
 
-  let state = createInitialState();
+  let state =
+    createInitialState();
 
   let typingTimer = null;
   let currentTypingText = "";
@@ -276,11 +329,17 @@
 
   function loadSettings() {
     try {
-      const saved = JSON.parse(
-        localStorage.getItem(SETTINGS_KEY)
-      );
+      const saved =
+        JSON.parse(
+          localStorage.getItem(
+            SETTINGS_KEY
+          )
+        );
 
-      if (saved && typeof saved === "object") {
+      if (
+        saved &&
+        typeof saved === "object"
+      ) {
         state.settings.sfx =
           saved.sfx !== false;
 
@@ -299,25 +358,59 @@
     try {
       localStorage.setItem(
         SETTINGS_KEY,
-        JSON.stringify(state.settings)
+        JSON.stringify(
+          state.settings
+        )
       );
     } catch (_) {}
   }
 
   function updateSettingsUI() {
+    /*
+      toggle-btn في HTML ليس checkbox.
+      لذلك نستعمل class active بدل checked.
+    */
+
     if (DOM.sfxToggle) {
-      DOM.sfxToggle.checked =
-        !!state.settings.sfx;
+      DOM.sfxToggle.classList.toggle(
+        "active",
+        !!state.settings.sfx
+      );
+
+      DOM.sfxToggle.setAttribute(
+        "aria-pressed",
+        String(
+          !!state.settings.sfx
+        )
+      );
     }
 
     if (DOM.musicToggle) {
-      DOM.musicToggle.checked =
-        !!state.settings.music;
+      DOM.musicToggle.classList.toggle(
+        "active",
+        !!state.settings.music
+      );
+
+      DOM.musicToggle.setAttribute(
+        "aria-pressed",
+        String(
+          !!state.settings.music
+        )
+      );
     }
 
     if (DOM.motionToggle) {
-      DOM.motionToggle.checked =
-        !!state.settings.motion;
+      DOM.motionToggle.classList.toggle(
+        "active",
+        !!state.settings.motion
+      );
+
+      DOM.motionToggle.setAttribute(
+        "aria-pressed",
+        String(
+          !!state.settings.motion
+        )
+      );
     }
 
     updateSoundIcon();
@@ -327,7 +420,9 @@
      SAVE / LOAD
      ========================================================= */
 
-  function saveGame(showMessage = true) {
+  function saveGame(
+    showMessage = true
+  ) {
     try {
       state.started = true;
 
@@ -401,17 +496,23 @@
         },
 
         inventory:
-          Array.isArray(saved.inventory)
+          Array.isArray(
+            saved.inventory
+          )
             ? saved.inventory
             : [],
 
         achievements:
-          Array.isArray(saved.achievements)
+          Array.isArray(
+            saved.achievements
+          )
             ? saved.achievements
             : [],
 
         history:
-          Array.isArray(saved.history)
+          Array.isArray(
+            saved.history
+          )
             ? saved.history
             : []
       };
@@ -453,7 +554,9 @@
     }
 
     DOM.continueBtn.style.display =
-      hasSave() ? "" : "none";
+      hasSave()
+        ? ""
+        : "none";
   }
 
   /* =========================================================
@@ -461,28 +564,32 @@
      ========================================================= */
 
   function normalizeState() {
-    state.health = clamp(
-      safeNumber(
-        state.health,
-        GAME.startingHealth
-      ),
-      0,
-      safeNumber(
-        GAME.maxHealth,
-        100
-      )
-    );
+    state.health =
+      clamp(
+        safeNumber(
+          state.health,
+          GAME.startingHealth
+        ),
+        0,
+        safeNumber(
+          GAME.maxHealth,
+          100
+        )
+      );
 
-    state.coins = Math.max(
-      0,
-      safeNumber(
-        state.coins,
-        GAME.startingCoins
-      )
-    );
+    state.coins =
+      Math.max(
+        0,
+        safeNumber(
+          state.coins,
+          GAME.startingCoins
+        )
+      );
 
     if (
-      !Array.isArray(state.inventory)
+      !Array.isArray(
+        state.inventory
+      )
     ) {
       state.inventory = [];
     }
@@ -497,7 +604,8 @@
 
     if (
       !state.flags ||
-      typeof state.flags !== "object"
+      typeof state.flags !==
+        "object"
     ) {
       state.flags = {};
     }
@@ -505,7 +613,9 @@
     Object.keys(
       defaultFlags
     ).forEach(flag => {
-      if (!(flag in state.flags)) {
+      if (
+        !(flag in state.flags)
+      ) {
         state.flags[flag] =
           defaultFlags[flag];
       }
@@ -518,7 +628,8 @@
 
   function allChapters() {
     return (
-      typeof GAME_DATA !== "undefined" &&
+      typeof GAME_DATA !==
+        "undefined" &&
       Array.isArray(
         GAME_DATA.chapters
       )
@@ -527,19 +638,25 @@
       : [];
   }
 
-  function findChapterByNumber(number) {
+  function findChapterByNumber(
+    number
+  ) {
     return allChapters().find(
       chapter =>
         Number(
           chapter.number ||
           chapter.id
-        ) === Number(number)
+        ) ===
+        Number(number)
     );
   }
 
-  function findScene(sceneId) {
+  function findScene(
+    sceneId
+  ) {
     for (
-      const chapter of allChapters()
+      const chapter of
+        allChapters()
     ) {
       if (
         !Array.isArray(
@@ -674,7 +791,8 @@
     }
 
     if (
-      requirement.minHealth != null &&
+      requirement.minHealth !=
+      null &&
       state.health <
         safeNumber(
           requirement.minHealth
@@ -684,7 +802,8 @@
     }
 
     if (
-      requirement.minCoins != null &&
+      requirement.minCoins !=
+      null &&
       state.coins <
         safeNumber(
           requirement.minCoins
@@ -694,7 +813,8 @@
     }
 
     if (
-      requirement.minChapter != null &&
+      requirement.minChapter !=
+      null &&
       state.chapter <
         safeNumber(
           requirement.minChapter
@@ -706,7 +826,9 @@
     return true;
   }
 
-  function choiceAvailable(choice) {
+  function choiceAvailable(
+    choice
+  ) {
     if (!choice) {
       return false;
     }
@@ -780,12 +902,16 @@
 
     showItemToast(id);
 
+    updateHUD();
+
     return true;
   }
 
   function removeItem(id) {
     const index =
-      state.inventory.indexOf(id);
+      state.inventory.indexOf(
+        id
+      );
 
     if (index === -1) {
       return false;
@@ -795,6 +921,8 @@
       index,
       1
     );
+
+    updateHUD();
 
     return true;
   }
@@ -824,21 +952,24 @@
   ) {
     if (
       !effects ||
-      typeof effects !== "object"
+      typeof effects !==
+        "object"
     ) {
       return;
     }
 
     if (effects.health != null) {
-      state.health += safeNumber(
-        effects.health
-      );
+      state.health +=
+        safeNumber(
+          effects.health
+        );
     }
 
     if (effects.coins != null) {
-      state.coins += safeNumber(
-        effects.coins
-      );
+      state.coins +=
+        safeNumber(
+          effects.coins
+        );
     }
 
     if (effects.addItem) {
@@ -958,21 +1089,24 @@
       );
     }
 
-    state.health = clamp(
-      state.health,
-      0,
-      safeNumber(
-        GAME.maxHealth,
-        100
-      )
-    );
+    state.health =
+      clamp(
+        state.health,
+        0,
+        safeNumber(
+          GAME.maxHealth,
+          100
+        )
+      );
 
-    state.coins = Math.max(
-      0,
-      state.coins
-    );
+    state.coins =
+      Math.max(
+        0,
+        state.coins
+      );
 
     calculateStats();
+    updateHUD();
   }
 
   /* =========================================================
@@ -1282,14 +1416,19 @@
     const sources = {
       click:
         "assets/audio/click.mp3",
+
       choice:
         "assets/audio/choice.mp3",
+
       item:
         "assets/audio/item.mp3",
+
       achievement:
         "assets/audio/achievement.mp3",
+
       transition:
         "assets/audio/transition.mp3",
+
       ending:
         "assets/audio/ending.mp3"
     };
@@ -1352,13 +1491,16 @@
   function startMusic() {
     if (
       !state.settings.music ||
-      !DOM.bgMusic ||
-      !DOM.bgMusic.src
+      !DOM.bgMusic
     ) {
       return;
     }
 
     try {
+      if (!DOM.bgMusic.src) {
+        return;
+      }
+
       DOM.bgMusic.loop =
         true;
 
@@ -1399,8 +1541,13 @@
       return;
     }
 
-    DOM.notification.textContent =
-      message;
+    if (DOM.notificationText) {
+      DOM.notificationText.textContent =
+        message;
+    } else {
+      DOM.notification.textContent =
+        message;
+    }
 
     DOM.notification.classList.add(
       "show"
@@ -1429,8 +1576,25 @@
     const item =
       itemData(id);
 
-    DOM.itemToast.textContent =
-      `تم العثور على: ${item.name || id}`;
+    if (DOM.itemToastIcon) {
+      DOM.itemToastIcon.textContent =
+        item.icon || "◈";
+    }
+
+    if (DOM.itemToastName) {
+      DOM.itemToastName.textContent =
+        item.name || id;
+    }
+
+    if (
+      !DOM.itemToastName &&
+      !DOM.itemToastIcon
+    ) {
+      DOM.itemToast.textContent =
+        `تم العثور على: ${
+          item.name || id
+        }`;
+    }
 
     DOM.itemToast.classList.add(
       "show"
@@ -1467,8 +1631,28 @@
       achievement.title ||
       "إنجاز جديد";
 
-    DOM.achievementToast.textContent =
-      `🏆 إنجاز جديد: ${name}`;
+    if (
+      DOM.achievementToastIcon
+    ) {
+      DOM.achievementToastIcon.textContent =
+        achievement.icon ||
+        "🏆";
+    }
+
+    if (
+      DOM.achievementToastTitle
+    ) {
+      DOM.achievementToastTitle.textContent =
+        name;
+    }
+
+    if (
+      !DOM.achievementToastTitle &&
+      !DOM.achievementToastIcon
+    ) {
+      DOM.achievementToast.textContent =
+        `🏆 إنجاز جديد: ${name}`;
+    }
 
     DOM.achievementToast.classList.add(
       "show"
@@ -1541,6 +1725,12 @@
     ) {
       typingFinished =
         true;
+
+      if (DOM.skipTextBtn) {
+        DOM.skipTextBtn.style.display =
+          "none";
+      }
+
       return;
     }
 
@@ -1596,13 +1786,14 @@
         "";
 
       /*
-        sceneImage في HTML قد يكون div،
-        لذلك ندعم الحالتين img و div.
+        sceneImage في HTML عبارة عن div.
+        لذلك لا نستعمل src عليه.
       */
 
       if (
-        DOM.sceneImage.tagName ===
-        "IMG"
+        DOM.sceneImage.tagName
+          ?.toLowerCase() ===
+        "img"
       ) {
         if (image) {
           DOM.sceneImage.src =
@@ -1618,14 +1809,28 @@
           DOM.sceneImage.style.display =
             "none";
         }
+
       } else {
         if (image) {
           DOM.sceneImage.style.backgroundImage =
-            `url("${image}")`;
+            `url("${String(image)
+              .replace(/"/g, '\\"')}")`;
+
+          DOM.sceneImage.style.backgroundSize =
+            "cover";
+
+          DOM.sceneImage.style.backgroundPosition =
+            "center";
+
+          DOM.sceneImage.style.backgroundRepeat =
+            "no-repeat";
 
           DOM.sceneImage.style.display =
             "";
         } else {
+          /*
+            إزالة أي صورة قديمة بالكامل.
+          */
           DOM.sceneImage.style.backgroundImage =
             "none";
 
@@ -1761,7 +1966,9 @@
     transitionBusy = true;
 
     const target =
-      findScene(nextScene);
+      findScene(
+        nextScene
+      );
 
     if (
       DOM.transitionChapter
@@ -1831,7 +2038,9 @@
       DOM.cinematicLabel
     ) {
       DOM.cinematicLabel.textContent =
-        `الفصل ${chapter?.number || ""}`;
+        `الفصل ${
+          chapter?.number || ""
+        }`;
     }
 
     if (
@@ -1856,6 +2065,11 @@
     DOM.cinematicOverlay.classList.add(
       "active"
     );
+
+    DOM.cinematicOverlay.setAttribute(
+      "aria-hidden",
+      "false"
+    );
   }
 
   function closeCinematic() {
@@ -1864,6 +2078,11 @@
     ) {
       DOM.cinematicOverlay.classList.remove(
         "active"
+      );
+
+      DOM.cinematicOverlay.setAttribute(
+        "aria-hidden",
+        "true"
       );
     }
 
@@ -1915,11 +2134,15 @@
     updateHUD();
 
     const render = () => {
+
       if (
         DOM.chapterLabel
       ) {
         DOM.chapterLabel.textContent =
-          `الفصل ${chapter.number || state.chapter}`;
+          `الفصل ${
+            chapter.number ||
+            state.chapter
+          }`;
       }
 
       if (
@@ -1933,7 +2156,10 @@
         DOM.sceneChapterTag
       ) {
         DOM.sceneChapterTag.textContent =
-          `الفصل ${chapter.number || state.chapter}`;
+          `الفصل ${
+            chapter.number ||
+            state.chapter
+          }`;
       }
 
       if (
@@ -2044,10 +2270,13 @@
       choices.push({
         id:
           "secret_ending",
+
         text:
           "تقرأ الحقيقة الأخيرة المخفية خلف الملف الأسود.",
+
         next:
           "ending_secret",
+
         effects: {
           setFlags: {
             finalTruth:
@@ -2100,6 +2329,7 @@
 
     choices.forEach(
       (choice, index) => {
+
         const button =
           document.createElement(
             "button"
@@ -2135,7 +2365,9 @@
 
         text.textContent =
           choice.text ||
-          `الخيار ${index + 1}`;
+          `الخيار ${
+            index + 1
+          }`;
 
         button.appendChild(
           number
@@ -2145,9 +2377,19 @@
           text
         );
 
+        /*
+          منع الضغط المزدوج السريع
+          أثناء الانتقال.
+        */
         button.addEventListener(
           "click",
           () => {
+            if (
+              transitionBusy
+            ) {
+              return;
+            }
+
             choose(
               choice
             );
@@ -2173,17 +2415,21 @@
 
     stopTyping();
 
-    playSfx("choice");
+    playSfx(
+      "choice"
+    );
 
     state.stats.choices++;
 
     state.history.push({
       scene:
         state.scene,
+
       choice:
         choice.id ||
         choice.text ||
         "",
+
       time:
         Date.now()
     });
@@ -2223,6 +2469,7 @@
       choice.goto;
 
     calculateStats();
+
     checkAchievements();
 
     saveGame(false);
@@ -2259,7 +2506,10 @@
         "END_"
       )
     ) {
-      finishGame(next);
+      finishGame(
+        next
+      );
+
       return;
     }
 
@@ -2268,11 +2518,14 @@
       "GAME_OVER"
     ) {
       gameOver();
+
       return;
     }
 
     const target =
-      findScene(next);
+      findScene(
+        next
+      );
 
     if (!target) {
       console.error(
@@ -2331,6 +2584,9 @@
      ========================================================= */
 
   function gameOver() {
+    closeAllOverlays();
+    closeCinematic();
+
     if (
       DOM.gameScreen
     ) {
@@ -2384,6 +2640,9 @@
   ) {
     stopTyping();
 
+    closeAllOverlays();
+    closeCinematic();
+
     state.flags.escapedVillage =
       type ===
       "END_ESCAPE";
@@ -2405,7 +2664,9 @@
 
     saveGame(false);
 
-    playSfx("ending");
+    playSfx(
+      "ending"
+    );
 
     if (
       DOM.gameScreen
@@ -2435,8 +2696,10 @@
       END_TRUE: {
         icon:
           "◈",
+
         title:
           "الحقيقة التي لم يكن يجب أن تُعرف",
+
         text:
           "الآن فهمت لماذا بدأت كل هذه الأحداث. لم تكن تبحث عن الحقيقة فقط... كانت الحقيقة تبحث عنك منذ البداية."
       },
@@ -2444,8 +2707,10 @@
       END_ESCAPE: {
         icon:
           "↗",
+
         title:
           "الخروج من الظلال",
+
         text:
           "غادرت المكان، لكن الصمت الذي حملته معك لم يكن طبيعيًا. بعض الأبواب تُغلق، وبعض الأسرار تبقى مفتوحة."
       },
@@ -2453,8 +2718,10 @@
       END_DESTROY: {
         icon:
           "✦",
+
         title:
           "نهاية التجربة",
+
         text:
           "اتخذت قرارًا لا رجعة فيه. انتهت التجربة، لكن السؤال الأهم بقي بلا جواب: من كان يراقب من؟"
       },
@@ -2462,8 +2729,10 @@
       END_SECRET: {
         icon:
           "◇",
+
         title:
           "الحقيقة الأخيرة",
+
         text:
           "كل الأدلة كانت تقود إلى شيء واحد. لم تكن هذه القصة مجرد تجربة... لقد كانت نسخة من قصة بدأت قبل أن تتذكرها."
       }
@@ -2517,8 +2786,16 @@
         state.stats.memories;
     }
 
+    /*
+      في HTML الحالي finalStats نفسه
+      هو الحاوية، لذلك نستعمله فقط
+      إذا لم تكن العناصر الداخلية موجودة.
+    */
     if (
-      DOM.finalStats
+      DOM.finalStats &&
+      !DOM.finalChoices &&
+      !DOM.finalEvidence &&
+      !DOM.finalMemories
     ) {
       DOM.finalStats.textContent =
         `${state.stats.choices} قرارًا • ${state.stats.evidence} أدلة • ${state.stats.memories} ذكريات`;
@@ -2526,35 +2803,21 @@
   }
 
   /* =========================================================
-     NEW GAME
+     SCREEN HELPERS
      ========================================================= */
 
-  function startNewGame() {
-    const confirmed =
-      !hasSave() ||
-      confirm(
-        "هل تريد بدء قصة جديدة؟ سيتم استبدال التقدم الحالي."
+  function showGameScreen() {
+    if (
+      DOM.loadingScreen
+    ) {
+      DOM.loadingScreen.classList.add(
+        "hidden"
       );
 
-    if (!confirmed) {
-      return;
+      DOM.loadingScreen.classList.remove(
+        "active"
+      );
     }
-
-    const oldSettings =
-      state.settings;
-
-    state =
-      createInitialState();
-
-    state.settings =
-      oldSettings;
-
-    state.started =
-      true;
-
-    deleteSave();
-
-    /* إصلاح الانتقال إلى شاشة اللعبة */
 
     if (
       DOM.startScreen
@@ -2591,6 +2854,41 @@
         "active"
       );
     }
+  }
+
+  /* =========================================================
+     NEW GAME
+     ========================================================= */
+
+  function startNewGame() {
+    const confirmed =
+      !hasSave() ||
+      confirm(
+        "هل تريد بدء قصة جديدة؟ سيتم استبدال التقدم الحالي."
+      );
+
+    if (!confirmed) {
+      return;
+    }
+
+    const oldSettings =
+      state.settings;
+
+    state =
+      createInitialState();
+
+    state.settings =
+      oldSettings;
+
+    state.started =
+      true;
+
+    deleteSave();
+
+    closeAllOverlays();
+    closeCinematic();
+
+    showGameScreen();
 
     state.scene =
       "c1_start";
@@ -2633,41 +2931,10 @@
     state.started =
       true;
 
-    if (
-      DOM.startScreen
-    ) {
-      DOM.startScreen.classList.add(
-        "hidden"
-      );
+    closeAllOverlays();
+    closeCinematic();
 
-      DOM.startScreen.classList.remove(
-        "active"
-      );
-    }
-
-    if (
-      DOM.endScreen
-    ) {
-      DOM.endScreen.classList.add(
-        "hidden"
-      );
-
-      DOM.endScreen.classList.remove(
-        "active"
-      );
-    }
-
-    if (
-      DOM.gameScreen
-    ) {
-      DOM.gameScreen.classList.remove(
-        "hidden"
-      );
-
-      DOM.gameScreen.classList.add(
-        "active"
-      );
-    }
+    showGameScreen();
 
     updateHUD();
 
@@ -2685,6 +2952,9 @@
 
     stopMusic();
 
+    closeAllOverlays();
+    closeCinematic();
+
     if (
       DOM.gameScreen
     ) {
@@ -2719,6 +2989,9 @@
       DOM.startScreen.classList.add(
         "active"
       );
+
+      DOM.startScreen.style.display =
+        "flex";
     }
 
     updateContinueButton();
@@ -2987,6 +3260,7 @@
     entries.push({
       title:
         "البداية",
+
       text:
         "استيقظ آدم في مكان لا يتذكر كيف وصل إليه. كان هناك شيء واحد واضح: المكان يعرفه أكثر مما يعرف نفسه."
     });
@@ -2997,6 +3271,7 @@
       entries.push({
         title:
           "الصورة",
+
         text:
           "ظهرت صورة قديمة تحمل تفصيلًا لم يكن من المفترض أن يكون موجودًا."
       });
@@ -3008,6 +3283,7 @@
       entries.push({
         title:
           "المذكرات",
+
         text:
           "كلمات مجهولة كشفت أن ما يحدث ليس وليد هذه الليلة."
       });
@@ -3019,6 +3295,7 @@
       entries.push({
         title:
           "القبو",
+
         text:
           "وجد آدم طريقًا إلى مكان أخفي عن الجميع."
       });
@@ -3030,6 +3307,7 @@
       entries.push({
         title:
           "الملف الأسود",
+
         text:
           "الملف يحمل معلومات لا تتعلق بشخص غريب... بل بآدم نفسه."
       });
@@ -3041,6 +3319,7 @@
       entries.push({
         title:
           "الذكرى الأولى",
+
         text:
           "بدأت أجزاء من الماضي بالعودة، لكن كل إجابة جلبت سؤالًا جديدًا."
       });
@@ -3052,6 +3331,7 @@
       entries.push({
         title:
           "الذكرى الثانية",
+
         text:
           "هناك أحداث في الماضي تم إخفاؤها عمدًا."
       });
@@ -3063,6 +3343,7 @@
       entries.push({
         title:
           "الذكرى الثالثة",
+
         text:
           "الحقيقة أصبحت قريبة جدًا... وربما أخطر مما توقع."
       });
@@ -3074,6 +3355,7 @@
       entries.push({
         title:
           "من هو آدم؟",
+
         text:
           "السؤال الذي بدأ القصة تغيّر معناه بالكامل."
       });
@@ -3085,6 +3367,7 @@
       entries.push({
         title:
           "الحقيقة",
+
         text:
           "لم تكن الأحداث مصادفة. كل خطوة قادت إلى الخطوة التالية."
       });
@@ -3161,6 +3444,11 @@
     overlay.classList.add(
       "active"
     );
+
+    overlay.setAttribute(
+      "aria-hidden",
+      "false"
+    );
   }
 
   function closeOverlay(
@@ -3172,6 +3460,11 @@
 
     overlay.classList.remove(
       "active"
+    );
+
+    overlay.setAttribute(
+      "aria-hidden",
+      "true"
     );
   }
 
@@ -3189,12 +3482,98 @@
   }
 
   /* =========================================================
+     MENU HELPERS
+     ========================================================= */
+
+  function openMenu() {
+    openOverlay(
+      DOM.menuOverlay
+    );
+
+    playSfx(
+      "click"
+    );
+  }
+
+  function closeMenu() {
+    closeOverlay(
+      DOM.menuOverlay
+    );
+  }
+
+  function openInventory() {
+    renderInventory();
+
+    closeOverlay(
+      DOM.menuOverlay
+    );
+
+    openOverlay(
+      DOM.inventoryOverlay
+    );
+
+    playSfx(
+      "click"
+    );
+  }
+
+  function openAchievements() {
+    renderAchievements();
+
+    closeOverlay(
+      DOM.menuOverlay
+    );
+
+    openOverlay(
+      DOM.achievementsOverlay
+    );
+
+    playSfx(
+      "click"
+    );
+  }
+
+  function openJournal() {
+    renderJournal();
+
+    closeOverlay(
+      DOM.menuOverlay
+    );
+
+    openOverlay(
+      DOM.journalOverlay
+    );
+
+    playSfx(
+      "click"
+    );
+  }
+
+  function openSettings() {
+    updateSettingsUI();
+
+    closeOverlay(
+      DOM.menuOverlay
+    );
+
+    openOverlay(
+      DOM.settingsOverlay
+    );
+
+    playSfx(
+      "click"
+    );
+  }
+
+  /* =========================================================
      EVENT BINDING
      ========================================================= */
 
   function bindEvents() {
 
-    /* Start */
+    /* =====================================================
+       START SCREEN
+       ===================================================== */
 
     DOM.newGameBtn?.addEventListener(
       "click",
@@ -3208,129 +3587,187 @@
 
     DOM.howToPlayBtn?.addEventListener(
       "click",
-      () =>
+      () => {
         openOverlay(
           DOM.howToPlayOverlay
-        )
+        );
+
+        playSfx(
+          "click"
+        );
+      }
     );
 
-    /* How to play */
+    /* =====================================================
+       HOW TO PLAY
+       ===================================================== */
 
-    DOM.howToPlayOverlay
-      ?.querySelectorAll(
-        "[data-close], .close-btn, .overlay-close"
-      )
-      .forEach(
-        button => {
-          button.addEventListener(
-            "click",
-            () =>
-              closeOverlay(
-                DOM.howToPlayOverlay
-              )
-          );
-        }
-      );
+    DOM.closeHowToPlayBtn?.addEventListener(
+      "click",
+      () => {
+        closeOverlay(
+          DOM.howToPlayOverlay
+        );
+      }
+    );
 
-    /* Menu */
+    DOM.tutorialOkBtn?.addEventListener(
+      "click",
+      () => {
+        closeOverlay(
+          DOM.howToPlayOverlay
+        );
+      }
+    );
+
+    /* =====================================================
+       GAME MENU
+       ===================================================== */
 
     DOM.menuBtn?.addEventListener(
       "click",
-      () =>
-        openOverlay(
-          DOM.menuOverlay
-        )
+      openMenu
     );
 
     DOM.closeMenuBtn?.addEventListener(
       "click",
-      () =>
-        closeOverlay(
-          DOM.menuOverlay
-        )
+      closeMenu
     );
 
-    /* Inventory */
+    /*
+      هذه كانت من أهم المشاكل:
+      أزرار القائمة موجودة في HTML
+      لكن لم تكن مربوطة بالـJS.
+    */
+
+    DOM.menuInventoryBtn?.addEventListener(
+      "click",
+      openInventory
+    );
+
+    DOM.menuAchievementsBtn?.addEventListener(
+      "click",
+      openAchievements
+    );
+
+    DOM.menuJournalBtn?.addEventListener(
+      "click",
+      openJournal
+    );
+
+    DOM.menuSettingsBtn?.addEventListener(
+      "click",
+      openSettings
+    );
+
+    /* =====================================================
+       QUICK INVENTORY
+       ===================================================== */
 
     DOM.inventoryBtn?.addEventListener(
       "click",
-      () => {
-        renderInventory();
+      openInventory
+    );
 
-        openOverlay(
+    /* =====================================================
+       QUICK ACHIEVEMENTS
+       ===================================================== */
+
+    DOM.achievementsBtn?.addEventListener(
+      "click",
+      openAchievements
+    );
+
+    /* =====================================================
+       QUICK JOURNAL
+       ===================================================== */
+
+    DOM.journalBtn?.addEventListener(
+      "click",
+      openJournal
+    );
+
+    /* =====================================================
+       CLOSE BUTTONS
+       ===================================================== */
+
+    DOM.closeInventoryBtn?.addEventListener(
+      "click",
+      () => {
+        closeOverlay(
           DOM.inventoryOverlay
         );
       }
     );
 
-    /* Achievements */
-
-    DOM.achievementsBtn?.addEventListener(
+    DOM.closeAchievementsBtn?.addEventListener(
       "click",
       () => {
-        renderAchievements();
-
-        openOverlay(
+        closeOverlay(
           DOM.achievementsOverlay
         );
       }
     );
 
-    /* Journal */
-
-    DOM.journalBtn?.addEventListener(
+    DOM.closeJournalBtn?.addEventListener(
       "click",
       () => {
-        renderJournal();
-
-        openOverlay(
+        closeOverlay(
           DOM.journalOverlay
         );
       }
     );
 
-    /* Generic close */
+    DOM.closeSettingsBtn?.addEventListener(
+      "click",
+      () => {
+        closeOverlay(
+          DOM.settingsOverlay
+        );
+      }
+    );
 
-    document
-      .querySelectorAll(
-        "[data-close-overlay]"
-      )
-      .forEach(
-        button => {
-          button.addEventListener(
-            "click",
-            () => {
-              const target =
-                button.dataset
-                  .closeOverlay;
+    DOM.settingsDoneBtn?.addEventListener(
+      "click",
+      () => {
+        saveSettings();
 
-              closeOverlay(
-                $(target)
-              );
-            }
-          );
-        }
-      );
+        closeOverlay(
+          DOM.settingsOverlay
+        );
 
-    /* Settings */
+        notify(
+          "تم حفظ الإعدادات."
+        );
+      }
+    );
+
+    /* =====================================================
+       SETTINGS — BUTTON TOGGLES
+       ===================================================== */
 
     DOM.sfxToggle?.addEventListener(
-      "change",
-      event => {
+      "click",
+      () => {
         state.settings.sfx =
-          event.target.checked;
+          !state.settings.sfx;
 
+        updateSettingsUI();
         saveSettings();
-        updateSoundIcon();
+
+        playSfx(
+          "click"
+        );
       }
     );
 
     DOM.musicToggle?.addEventListener(
-      "change",
-      event => {
+      "click",
+      () => {
         state.settings.music =
-          event.target.checked;
+          !state.settings.music;
 
+        updateSettingsUI();
         saveSettings();
 
         if (
@@ -3341,65 +3778,101 @@
           stopMusic();
         }
 
-        updateSoundIcon();
+        playSfx(
+          "click"
+        );
       }
     );
 
     DOM.motionToggle?.addEventListener(
-      "change",
-      event => {
+      "click",
+      () => {
         state.settings.motion =
-          event.target.checked;
+          !state.settings.motion;
 
+        updateSettingsUI();
         saveSettings();
 
         renderScene();
+
+        playSfx(
+          "click"
+        );
       }
     );
 
-    /* Sound */
+    /* =====================================================
+       SOUND
+       ===================================================== */
 
     DOM.soundBtn?.addEventListener(
       "click",
       toggleSound
     );
 
-    /* Skip text */
+    /* =====================================================
+       SKIP TEXT
+       ===================================================== */
 
     DOM.skipTextBtn?.addEventListener(
       "click",
-      stopTyping
+      () => {
+        stopTyping();
+
+        playSfx(
+          "click"
+        );
+      }
     );
 
-    /* Cinematic */
+    /* =====================================================
+       CINEMATIC
+       ===================================================== */
 
     DOM.cinematicContinueBtn?.addEventListener(
       "click",
-      closeCinematic
+      () => {
+        playSfx(
+          "click"
+        );
+
+        closeCinematic();
+      }
     );
 
-    /* Save */
+    /* =====================================================
+       SAVE
+       ===================================================== */
 
     DOM.saveBtn?.addEventListener(
       "click",
       () => {
         saveGame(true);
-        closeAllOverlays();
+
+        closeOverlay(
+          DOM.menuOverlay
+        );
       }
     );
 
-    /* Exit */
+    /* =====================================================
+       EXIT TO TITLE
+       ===================================================== */
 
     DOM.exitBtn?.addEventListener(
       "click",
       () => {
-        saveGame(false);
-        closeAllOverlays();
+        closeOverlay(
+          DOM.menuOverlay
+        );
+
         returnToTitle();
       }
     );
 
-    /* End */
+    /* =====================================================
+       END SCREEN
+       ===================================================== */
 
     DOM.restartBtn?.addEventListener(
       "click",
@@ -3411,7 +3884,9 @@
       returnToTitle
     );
 
-    /* Close overlays outside */
+    /* =====================================================
+       CLOSE OVERLAY BY BACKDROP
+       ===================================================== */
 
     document
       .querySelectorAll(
@@ -3435,7 +3910,34 @@
         }
       );
 
-    /* Keyboard */
+    /* =====================================================
+       GENERIC DATA CLOSE
+       ===================================================== */
+
+    document
+      .querySelectorAll(
+        "[data-close-overlay]"
+      )
+      .forEach(
+        button => {
+          button.addEventListener(
+            "click",
+            () => {
+              const target =
+                button.dataset
+                  .closeOverlay;
+
+              closeOverlay(
+                $(target)
+              );
+            }
+          );
+        }
+      );
+
+    /* =====================================================
+       KEYBOARD
+       ===================================================== */
 
     document.addEventListener(
       "keydown",
@@ -3445,14 +3947,14 @@
           event.key ===
           "Escape"
         ) {
-          closeAllOverlays();
-
           if (
             DOM.cinematicOverlay?.classList.contains(
               "active"
             )
           ) {
             closeCinematic();
+          } else {
+            closeAllOverlays();
           }
 
           return;
@@ -3464,7 +3966,9 @@
           !typingFinished
         ) {
           event.preventDefault();
+
           stopTyping();
+
           return;
         }
 
@@ -3498,6 +4002,7 @@
       !DOM.loadingScreen
     ) {
       showTitleScreen();
+
       return;
     }
 
@@ -3539,6 +4044,7 @@
             Math.min(
               messages.length -
                 1,
+
               Math.floor(
                 (progress /
                   100) *
@@ -3570,6 +4076,11 @@
         },
         180
       );
+
+    /*
+      حماية إضافية حتى لا تبقى اللعبة
+      عالقة في شاشة التحميل.
+    */
 
     setTimeout(
       () => {
@@ -3616,6 +4127,9 @@
       DOM.loadingScreen.classList.remove(
         "active"
       );
+
+      DOM.loadingScreen.style.display =
+        "none";
     }
 
     if (
@@ -3628,6 +4142,9 @@
       DOM.startScreen.classList.add(
         "active"
       );
+
+      DOM.startScreen.style.display =
+        "flex";
     }
 
     if (
@@ -3658,15 +4175,22 @@
       DOM.versionText
     ) {
       DOM.versionText.textContent =
-        `الإصدار ${GAME.version || "1.0.0"}`;
+        GAME.version ||
+        "1.0.0";
     }
 
     if (
       DOM.gameLogo
     ) {
-      DOM.gameLogo.textContent =
+      /*
+        لا نستبدل محتوى الشعار كله
+        لأن HTML يحتوي على عناصر التصميم.
+      */
+      DOM.gameLogo.setAttribute(
+        "aria-label",
         GAME.title ||
-        "ظلال المجهول";
+        "ظلال المجهول"
+      );
     }
 
     if (
@@ -3688,7 +4212,8 @@
     () => {
       if (
         state.started &&
-        !DOM.gameScreen?.classList.contains(
+        DOM.gameScreen &&
+        !DOM.gameScreen.classList.contains(
           "hidden"
         )
       ) {
