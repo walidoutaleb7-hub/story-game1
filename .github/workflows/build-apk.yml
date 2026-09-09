@@ -2,15 +2,12 @@ name: Build Shadows Unknown APK
 
 on:
   workflow_dispatch:
-
   push:
     branches:
       - main
 
 jobs:
-
   build:
-
     runs-on: ubuntu-latest
 
     steps:
@@ -18,41 +15,34 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-
       - name: Setup Java 17
         uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '17'
 
-
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
-
 
       - name: Install Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
 
-
-      - name: Create Android project
+      - name: Prepare Android project
+        shell: bash
         run: |
+          set -e
 
           mkdir -p app/src/main/java/com/shadowsunknown/game
           mkdir -p app/src/main/assets
           mkdir -p app/src/main/res/values
           mkdir -p app/src/main/res/drawable
 
-          mkdir -p app/src/main/res/mipmap-hdpi
-          mkdir -p app/src/main/res/mipmap-mdpi
-          mkdir -p app/src/main/res/mipmap-xhdpi
-          mkdir -p app/src/main/res/mipmap-xxhdpi
-          mkdir -p app/src/main/res/mipmap-xxxhdpi
-
-
       - name: Copy game files
+        shell: bash
         run: |
+          set -e
 
           cp index.html app/src/main/assets/index.html
           cp style.css app/src/main/assets/style.css
@@ -60,268 +50,223 @@ jobs:
           cp data.js app/src/main/assets/data.js
 
           if [ -d "assets" ]; then
-            cp -r assets/* app/src/main/assets/ || true
+            cp -r assets/. app/src/main/assets/
           fi
 
-
-      - name: Copy application icon
+      - name: Verify icon
+        shell: bash
         run: |
+          set -e
 
-          if [ -f "app/src/main/res/drawable/app_icon.png" ]; then
-            echo "Icon already exists."
-          else
-            echo "Icon not found in drawable."
+          if [ ! -f "app/src/main/res/drawable/app_icon.png" ]; then
+            echo "ERROR: app_icon.png is missing."
+            exit 1
           fi
 
+          file app/src/main/res/drawable/app_icon.png
+          ls -lh app/src/main/res/drawable/app_icon.png
 
       - name: Create settings.gradle
+        shell: bash
         run: |
-
           cat > settings.gradle <<'EOF'
+pluginManagement {
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
 
-          pluginManagement {
-              repositories {
-                  google()
-                  mavenCentral()
-                  gradlePluginPortal()
-              }
-          }
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
 
-          dependencyResolutionManagement {
-              repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
 
-              repositories {
-                  google()
-                  mavenCentral()
-              }
-          }
+rootProject.name = "ShadowsUnknown"
 
-          rootProject.name = "ShadowsUnknown"
-
-          include(":app")
-
-          EOF
-
+include(":app")
+EOF
 
       - name: Create root build.gradle
+        shell: bash
         run: |
-
           cat > build.gradle <<'EOF'
-
-          plugins {
-              id 'com.android.application' version '8.7.3' apply false
-          }
-
-          EOF
-
+plugins {
+    id 'com.android.application' version '8.7.3' apply false
+}
+EOF
 
       - name: Create app build.gradle
+        shell: bash
         run: |
-
           cat > app/build.gradle <<'EOF'
+plugins {
+    id 'com.android.application'
+}
 
-          plugins {
-              id 'com.android.application'
-          }
+android {
+    namespace 'com.shadowsunknown.game'
 
-          android {
+    compileSdk 35
 
-              namespace 'com.shadowsunknown.game'
+    defaultConfig {
+        applicationId 'com.shadowsunknown.game'
 
-              compileSdk 35
+        minSdk 23
+        targetSdk 35
 
-              defaultConfig {
+        versionCode 1
+        versionName '1.0'
+    }
+}
+EOF
 
-                  applicationId 'com.shadowsunknown.game'
-
-                  minSdk 23
-
-                  targetSdk 35
-
-                  versionCode 1
-
-                  versionName '1.0'
-              }
-          }
-
-          EOF
-
-
-      - name: Create AndroidManifest
+      - name: Create AndroidManifest.xml
+        shell: bash
         run: |
-
           cat > app/src/main/AndroidManifest.xml <<'EOF'
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-          <?xml version="1.0" encoding="utf-8"?>
+    <application
+        android:allowBackup="true"
+        android:supportsRtl="true"
+        android:label="ظلال المجهول"
+        android:icon="@drawable/app_icon"
+        android:roundIcon="@drawable/app_icon"
+        android:theme="@style/AppTheme">
 
-          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+        <activity
+            android:name=".MainActivity"
+            android:screenOrientation="portrait"
+            android:exported="true">
 
-              <application
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
 
-                  android:theme="@style/AppTheme"
+        </activity>
 
-                  android:label="ظلال المجهول"
+    </application>
 
-                  android:allowBackup="true"
+</manifest>
+EOF
 
-                  android:supportsRtl="true"
-
-                  android:icon="@drawable/app_icon"
-
-                  android:roundIcon="@drawable/app_icon">
-
-                  <activity
-
-                      android:name=".MainActivity"
-
-                      android:screenOrientation="portrait"
-
-                      android:exported="true">
-
-                      <intent-filter>
-
-                          <action
-                              android:name="android.intent.action.MAIN" />
-
-                          <category
-                              android:name="android.intent.category.LAUNCHER" />
-
-                      </intent-filter>
-
-                  </activity>
-
-              </application>
-
-          </manifest>
-
-          EOF
-
-
-      - name: Create theme
+      - name: Create styles.xml
+        shell: bash
         run: |
-
           cat > app/src/main/res/values/styles.xml <<'EOF'
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
 
-          <?xml version="1.0" encoding="utf-8"?>
+    <style
+        name="AppTheme"
+        parent="android:style/Theme.Material.NoActionBar">
 
-          <resources>
+        <item name="android:fontFamily">sans</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:statusBarColor">#060810</item>
+        <item name="android:navigationBarColor">#060810</item>
 
-              <style
-                  name="AppTheme"
-                  parent="android:style/Theme.Material.NoActionBar">
+    </style>
 
-                  <item name="android:fontFamily">sans</item>
+</resources>
+EOF
 
-                  <item name="android:windowLightStatusBar">false</item>
-
-                  <item name="android:statusBarColor">#060810</item>
-
-                  <item name="android:navigationBarColor">#060810</item>
-
-              </style>
-
-          </resources>
-
-          EOF
-
-
-      - name: Create MainActivity
+      - name: Create MainActivity.java
+        shell: bash
         run: |
-
           cat > app/src/main/java/com/shadowsunknown/game/MainActivity.java <<'EOF'
+package com.shadowsunknown.game;
 
-          package com.shadowsunknown.game;
+import android.app.Activity;
+import android.os.Bundle;
+import android.webkit.WebSettings;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
 
-          import android.app.Activity;
-          import android.os.Bundle;
-          import android.webkit.WebSettings;
-          import android.webkit.WebView;
-          import android.webkit.WebViewClient;
+public class MainActivity extends Activity {
 
-          public class MainActivity extends Activity {
+    private WebView webView;
 
-              private WebView webView;
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
 
-              @Override
-              protected void onCreate(Bundle savedInstanceState) {
+        webView = new WebView(this);
 
-                  super.onCreate(savedInstanceState);
+        WebSettings settings = webView.getSettings();
 
-                  webView = new WebView(this);
+        settings.setJavaScriptEnabled(true);
+        settings.setDomStorageEnabled(true);
+        settings.setAllowFileAccess(true);
+        settings.setAllowContentAccess(true);
 
-                  WebSettings settings = webView.getSettings();
+        webView.setWebViewClient(new WebViewClient());
 
-                  settings.setJavaScriptEnabled(true);
+        webView.loadUrl("file:///android_asset/index.html");
 
-                  settings.setDomStorageEnabled(true);
+        setContentView(webView);
+    }
 
-                  settings.setAllowFileAccess(true);
+    @Override
+    public void onBackPressed() {
+        if (webView != null && webView.canGoBack()) {
+            webView.goBack();
+        } else {
+            super.onBackPressed();
+        }
+    }
+}
+EOF
 
-                  settings.setAllowContentAccess(true);
-
-                  webView.setWebViewClient(new WebViewClient());
-
-                  webView.loadUrl(
-                      "file:///android_asset/index.html"
-                  );
-
-                  setContentView(webView);
-              }
-
-              @Override
-              public void onBackPressed() {
-
-                  if (webView != null && webView.canGoBack()) {
-
-                      webView.goBack();
-
-                  } else {
-
-                      super.onBackPressed();
-                  }
-              }
-          }
-
-          EOF
-
-
-      - name: Verify project
+      - name: Verify Android project
+        shell: bash
         run: |
+          set -e
 
-          echo "===== Project ====="
+          echo "===== MAIN FILES ====="
+          find app/src/main -maxdepth 5 -type f | sort
 
-          find app/src/main -maxdepth 4 -type f | sort
+          echo ""
+          echo "===== GAME ASSETS ====="
+          ls -lh app/src/main/assets/
 
-          echo "===== Assets ====="
-
-          ls -lah app/src/main/assets
-
-          echo "===== Icon ====="
-
-          ls -lah app/src/main/res/drawable/app_icon.png
-
+          echo ""
+          echo "===== ICON ====="
+          ls -lh app/src/main/res/drawable/app_icon.png
 
       - name: Build APK
+        shell: bash
         run: |
+          set -e
 
           gradle assembleDebug --stacktrace
 
-
-      - name: Find APK
+      - name: Verify APK
+        shell: bash
         run: |
+          set -e
 
-          echo "===== APK FILES ====="
+          APK=$(find app/build/outputs/apk/debug -type f -name "*.apk" | head -n 1)
 
-          find app/build/outputs/apk -type f -name "*.apk" -print
+          if [ -z "$APK" ]; then
+            echo "ERROR: APK was not generated."
+            exit 1
+          fi
 
+          echo "APK generated successfully:"
+          ls -lh "$APK"
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
-
         with:
-
           name: shadows-unknown-apk
-
           path: app/build/outputs/apk/debug/*.apk
-
           if-no-files-found: error
