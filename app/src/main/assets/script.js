@@ -2698,4 +2698,689 @@
     const entries =
       journalEntries();
 
-    entries.forEac
+    entries.forEach(
+  entry => {
+
+    const card =
+      document.createElement(
+        "div"
+      );
+
+    card.className =
+      "journal-entry";
+
+    const title =
+      document.createElement(
+        "div"
+      );
+
+    title.className =
+      "journal-entry-title";
+
+    title.textContent =
+      entry.title;
+
+    const text =
+      document.createElement(
+        "div"
+      );
+
+    text.className =
+      "journal-entry-text";
+
+    text.textContent =
+      entry.text;
+
+    card.appendChild(title);
+    card.appendChild(text);
+
+    DOM.journalContent.appendChild(
+      card
+    );
+  }
+);
+
+/* =========================================================
+   SETTINGS
+   ========================================================= */
+
+function updateSettingsUI() {
+
+  if (
+    DOM.musicToggle
+  ) {
+    DOM.musicToggle.classList.toggle(
+      "active",
+      !!state.settings.music
+    );
+  }
+
+  if (
+    DOM.soundToggle
+  ) {
+    DOM.soundToggle.classList.toggle(
+      "active",
+      !!state.settings.sound
+    );
+  }
+
+  if (
+    DOM.typingToggle
+  ) {
+    DOM.typingToggle.classList.toggle(
+      "active",
+      !!state.settings.typing
+    );
+  }
+}
+
+function toggleMusic() {
+
+  state.settings.music =
+    !state.settings.music;
+
+  if (
+    state.settings.music
+  ) {
+    startMusic();
+  } else {
+    stopMusic();
+  }
+
+  updateSettingsUI();
+  saveGame(false);
+}
+
+function toggleSound() {
+
+  state.settings.sound =
+    !state.settings.sound;
+
+  updateSettingsUI();
+  saveGame(false);
+}
+
+function toggleTyping() {
+
+  state.settings.typing =
+    !state.settings.typing;
+
+  updateSettingsUI();
+  saveGame(false);
+}
+
+/* =========================================================
+   PANELS
+   ========================================================= */
+
+function openPanel(
+  panel
+) {
+
+  if (!panel) {
+    return;
+  }
+
+  panel.classList.remove(
+    "hidden"
+  );
+}
+
+function closePanel(
+  panel
+) {
+
+  if (!panel) {
+    return;
+  }
+
+  panel.classList.add(
+    "hidden"
+  );
+}
+
+/* =========================================================
+   EVENT BINDING
+   ========================================================= */
+
+function bindEvents() {
+
+  if (
+    DOM.newGameBtn
+  ) {
+    DOM.newGameBtn.addEventListener(
+      "click",
+      startNewGame
+    );
+  }
+
+  if (
+    DOM.continueBtn
+  ) {
+    DOM.continueBtn.addEventListener(
+      "click",
+      continueGame
+    );
+  }
+
+  if (
+    DOM.restartBtn
+  ) {
+    DOM.restartBtn.addEventListener(
+      "click",
+      restartAfterEnding
+    );
+  }
+
+  if (
+    DOM.titleBtn
+  ) {
+    DOM.titleBtn.addEventListener(
+      "click",
+      returnToTitle
+    );
+  }
+
+  if (
+    DOM.inventoryBtn
+  ) {
+    DOM.inventoryBtn.addEventListener(
+      "click",
+      () => {
+        renderInventory();
+        openPanel(
+          DOM.inventoryPanel
+        );
+      }
+    );
+  }
+
+  if (
+    DOM.achievementsBtn
+  ) {
+    DOM.achievementsBtn.addEventListener(
+      "click",
+      () => {
+        renderAchievements();
+        openPanel(
+          DOM.achievementsPanel
+        );
+      }
+    );
+  }
+
+  if (
+    DOM.journalBtn
+  ) {
+    DOM.journalBtn.addEventListener(
+      "click",
+      () => {
+        renderJournal();
+        openPanel(
+          DOM.journalPanel
+        );
+      }
+    );
+  }
+
+  if (
+    DOM.closeInventoryBtn
+  ) {
+    DOM.closeInventoryBtn.addEventListener(
+      "click",
+      () => {
+        closePanel(
+          DOM.inventoryPanel
+        );
+      }
+    );
+  }
+
+  if (
+    DOM.closeAchievementsBtn
+  ) {
+    DOM.closeAchievementsBtn.addEventListener(
+      "click",
+      () => {
+        closePanel(
+          DOM.achievementsPanel
+        );
+      }
+    );
+  }
+
+  if (
+    DOM.closeJournalBtn
+  ) {
+    DOM.closeJournalBtn.addEventListener(
+      "click",
+      () => {
+        closePanel(
+          DOM.journalPanel
+        );
+      }
+    );
+  }
+
+  if (
+    DOM.settingsBtn
+  ) {
+    DOM.settingsBtn.addEventListener(
+      "click",
+      () => {
+        updateSettingsUI();
+        openPanel(
+          DOM.settingsPanel
+        );
+      }
+    );
+  }
+
+  if (
+    DOM.closeSettingsBtn
+  ) {
+    DOM.closeSettingsBtn.addEventListener(
+      "click",
+      () => {
+        closePanel(
+          DOM.settingsPanel
+        );
+      }
+    );
+  }
+
+  if (
+    DOM.musicToggle
+  ) {
+    DOM.musicToggle.addEventListener(
+      "click",
+      toggleMusic
+    );
+  }
+
+  if (
+    DOM.soundToggle
+  ) {
+    DOM.soundToggle.addEventListener(
+      "click",
+      toggleSound
+    );
+  }
+
+  if (
+    DOM.typingToggle
+  ) {
+    DOM.typingToggle.addEventListener(
+      "click",
+      toggleTyping
+    );
+  }
+
+  if (
+    DOM.saveBtn
+  ) {
+    DOM.saveBtn.addEventListener(
+      "click",
+      () => {
+        saveGame(true);
+      }
+    );
+  }
+
+  if (
+    DOM.exitBtn
+  ) {
+    DOM.exitBtn.addEventListener(
+      "click",
+      returnToTitle
+    );
+  }
+
+  if (
+    DOM.restartFromEnd
+  ) {
+    DOM.restartFromEnd.addEventListener(
+      "click",
+      restartAfterEnding
+    );
+  }
+
+  if (
+    DOM.endToTitleBtn
+  ) {
+    DOM.endToTitleBtn.addEventListener(
+      "click",
+      returnToTitle
+    );
+  }
+
+  document.addEventListener(
+    "keydown",
+    event => {
+
+      if (
+        event.key === "Escape"
+      ) {
+
+        [
+          DOM.inventoryPanel,
+          DOM.achievementsPanel,
+          DOM.journalPanel,
+          DOM.settingsPanel
+        ].forEach(
+          panel => {
+            if (
+              panel &&
+              !panel.classList.contains(
+                "hidden"
+              )
+            ) {
+              closePanel(panel);
+            }
+          }
+        );
+      }
+    }
+  );
+}
+
+/* =========================================================
+   LOADING
+   ========================================================= */
+
+function runLoading() {
+
+  const loading =
+    DOM.loadingScreen;
+
+  const start =
+    DOM.startScreen;
+
+  const progress =
+    DOM.loadingProgress;
+
+  const status =
+    DOM.loadingStatus;
+
+  if (!loading) {
+    if (start) {
+      start.classList.remove(
+        "hidden"
+      );
+      start.classList.add(
+        "active"
+      );
+    }
+    return;
+  }
+
+  let value = 0;
+
+  const messages = [
+    "تهيئة العالم...",
+    "تحميل القصة...",
+    "بناء الذكريات...",
+    "تحضير الأدلة...",
+    "فتح الأبواب...",
+    "العالم جاهز."
+  ];
+
+  let index = 0;
+
+  const timer =
+    setInterval(
+      () => {
+
+        value += 20;
+
+        if (
+          progress
+        ) {
+          progress.style.width =
+            `${Math.min(
+              value,
+              100
+            )}%`;
+        }
+
+        if (
+          status
+        ) {
+          status.textContent =
+            messages[
+              Math.min(
+                index,
+                messages.length - 1
+              )
+            ];
+        }
+
+        index++;
+
+        if (
+          value >= 100
+        ) {
+
+          clearInterval(timer);
+
+          setTimeout(
+            () => {
+
+              loading.classList.remove(
+                "active"
+              );
+
+              loading.classList.add(
+                "hidden"
+              );
+
+              loading.style.display =
+                "none";
+
+              if (start) {
+
+                start.classList.remove(
+                  "hidden"
+                );
+
+                start.classList.add(
+                  "active"
+                );
+
+                start.style.display =
+                  "flex";
+              }
+
+              updateContinueButton();
+
+            },
+            300
+          );
+        }
+
+      },
+      250
+    );
+
+  /* أمان إضافي حتى لا تعلق شاشة التحميل */
+  setTimeout(
+    () => {
+
+      clearInterval(timer);
+
+      loading.classList.remove(
+        "active"
+      );
+
+      loading.classList.add(
+        "hidden"
+      );
+
+      loading.style.display =
+        "none";
+
+      if (start) {
+
+        start.classList.remove(
+          "hidden"
+        );
+
+        start.classList.add(
+          "active"
+        );
+
+        start.style.display =
+          "flex";
+      }
+
+      updateContinueButton();
+
+    },
+    6000
+  );
+}
+
+/* =========================================================
+   CONTINUE BUTTON
+   ========================================================= */
+
+function updateContinueButton() {
+
+  if (
+    !DOM.continueBtn
+  ) {
+    return;
+  }
+
+  if (
+    hasSave()
+  ) {
+
+    DOM.continueBtn.style.display =
+      "";
+
+    DOM.continueBtn.disabled =
+      false;
+
+  } else {
+
+    DOM.continueBtn.style.display =
+      "none";
+
+    DOM.continueBtn.disabled =
+      true;
+  }
+}
+
+/* =========================================================
+   INITIALIZATION
+   ========================================================= */
+
+function init() {
+
+  try {
+
+    if (
+      typeof GAME_DATA ===
+      "undefined"
+    ) {
+
+      console.error(
+        "GAME_DATA غير موجود."
+      );
+
+      return;
+    }
+
+    state =
+      loadGame() ||
+      createInitialState();
+
+    state =
+      normalizeState(state);
+
+    bindEvents();
+
+    updateHUD();
+    updateSettingsUI();
+    updateContinueButton();
+
+    calculateStats();
+
+    runLoading();
+
+  } catch (
+    error
+  ) {
+
+    console.error(
+      "Initialization error:",
+      error
+    );
+
+    /* حتى لو حدث خطأ، لا نترك اللاعب في شاشة التحميل */
+
+    const loading =
+      document.getElementById(
+        "loadingScreen"
+      );
+
+    const start =
+      document.getElementById(
+        "startScreen"
+      );
+
+    if (loading) {
+
+      loading.classList.remove(
+        "active"
+      );
+
+      loading.classList.add(
+        "hidden"
+      );
+
+      loading.style.display =
+        "none";
+    }
+
+    if (start) {
+
+      start.classList.remove(
+        "hidden"
+      );
+
+      start.classList.add(
+        "active"
+      );
+
+      start.style.display =
+        "flex";
+    }
+  }
+}
+
+/* =========================================================
+   START
+   ========================================================= */
+
+if (
+  document.readyState ===
+  "loading"
+) {
+
+  document.addEventListener(
+    "DOMContentLoaded",
+    init,
+    {
+      once: true
+    }
+  );
+
+} else {
+
+  init();
+
+}
+
+})();
