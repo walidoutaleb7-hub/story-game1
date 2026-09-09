@@ -119,7 +119,6 @@
     closeSettingsBtn: $("closeSettingsBtn"),
     settingsDoneBtn: $("settingsDoneBtn"),
 
-    /* أسماء HTML الحقيقية + توافق مع الأسماء القديمة */
     saveBtn:
       $("saveGameBtn") ||
       $("saveBtn"),
@@ -160,7 +159,6 @@
     finalEvidence: $("finalEvidence"),
     finalMemories: $("finalMemories"),
 
-    /* أسماء HTML الحقيقية */
     restartBtn:
       $("restartFromEnd") ||
       $("restartBtn"),
@@ -366,11 +364,6 @@
   }
 
   function updateSettingsUI() {
-    /*
-      toggle-btn في HTML ليس checkbox.
-      لذلك نستعمل class active بدل checked.
-    */
-
     if (DOM.sfxToggle) {
       DOM.sfxToggle.classList.toggle(
         "active",
@@ -1783,24 +1776,34 @@
       const image =
         scene.image ||
         scene.background ||
+        scene.bg ||
         "";
 
-      /*
-        sceneImage في HTML عبارة عن div.
-        لذلك لا نستعمل src عليه.
-      */
+      const elementType =
+        DOM.sceneImage.tagName
+          ?.toLowerCase();
 
       if (
-        DOM.sceneImage.tagName
-          ?.toLowerCase() ===
-        "img"
+        elementType === "img"
       ) {
         if (image) {
           DOM.sceneImage.src =
             image;
 
           DOM.sceneImage.style.display =
-            "";
+            "block";
+
+          DOM.sceneImage.style.width =
+            "100%";
+
+          DOM.sceneImage.style.height =
+            "100%";
+
+          DOM.sceneImage.style.objectFit =
+            "cover";
+
+          DOM.sceneImage.style.objectPosition =
+            "center";
         } else {
           DOM.sceneImage.removeAttribute(
             "src"
@@ -1811,9 +1814,11 @@
         }
 
       } else {
+
         if (image) {
           DOM.sceneImage.style.backgroundImage =
             `url("${String(image)
+              .replace(/\\/g, "\\\\")
               .replace(/"/g, '\\"')}")`;
 
           DOM.sceneImage.style.backgroundSize =
@@ -1825,17 +1830,72 @@
           DOM.sceneImage.style.backgroundRepeat =
             "no-repeat";
 
-          DOM.sceneImage.style.display =
-            "";
-        } else {
-          /*
-            إزالة أي صورة قديمة بالكامل.
-          */
-          DOM.sceneImage.style.backgroundImage =
-            "none";
+          DOM.sceneImage.style.width =
+            "100%";
+
+          DOM.sceneImage.style.minHeight =
+            "260px";
 
           DOM.sceneImage.style.display =
-            "none";
+            "block";
+
+          DOM.sceneImage.dataset.hasImage =
+            "true";
+
+        } else {
+          /*
+            لا نخلي منطقة المشهد فارغة بالكامل.
+            نستعمل خلفية احتياطية مرئية.
+          */
+
+          const weather =
+            String(
+              scene.weather || ""
+            );
+
+          let fallback =
+            "linear-gradient(180deg,#101827 0%,#070b12 55%,#020307 100%)";
+
+          if (
+            weather.includes("مطر")
+          ) {
+            fallback =
+              "linear-gradient(180deg,#1b2b3d 0%,#101923 50%,#05070b 100%)";
+          } else if (
+            weather.includes("ضباب")
+          ) {
+            fallback =
+              "linear-gradient(180deg,#46505a 0%,#242c32 50%,#090c10 100%)";
+          } else if (
+            weather.includes("ثلج")
+          ) {
+            fallback =
+              "linear-gradient(180deg,#718090 0%,#36424d 50%,#0a0d11 100%)";
+          }
+
+          DOM.sceneImage.style.backgroundImage =
+            fallback;
+
+          DOM.sceneImage.style.backgroundSize =
+            "cover";
+
+          DOM.sceneImage.style.backgroundPosition =
+            "center";
+
+          DOM.sceneImage.style.backgroundRepeat =
+            "no-repeat";
+
+          DOM.sceneImage.style.width =
+            "100%";
+
+          DOM.sceneImage.style.minHeight =
+            "260px";
+
+          DOM.sceneImage.style.display =
+            "block";
+
+          DOM.sceneImage.dataset.hasImage =
+            "false";
         }
       }
     }
@@ -2207,6 +2267,26 @@
       checkAchievements();
 
       saveGame(false);
+
+      /*
+        نضمن أن المشهد يبدأ من الأعلى
+        عند الانتقال لمشهد جديد.
+      */
+      requestAnimationFrame(() => {
+        if (DOM.gameScreen) {
+          DOM.gameScreen.scrollTop = 0;
+        }
+
+        if (DOM.sceneArea) {
+          DOM.sceneArea.scrollIntoView({
+            behavior:
+              state.settings.motion
+                ? "smooth"
+                : "auto",
+            block: "start"
+          });
+        }
+      });
     };
 
     if (useTransition) {
@@ -2377,10 +2457,6 @@
           text
         );
 
-        /*
-          منع الضغط المزدوج السريع
-          أثناء الانتقال.
-        */
         button.addEventListener(
           "click",
           () => {
@@ -2786,11 +2862,6 @@
         state.stats.memories;
     }
 
-    /*
-      في HTML الحالي finalStats نفسه
-      هو الحاوية، لذلك نستعمله فقط
-      إذا لم تكن العناصر الداخلية موجودة.
-    */
     if (
       DOM.finalStats &&
       !DOM.finalChoices &&
@@ -2817,6 +2888,9 @@
       DOM.loadingScreen.classList.remove(
         "active"
       );
+
+      DOM.loadingScreen.style.display =
+        "none";
     }
 
     if (
@@ -2829,6 +2903,9 @@
       DOM.startScreen.classList.remove(
         "active"
       );
+
+      DOM.startScreen.style.display =
+        "none";
     }
 
     if (
@@ -2841,6 +2918,9 @@
       DOM.endScreen.classList.remove(
         "active"
       );
+
+      DOM.endScreen.style.display =
+        "none";
     }
 
     if (
@@ -2853,6 +2933,9 @@
       DOM.gameScreen.classList.add(
         "active"
       );
+
+      DOM.gameScreen.style.display =
+        "";
     }
   }
 
@@ -2901,14 +2984,12 @@
 
     updateHUD();
 
-    showCinematic(
-      findChapterByNumber(
-        1
-      ),
-      () => {
-        renderScene();
-      }
-    );
+    /*
+      الإصلاح الأساسي:
+      لا ننتظر Cinematic حتى تبدأ اللعبة.
+      نعرض المشهد مباشرة.
+    */
+    renderScene();
 
     saveGame(false);
 
@@ -2965,6 +3046,9 @@
       DOM.gameScreen.classList.remove(
         "active"
       );
+
+      DOM.gameScreen.style.display =
+        "none";
     }
 
     if (
@@ -3571,10 +3655,6 @@
 
   function bindEvents() {
 
-    /* =====================================================
-       START SCREEN
-       ===================================================== */
-
     DOM.newGameBtn?.addEventListener(
       "click",
       startNewGame
@@ -3598,10 +3678,6 @@
       }
     );
 
-    /* =====================================================
-       HOW TO PLAY
-       ===================================================== */
-
     DOM.closeHowToPlayBtn?.addEventListener(
       "click",
       () => {
@@ -3620,10 +3696,6 @@
       }
     );
 
-    /* =====================================================
-       GAME MENU
-       ===================================================== */
-
     DOM.menuBtn?.addEventListener(
       "click",
       openMenu
@@ -3633,12 +3705,6 @@
       "click",
       closeMenu
     );
-
-    /*
-      هذه كانت من أهم المشاكل:
-      أزرار القائمة موجودة في HTML
-      لكن لم تكن مربوطة بالـJS.
-    */
 
     DOM.menuInventoryBtn?.addEventListener(
       "click",
@@ -3660,36 +3726,20 @@
       openSettings
     );
 
-    /* =====================================================
-       QUICK INVENTORY
-       ===================================================== */
-
     DOM.inventoryBtn?.addEventListener(
       "click",
       openInventory
     );
-
-    /* =====================================================
-       QUICK ACHIEVEMENTS
-       ===================================================== */
 
     DOM.achievementsBtn?.addEventListener(
       "click",
       openAchievements
     );
 
-    /* =====================================================
-       QUICK JOURNAL
-       ===================================================== */
-
     DOM.journalBtn?.addEventListener(
       "click",
       openJournal
     );
-
-    /* =====================================================
-       CLOSE BUTTONS
-       ===================================================== */
 
     DOM.closeInventoryBtn?.addEventListener(
       "click",
@@ -3741,10 +3791,6 @@
         );
       }
     );
-
-    /* =====================================================
-       SETTINGS — BUTTON TOGGLES
-       ===================================================== */
 
     DOM.sfxToggle?.addEventListener(
       "click",
@@ -3801,18 +3847,10 @@
       }
     );
 
-    /* =====================================================
-       SOUND
-       ===================================================== */
-
     DOM.soundBtn?.addEventListener(
       "click",
       toggleSound
     );
-
-    /* =====================================================
-       SKIP TEXT
-       ===================================================== */
 
     DOM.skipTextBtn?.addEventListener(
       "click",
@@ -3825,10 +3863,6 @@
       }
     );
 
-    /* =====================================================
-       CINEMATIC
-       ===================================================== */
-
     DOM.cinematicContinueBtn?.addEventListener(
       "click",
       () => {
@@ -3839,10 +3873,6 @@
         closeCinematic();
       }
     );
-
-    /* =====================================================
-       SAVE
-       ===================================================== */
 
     DOM.saveBtn?.addEventListener(
       "click",
@@ -3855,10 +3885,6 @@
       }
     );
 
-    /* =====================================================
-       EXIT TO TITLE
-       ===================================================== */
-
     DOM.exitBtn?.addEventListener(
       "click",
       () => {
@@ -3870,10 +3896,6 @@
       }
     );
 
-    /* =====================================================
-       END SCREEN
-       ===================================================== */
-
     DOM.restartBtn?.addEventListener(
       "click",
       restartAfterEnding
@@ -3883,10 +3905,6 @@
       "click",
       returnToTitle
     );
-
-    /* =====================================================
-       CLOSE OVERLAY BY BACKDROP
-       ===================================================== */
 
     document
       .querySelectorAll(
@@ -3910,10 +3928,6 @@
         }
       );
 
-    /* =====================================================
-       GENERIC DATA CLOSE
-       ===================================================== */
-
     document
       .querySelectorAll(
         "[data-close-overlay]"
@@ -3934,10 +3948,6 @@
           );
         }
       );
-
-    /* =====================================================
-       KEYBOARD
-       ===================================================== */
 
     document.addEventListener(
       "keydown",
@@ -4077,11 +4087,6 @@
         180
       );
 
-    /*
-      حماية إضافية حتى لا تبقى اللعبة
-      عالقة في شاشة التحميل.
-    */
-
     setTimeout(
       () => {
         clearInterval(
@@ -4157,6 +4162,9 @@
       DOM.gameScreen.classList.remove(
         "active"
       );
+
+      DOM.gameScreen.style.display =
+        "none";
     }
 
     if (
@@ -4182,10 +4190,6 @@
     if (
       DOM.gameLogo
     ) {
-      /*
-        لا نستبدل محتوى الشعار كله
-        لأن HTML يحتوي على عناصر التصميم.
-      */
       DOM.gameLogo.setAttribute(
         "aria-label",
         GAME.title ||
@@ -4316,6 +4320,7 @@
             state.chapter
           );
 
+        showGameScreen();
         renderScene();
       }
     },
