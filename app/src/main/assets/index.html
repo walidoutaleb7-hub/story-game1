@@ -12,94 +12,44 @@
         viewport-fit=cover"
     >
 
-    <meta
-        name="theme-color"
-        content="#08090d"
-    >
-
-    <meta
-        name="mobile-web-app-capable"
-        content="yes"
-    >
-
-    <meta
-        name="apple-mobile-web-app-capable"
-        content="yes"
-    >
+    <meta name="theme-color" content="#08090d">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
 
     <title>ظلال المجهول</title>
 
-    <!-- =====================================================
-         Fonts
-         ===================================================== -->
-
-    <link
-        rel="preconnect"
-        href="https://fonts.googleapis.com"
-    >
-
-    <link
-        rel="preconnect"
-        href="https://fonts.gstatic.com"
-        crossorigin
-    >
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
     <link
         href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap"
         rel="stylesheet"
     >
 
-    <!-- =====================================================
-         Main CSS
-         ===================================================== -->
-
-    <link
-        rel="stylesheet"
-        href="style.css"
-    >
+    <link rel="stylesheet" href="style.css">
 </head>
-
 
 <body>
 
-<!-- =========================================================
-     APP ROOT
-     ========================================================= -->
+<div id="app" class="app">
 
-<div
-    id="app"
-    class="app"
->
-
-
-    <!-- =====================================================
-         AMBIENT BACKGROUND
-         ===================================================== -->
+    <!-- AMBIENT BACKGROUND -->
 
     <div
         id="ambientBackground"
         class="ambient-background"
         aria-hidden="true"
     >
-
         <div class="ambient-gradient"></div>
-
         <div class="fog fog-one"></div>
         <div class="fog fog-two"></div>
         <div class="fog fog-three"></div>
-
         <div class="particles" id="particles"></div>
-
-        <div
-            class="vignette"
-        ></div>
-
+        <div class="vignette"></div>
     </div>
 
 
-    <!-- =====================================================
-         LOADING SCREEN
-         ===================================================== -->
+    <!-- LOADING SCREEN -->
 
     <section
         id="loadingScreen"
@@ -140,9 +90,7 @@
     </section>
 
 
-    <!-- =====================================================
-         START SCREEN
-         ===================================================== -->
+    <!-- START SCREEN -->
 
     <section
         id="startScreen"
@@ -153,36 +101,26 @@
 
         <div class="start-content">
 
-            <!-- Logo -->
-
             <div
                 class="game-logo"
                 id="gameLogo"
                 aria-label="شعار ظلال المجهول"
             >
-
                 <div class="logo-ring"></div>
 
                 <div class="logo-inner">
                     ◈
                 </div>
-
             </div>
 
 
-            <!-- Title -->
-
             <div class="title-wrapper">
 
-                <div
-                    class="title-small"
-                >
+                <div class="title-small">
                     قصة تفاعلية
                 </div>
 
-                <h1
-                    class="game-title"
-                >
+                <h1 class="game-title">
                     ظلال
                     <span>المجهول</span>
                 </h1>
@@ -198,18 +136,13 @@
             </div>
 
 
-            <!-- Main buttons -->
-
-            <div
-                class="start-actions"
-            >
+            <div class="start-actions">
 
                 <button
                     id="continueBtn"
                     class="main-btn continue-btn"
                     type="button"
                 >
-
                     <span class="btn-icon">
                         ▶
                     </span>
@@ -217,7 +150,6 @@
                     <span>
                         متابعة القصة
                     </span>
-
                 </button>
 
 
@@ -226,7 +158,6 @@
                     class="main-btn primary-btn"
                     type="button"
                 >
-
                     <span class="btn-icon">
                         ✦
                     </span>
@@ -234,7 +165,6 @@
                     <span>
                         لعبة جديدة
                     </span>
-
                 </button>
 
 
@@ -249,54 +179,25 @@
             </div>
 
 
-            <!-- Start information -->
-
-            <div
-                class="start-info"
-            >
+            <div class="start-info">
 
                 <div class="info-item">
-
-                    <span>
-                        12
-                    </span>
-
-                    <small>
-                        فصل
-                    </small>
-
+                    <span>12</span>
+                    <small>فصل</small>
                 </div>
-
 
                 <div class="info-divider"></div>
 
-
                 <div class="info-item">
-
-                    <span>
-                        ∞
-                    </span>
-
-                    <small>
-                        اختيارات
-                    </small>
-
+                    <span>∞</span>
+                    <small>اختيارات</small>
                 </div>
-
 
                 <div class="info-divider"></div>
 
-
                 <div class="info-item">
-
-                    <span>
-                        ✦
-                    </span>
-
-                    <small>
-                        نهايات
-                    </small>
-
+                    <span>✦</span>
+                    <small>نهايات</small>
                 </div>
 
             </div>
@@ -311,9 +212,7 @@
     </section>
 
 
-    <!-- =====================================================
-         HOW TO PLAY OVERLAY
-         ===================================================== -->
+    <!-- HOW TO PLAY -->
 
     <div
         id="howToPlayOverlay"
@@ -438,23 +337,14 @@
     </div>
 
 
-    <!-- =====================================================
-         GAME SCREEN
-         ===================================================== -->
+    <!-- GAME SCREEN -->
 
     <main
         id="gameScreen"
         class="screen game-screen"
     >
 
-
-        <!-- =================================================
-             TOP BAR
-             ================================================= -->
-
-        <header
-            class="game-header"
-        >
+        <header class="game-header">
 
             <button
                 id="menuBtn"
@@ -468,9 +358,7 @@
             </button>
 
 
-            <div
-                class="chapter-info"
-            >
+            <div class="chapter-info">
 
                 <div
                     id="chapterLabel"
@@ -503,17 +391,11 @@
         </header>
 
 
-        <!-- =================================================
-             PROGRESS
-             ================================================= -->
+        <!-- PROGRESS -->
 
-        <div
-            class="story-progress-wrapper"
-        >
+        <div class="story-progress-wrapper">
 
-            <div
-                class="story-progress"
-            >
+            <div class="story-progress">
 
                 <div
                     id="progressBar"
@@ -532,19 +414,11 @@
         </div>
 
 
-        <!-- =================================================
-             HUD
-             ================================================= -->
+        <!-- HUD -->
 
-        <section
-            class="hud"
-        >
+        <section class="hud">
 
-            <!-- Health -->
-
-            <div
-                class="hud-card health-card"
-            >
+            <div class="hud-card health-card">
 
                 <div class="hud-icon">
                     ♥
@@ -556,9 +430,7 @@
                         الحالة
                     </small>
 
-                    <strong
-                        id="health"
-                    >
+                    <strong id="health">
                         100
                     </strong>
 
@@ -567,11 +439,7 @@
             </div>
 
 
-            <!-- Coins -->
-
-            <div
-                class="hud-card coin-card"
-            >
+            <div class="hud-card coin-card">
 
                 <div class="hud-icon">
                     ◈
@@ -583,9 +451,7 @@
                         القطع
                     </small>
 
-                    <strong
-                        id="coins"
-                    >
+                    <strong id="coins">
                         25
                     </strong>
 
@@ -594,11 +460,7 @@
             </div>
 
 
-            <!-- Chapter -->
-
-            <div
-                class="hud-card chapter-card"
-            >
+            <div class="hud-card chapter-card">
 
                 <div class="hud-icon">
                     ✦
@@ -610,9 +472,7 @@
                         الفصل
                     </small>
 
-                    <strong
-                        id="chapter"
-                    >
+                    <strong id="chapter">
                         1
                     </strong>
 
@@ -623,16 +483,12 @@
         </section>
 
 
-        <!-- =================================================
-             SCENE AREA
-             ================================================= -->
+        <!-- SCENE -->
 
         <section
             id="sceneArea"
             class="scene-area"
         >
-
-            <!-- Scene image / cinematic -->
 
             <div
                 id="sceneVisual"
@@ -644,9 +500,7 @@
                     class="scene-image"
                 ></div>
 
-                <div
-                    class="scene-overlay"
-                ></div>
+                <div class="scene-overlay"></div>
 
                 <div
                     id="sceneWeather"
@@ -666,32 +520,22 @@
             </div>
 
 
-            <!-- Scene content -->
-
             <article
                 id="storyPanel"
                 class="story-panel"
             >
 
-                <div
-                    class="scene-meta"
-                >
+                <div class="scene-meta">
 
-                    <span
-                        id="sceneChapterTag"
-                    >
+                    <span id="sceneChapterTag">
                         الفصل 01
                     </span>
 
-                    <span
-                        class="meta-dot"
-                    >
+                    <span class="meta-dot">
                         •
                     </span>
 
-                    <span
-                        id="sceneLocation"
-                    >
+                    <span id="sceneLocation">
                         مكان مجهول
                     </span>
 
@@ -706,8 +550,6 @@
                 </h1>
 
 
-                <!-- Typewriter text -->
-
                 <div
                     id="storyText"
                     class="story-text"
@@ -718,11 +560,7 @@
                 </div>
 
 
-                <!-- Reading controls -->
-
-                <div
-                    class="reading-controls"
-                >
+                <div class="reading-controls">
 
                     <button
                         id="skipTextBtn"
@@ -739,26 +577,20 @@
         </section>
 
 
-        <!-- =================================================
-             CHOICES
-             ================================================= -->
+        <!-- CHOICES -->
 
         <section
             id="choicesArea"
             class="choices-area"
         >
 
-            <div
-                class="choices-header"
-            >
+            <div class="choices-header">
 
                 <span>
                     ماذا ستفعل؟
                 </span>
 
-                <span
-                    class="choice-line"
-                ></span>
+                <span class="choice-line"></span>
 
             </div>
 
@@ -766,18 +598,12 @@
             <div
                 id="choices"
                 class="choices"
-            >
-
-                <!-- Choices generated by JS -->
-
-            </div>
+            ></div>
 
         </section>
 
 
-        <!-- =================================================
-             QUICK ACTIONS
-             ================================================= -->
+        <!-- QUICK ACTIONS -->
 
         <nav
             class="quick-actions"
@@ -798,9 +624,7 @@
                     الحقيبة
                 </span>
 
-                <b
-                    id="inventoryCount"
-                >
+                <b id="inventoryCount">
                     0
                 </b>
 
@@ -821,9 +645,7 @@
                     الإنجازات
                 </span>
 
-                <b
-                    id="achievementCount"
-                >
+                <b id="achievementCount">
                     0
                 </b>
 
@@ -851,9 +673,7 @@
     </main>
 
 
-    <!-- =====================================================
-         GAME MENU
-         ===================================================== -->
+    <!-- GAME MENU -->
 
     <div
         id="menuOverlay"
@@ -863,9 +683,7 @@
 
         <div class="overlay-backdrop"></div>
 
-        <aside
-            class="side-menu"
-        >
+        <aside class="side-menu">
 
             <div class="side-menu-header">
 
@@ -986,9 +804,7 @@
     </div>
 
 
-    <!-- =====================================================
-         INVENTORY OVERLAY
-         ===================================================== -->
+    <!-- INVENTORY -->
 
     <div
         id="inventoryOverlay"
@@ -998,13 +814,9 @@
 
         <div class="overlay-backdrop"></div>
 
-        <div
-            class="large-modal"
-        >
+        <div class="large-modal">
 
-            <header
-                class="modal-header"
-            >
+            <header class="modal-header">
 
                 <div>
 
@@ -1053,9 +865,7 @@
     </div>
 
 
-    <!-- =====================================================
-         ACHIEVEMENTS OVERLAY
-         ===================================================== -->
+    <!-- ACHIEVEMENTS -->
 
     <div
         id="achievementsOverlay"
@@ -1065,13 +875,9 @@
 
         <div class="overlay-backdrop"></div>
 
-        <div
-            class="large-modal"
-        >
+        <div class="large-modal">
 
-            <header
-                class="modal-header"
-            >
+            <header class="modal-header">
 
                 <div>
 
@@ -1096,15 +902,11 @@
             </header>
 
 
-            <div
-                class="achievement-summary"
-            >
+            <div class="achievement-summary">
 
                 <div>
 
-                    <strong
-                        id="achievementUnlocked"
-                    >
+                    <strong id="achievementUnlocked">
                         0
                     </strong>
 
@@ -1118,9 +920,7 @@
 
                 <div>
 
-                    <strong
-                        id="achievementTotal"
-                    >
+                    <strong id="achievementTotal">
                         12
                     </strong>
 
@@ -1136,20 +936,14 @@
             <div
                 id="achievementsContent"
                 class="achievements-content"
-            >
-
-                <!-- Generated by JS -->
-
-            </div>
+            ></div>
 
         </div>
 
     </div>
 
 
-    <!-- =====================================================
-         JOURNAL OVERLAY
-         ===================================================== -->
+    <!-- JOURNAL -->
 
     <div
         id="journalOverlay"
@@ -1159,13 +953,9 @@
 
         <div class="overlay-backdrop"></div>
 
-        <div
-            class="large-modal journal-modal"
-        >
+        <div class="large-modal journal-modal">
 
-            <header
-                class="modal-header"
-            >
+            <header class="modal-header">
 
                 <div>
 
@@ -1215,9 +1005,7 @@
     </div>
 
 
-    <!-- =====================================================
-         SETTINGS OVERLAY
-         ===================================================== -->
+    <!-- SETTINGS -->
 
     <div
         id="settingsOverlay"
@@ -1227,13 +1015,9 @@
 
         <div class="overlay-backdrop"></div>
 
-        <div
-            class="modal settings-modal"
-        >
+        <div class="modal settings-modal">
 
-            <header
-                class="modal-header"
-            >
+            <header class="modal-header">
 
                 <div>
 
@@ -1353,9 +1137,7 @@
     </div>
 
 
-    <!-- =====================================================
-         SCENE TRANSITION
-         ===================================================== -->
+    <!-- SCENE TRANSITION -->
 
     <div
         id="sceneTransition"
@@ -1384,9 +1166,7 @@
     </div>
 
 
-    <!-- =====================================================
-         CINEMATIC OVERLAY
-         ===================================================== -->
+    <!-- CINEMATIC -->
 
     <div
         id="cinematicOverlay"
@@ -1408,15 +1188,11 @@
                 ذكرى
             </div>
 
-            <h2
-                id="cinematicTitle"
-            >
+            <h2 id="cinematicTitle">
                 ...
             </h2>
 
-            <p
-                id="cinematicText"
-            >
+            <p id="cinematicText">
                 ...
             </p>
 
@@ -1435,9 +1211,7 @@
     </div>
 
 
-    <!-- =====================================================
-         ITEM ACQUIRED TOAST
-         ===================================================== -->
+    <!-- ITEM TOAST -->
 
     <div
         id="itemToast"
@@ -1458,9 +1232,7 @@
                 حصلت على
             </small>
 
-            <strong
-                id="itemToastName"
-            >
+            <strong id="itemToastName">
                 عنصر جديد
             </strong>
 
@@ -1469,9 +1241,7 @@
     </div>
 
 
-    <!-- =====================================================
-         ACHIEVEMENT TOAST
-         ===================================================== -->
+    <!-- ACHIEVEMENT TOAST -->
 
     <div
         id="achievementToast"
@@ -1492,9 +1262,7 @@
                 إنجاز جديد
             </small>
 
-            <strong
-                id="achievementToastTitle"
-            >
+            <strong id="achievementToastTitle">
                 إنجاز
             </strong>
 
@@ -1503,9 +1271,7 @@
     </div>
 
 
-    <!-- =====================================================
-         NOTIFICATION
-         ===================================================== -->
+    <!-- NOTIFICATION -->
 
     <div
         id="notification"
@@ -1513,37 +1279,27 @@
         aria-hidden="true"
     >
 
-        <span
-            id="notificationIcon"
-        >
+        <span id="notificationIcon">
             ✦
         </span>
 
-        <span
-            id="notificationText"
-        >
+        <span id="notificationText">
             تم الحفظ
         </span>
 
     </div>
 
 
-    <!-- =====================================================
-         END SCREEN
-         ===================================================== -->
+    <!-- END SCREEN -->
 
     <section
         id="endScreen"
         class="screen end-screen"
     >
 
-        <div
-            class="end-background"
-        ></div>
+        <div class="end-background"></div>
 
-        <div
-            class="end-content"
-        >
+        <div class="end-content">
 
             <div
                 id="endIcon"
@@ -1552,9 +1308,7 @@
                 ✦
             </div>
 
-            <div
-                class="end-label"
-            >
+            <div class="end-label">
                 انتهت الرحلة
             </div>
 
@@ -1573,11 +1327,7 @@
             </div>
 
 
-            <!-- Final stats -->
-
-            <div
-                class="final-stats"
-            >
+            <div class="final-stats">
 
                 <div class="final-stat">
 
@@ -1585,9 +1335,7 @@
                         الفصل
                     </span>
 
-                    <strong
-                        id="finalChapter"
-                    >
+                    <strong id="finalChapter">
                         12
                     </strong>
 
@@ -1600,9 +1348,7 @@
                         القطع
                     </span>
 
-                    <strong
-                        id="finalCoins"
-                    >
+                    <strong id="finalCoins">
                         0
                     </strong>
 
@@ -1615,9 +1361,7 @@
                         الإنجازات
                     </span>
 
-                    <strong
-                        id="finalAchievements"
-                    >
+                    <strong id="finalAchievements">
                         0
                     </strong>
 
@@ -1626,9 +1370,7 @@
             </div>
 
 
-            <div
-                class="end-actions"
-            >
+            <div class="end-actions">
 
                 <button
                     id="restartFromEnd"
@@ -1653,9 +1395,7 @@
     </section>
 
 
-    <!-- =====================================================
-         AUDIO
-         ===================================================== -->
+    <!-- AUDIO -->
 
     <audio
         id="bgMusic"
@@ -1669,9 +1409,7 @@
     ></audio>
 
 
-    <!-- =====================================================
-         GLOBAL FLASH
-         ===================================================== -->
+    <!-- GLOBAL FLASH -->
 
     <div
         id="screenFlash"
@@ -1680,12 +1418,39 @@
     ></div>
 
 
-    <!-- =====================================================
-         JS
-         ===================================================== -->
+    <!-- GAME JS -->
 
     <script src="data.js"></script>
     <script src="script.js"></script>
+
+
+    <!-- LOADING FALLBACK -->
+
+    <script>
+    (function () {
+
+        setTimeout(function () {
+
+            const loading =
+                document.getElementById("loadingScreen");
+
+            const start =
+                document.getElementById("startScreen");
+
+            if (loading) {
+                loading.classList.remove("active");
+                loading.style.display = "none";
+            }
+
+            if (start) {
+                start.classList.add("active");
+                start.style.display = "flex";
+            }
+
+        }, 7000);
+
+    })();
+    </script>
 
 </div>
 
