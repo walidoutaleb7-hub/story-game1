@@ -11,29 +11,25 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Java 17
+      - name: Setup Java
         uses: actions/setup-java@v5
         with:
           distribution: temurin
-          java-version: '17'
+          java-version: "17"
 
-      - name: Setup Android SDK
+      - name: Setup Android
         uses: android-actions/setup-android@v3
 
-      - name: Install Gradle
+      - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
-          gradle-version: '8.9'
+          gradle-version: "8.9"
 
-      - name: Clean old Android files
-        shell: bash
+      - name: Prepare project
         run: |
-          set -e
-
           rm -rf app/src/main/java
           rm -rf app/src/main/res
           rm -rf app/src/main/assets
@@ -44,10 +40,7 @@ jobs:
           mkdir -p app/src/main/res/drawable
 
       - name: Copy game files
-        shell: bash
         run: |
-          set -e
-
           cp index.html app/src/main/assets/index.html
           cp style.css app/src/main/assets/style.css
           cp script.js app/src/main/assets/script.js
@@ -57,21 +50,13 @@ jobs:
             cp -r assets/. app/src/main/assets/
           fi
 
-      - name: Copy application icon
-        shell: bash
+      - name: Check icon
         run: |
-          set -e
-
-          if [ ! -f "app/src/main/res/drawable/app_icon.png" ]; then
-            echo "ERROR: app_icon.png not found!"
-            exit 1
-          fi
-
-          echo "Icon found:"
+          test -f app/src/main/res/drawable/app_icon.png
+          echo "Icon found"
           ls -lh app/src/main/res/drawable/app_icon.png
 
       - name: Create settings.gradle
-        shell: bash
         run: |
           cat > settings.gradle <<'EOF'
 pluginManagement {
@@ -84,7 +69,6 @@ pluginManagement {
 
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
-
     repositories {
         google()
         mavenCentral()
@@ -92,12 +76,10 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "ShadowsUnknown"
-
 include(":app")
 EOF
 
-      - name: Create root build.gradle
-        shell: bash
+      - name: Create build.gradle
         run: |
           cat > build.gradle <<'EOF'
 plugins {
@@ -106,7 +88,6 @@ plugins {
 EOF
 
       - name: Create app build.gradle
-        shell: bash
         run: |
           cat > app/build.gradle <<'EOF'
 plugins {
@@ -115,7 +96,6 @@ plugins {
 
 android {
     namespace 'com.shadowsunknown.game'
-
     compileSdk 35
 
     defaultConfig {
@@ -128,13 +108,11 @@ android {
 }
 EOF
 
-      - name: Create AndroidManifest.xml
-        shell: bash
+      - name: Create AndroidManifest
         run: |
           cat > app/src/main/AndroidManifest.xml <<'EOF'
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-
     <application
         android:allowBackup="true"
         android:supportsRtl="true"
@@ -154,35 +132,27 @@ EOF
             </intent-filter>
 
         </activity>
-
     </application>
-
 </manifest>
 EOF
 
-      - name: Create styles.xml
-        shell: bash
+      - name: Create styles
         run: |
           cat > app/src/main/res/values/styles.xml <<'EOF'
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-
     <style
         name="AppTheme"
         parent="android:style/Theme.Material.NoActionBar">
-
         <item name="android:fontFamily">sans</item>
         <item name="android:windowLightStatusBar">false</item>
         <item name="android:statusBarColor">#060810</item>
         <item name="android:navigationBarColor">#060810</item>
-
     </style>
-
 </resources>
 EOF
 
-      - name: Create MainActivity.java
-        shell: bash
+      - name: Create MainActivity
         run: |
           cat > app/src/main/java/com/shadowsunknown/game/MainActivity.java <<'EOF'
 package com.shadowsunknown.game;
@@ -204,14 +174,12 @@ public class MainActivity extends Activity {
         webView = new WebView(this);
 
         WebSettings settings = webView.getSettings();
-
         settings.setJavaScriptEnabled(true);
         settings.setDomStorageEnabled(true);
         settings.setAllowFileAccess(true);
         settings.setAllowContentAccess(true);
 
         webView.setWebViewClient(new WebViewClient());
-
         webView.loadUrl("file:///android_asset/index.html");
 
         setContentView(webView);
@@ -228,62 +196,18 @@ public class MainActivity extends Activity {
 }
 EOF
 
-      - name: Verify project
-        shell: bash
+      - name: Verify Java files
         run: |
-          set -e
-
-          echo "=============================="
-          echo "ANDROID PROJECT"
-          echo "=============================="
-
-          find app/src/main -type f | sort
-
-          echo ""
-          echo "=============================="
-          echo "JAVA FILES"
-          echo "=============================="
-
+          echo "Java files:"
           find app/src/main/java -type f -name "*.java" -print
 
-          echo ""
-          echo "=============================="
-          echo "ICON"
-          echo "=============================="
-
-          ls -lh app/src/main/res/drawable/app_icon.png
-
-          echo ""
-          echo "=============================="
-          echo "GAME ASSETS"
-          echo "=============================="
-
-          ls -lh app/src/main/assets/
-
       - name: Build APK
-        shell: bash
         run: |
-          set -e
-
           gradle assembleDebug --stacktrace
 
-      - name: Verify APK
-        shell: bash
+      - name: Check APK
         run: |
-          set -e
-
-          APK=$(find app/build/outputs/apk/debug -type f -name "*.apk" | head -n 1)
-
-          if [ -z "$APK" ]; then
-            echo "ERROR: APK was not generated."
-            exit 1
-          fi
-
-          echo "=============================="
-          echo "APK GENERATED SUCCESSFULLY"
-          echo "=============================="
-
-          ls -lh "$APK"
+          find app/build/outputs/apk/debug -type f -name "*.apk" -print
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
