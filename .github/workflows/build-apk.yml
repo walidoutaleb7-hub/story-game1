@@ -41,8 +41,9 @@ jobs:
 
           mkdir -p app/src/main/java/com/shadowsunknown/game
           mkdir -p app/src/main/assets
-
           mkdir -p app/src/main/res/values
+          mkdir -p app/src/main/res/drawable
+
           mkdir -p app/src/main/res/mipmap-hdpi
           mkdir -p app/src/main/res/mipmap-mdpi
           mkdir -p app/src/main/res/mipmap-xhdpi
@@ -63,9 +64,21 @@ jobs:
           fi
 
 
+      - name: Copy application icon
+        run: |
+
+          if [ -f "app/src/main/res/drawable/app_icon.png" ]; then
+            echo "Icon already exists."
+          else
+            echo "Icon not found in drawable."
+          fi
+
+
       - name: Create settings.gradle
         run: |
+
           cat > settings.gradle <<'EOF'
+
           pluginManagement {
               repositories {
                   google()
@@ -76,6 +89,7 @@ jobs:
 
           dependencyResolutionManagement {
               repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+
               repositories {
                   google()
                   mavenCentral()
@@ -83,57 +97,85 @@ jobs:
           }
 
           rootProject.name = "ShadowsUnknown"
+
           include(":app")
+
           EOF
 
 
       - name: Create root build.gradle
         run: |
+
           cat > build.gradle <<'EOF'
+
           plugins {
               id 'com.android.application' version '8.7.3' apply false
           }
+
           EOF
 
 
       - name: Create app build.gradle
         run: |
+
           cat > app/build.gradle <<'EOF'
+
           plugins {
               id 'com.android.application'
           }
 
           android {
+
               namespace 'com.shadowsunknown.game'
+
               compileSdk 35
 
               defaultConfig {
+
                   applicationId 'com.shadowsunknown.game'
+
                   minSdk 23
+
                   targetSdk 35
+
                   versionCode 1
+
                   versionName '1.0'
               }
           }
+
           EOF
 
 
       - name: Create AndroidManifest
         run: |
+
           cat > app/src/main/AndroidManifest.xml <<'EOF'
+
           <?xml version="1.0" encoding="utf-8"?>
 
           <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
               <application
+
                   android:theme="@style/AppTheme"
+
                   android:label="ظلال المجهول"
+
                   android:allowBackup="true"
-                  android:supportsRtl="true">
+
+                  android:supportsRtl="true"
+
+                  android:icon="@drawable/app_icon"
+
+                  android:roundIcon="@drawable/app_icon">
 
                   <activity
+
                       android:name=".MainActivity"
+
                       android:screenOrientation="portrait"
+
                       android:exported="true">
 
                       <intent-filter>
@@ -151,12 +193,15 @@ jobs:
               </application>
 
           </manifest>
+
           EOF
 
 
       - name: Create theme
         run: |
+
           cat > app/src/main/res/values/styles.xml <<'EOF'
+
           <?xml version="1.0" encoding="utf-8"?>
 
           <resources>
@@ -166,19 +211,25 @@ jobs:
                   parent="android:style/Theme.Material.NoActionBar">
 
                   <item name="android:fontFamily">sans</item>
+
                   <item name="android:windowLightStatusBar">false</item>
+
                   <item name="android:statusBarColor">#060810</item>
+
                   <item name="android:navigationBarColor">#060810</item>
 
               </style>
 
           </resources>
+
           EOF
 
 
       - name: Create MainActivity
         run: |
+
           cat > app/src/main/java/com/shadowsunknown/game/MainActivity.java <<'EOF'
+
           package com.shadowsunknown.game;
 
           import android.app.Activity;
@@ -193,6 +244,7 @@ jobs:
 
               @Override
               protected void onCreate(Bundle savedInstanceState) {
+
                   super.onCreate(savedInstanceState);
 
                   webView = new WebView(this);
@@ -200,8 +252,11 @@ jobs:
                   WebSettings settings = webView.getSettings();
 
                   settings.setJavaScriptEnabled(true);
+
                   settings.setDomStorageEnabled(true);
+
                   settings.setAllowFileAccess(true);
+
                   settings.setAllowContentAccess(true);
 
                   webView.setWebViewClient(new WebViewClient());
@@ -216,29 +271,57 @@ jobs:
               @Override
               public void onBackPressed() {
 
-                  if (webView.canGoBack()) {
+                  if (webView != null && webView.canGoBack()) {
+
                       webView.goBack();
+
                   } else {
+
                       super.onBackPressed();
                   }
               }
           }
+
           EOF
+
+
+      - name: Verify project
+        run: |
+
+          echo "===== Project ====="
+
+          find app/src/main -maxdepth 4 -type f | sort
+
+          echo "===== Assets ====="
+
+          ls -lah app/src/main/assets
+
+          echo "===== Icon ====="
+
+          ls -lah app/src/main/res/drawable/app_icon.png
 
 
       - name: Build APK
         run: |
+
           gradle assembleDebug --stacktrace
 
 
       - name: Find APK
         run: |
-          find app/build/outputs/apk -type f -name "*.apk"
+
+          echo "===== APK FILES ====="
+
+          find app/build/outputs/apk -type f -name "*.apk" -print
 
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
+
         with:
+
           name: shadows-unknown-apk
+
           path: app/build/outputs/apk/debug/*.apk
+
           if-no-files-found: error
