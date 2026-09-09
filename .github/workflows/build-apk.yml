@@ -11,6 +11,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+
       - name: Checkout
         uses: actions/checkout@v4
 
@@ -20,7 +21,7 @@ jobs:
           distribution: temurin
           java-version: "17"
 
-      - name: Setup Android
+      - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
       - name: Setup Gradle
@@ -28,7 +29,7 @@ jobs:
         with:
           gradle-version: "8.9"
 
-      - name: Prepare project
+      - name: Prepare Android project
         run: |
           rm -rf app/src/main/java
           rm -rf app/src/main/res
@@ -50,164 +51,187 @@ jobs:
             cp -r assets/. app/src/main/assets/
           fi
 
-      - name: Check icon
+      - name: Copy icon
         run: |
-          test -f app/src/main/res/drawable/app_icon.png
-          echo "Icon found"
-          ls -lh app/src/main/res/drawable/app_icon.png
+          if [ ! -f "app/src/main/res/drawable/app_icon.png" ]; then
+            echo "ERROR: app_icon.png not found"
+            exit 1
+          fi
+
+          cp app/src/main/res/drawable/app_icon.png app/src/main/res/drawable/app_icon.png
 
       - name: Create settings.gradle
         run: |
-          cat > settings.gradle <<'EOF'
-pluginManagement {
-    repositories {
-        google()
-        mavenCentral()
-        gradlePluginPortal()
-    }
-}
+          printf '%s\n' \
+          'pluginManagement {' \
+          '    repositories {' \
+          '        google()' \
+          '        mavenCentral()' \
+          '        gradlePluginPortal()' \
+          '    }' \
+          '}' \
+          '' \
+          'dependencyResolutionManagement {' \
+          '    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)' \
+          '    repositories {' \
+          '        google()' \
+          '        mavenCentral()' \
+          '    }' \
+          '}' \
+          '' \
+          'rootProject.name = "ShadowsUnknown"' \
+          'include(":app")' \
+          > settings.gradle
 
-dependencyResolutionManagement {
-    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
-    repositories {
-        google()
-        mavenCentral()
-    }
-}
-
-rootProject.name = "ShadowsUnknown"
-include(":app")
-EOF
-
-      - name: Create build.gradle
+      - name: Create root build.gradle
         run: |
-          cat > build.gradle <<'EOF'
-plugins {
-    id 'com.android.application' version '8.7.3' apply false
-}
-EOF
+          printf '%s\n' \
+          'plugins {' \
+          '    id "com.android.application" version "8.7.3" apply false' \
+          '}' \
+          > build.gradle
 
       - name: Create app build.gradle
         run: |
-          cat > app/build.gradle <<'EOF'
-plugins {
-    id 'com.android.application'
-}
+          printf '%s\n' \
+          'plugins {' \
+          '    id "com.android.application"' \
+          '}' \
+          '' \
+          'android {' \
+          '    namespace "com.shadowsunknown.game"' \
+          '    compileSdk 35' \
+          '' \
+          '    defaultConfig {' \
+          '        applicationId "com.shadowsunknown.game"' \
+          '        minSdk 23' \
+          '        targetSdk 35' \
+          '        versionCode 1' \
+          '        versionName "1.0"' \
+          '    }' \
+          '}' \
+          > app/build.gradle
 
-android {
-    namespace 'com.shadowsunknown.game'
-    compileSdk 35
-
-    defaultConfig {
-        applicationId 'com.shadowsunknown.game'
-        minSdk 23
-        targetSdk 35
-        versionCode 1
-        versionName '1.0'
-    }
-}
-EOF
-
-      - name: Create AndroidManifest
+      - name: Create AndroidManifest.xml
         run: |
-          cat > app/src/main/AndroidManifest.xml <<'EOF'
-<?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <application
-        android:allowBackup="true"
-        android:supportsRtl="true"
-        android:label="ظلال المجهول"
-        android:icon="@drawable/app_icon"
-        android:roundIcon="@drawable/app_icon"
-        android:theme="@style/AppTheme">
+          printf '%s\n' \
+          '<?xml version="1.0" encoding="utf-8"?>' \
+          '<manifest xmlns:android="http://schemas.android.com/apk/res/android">' \
+          '' \
+          '    <application' \
+          '        android:allowBackup="true"' \
+          '        android:supportsRtl="true"' \
+          '        android:label="ظلال المجهول"' \
+          '        android:icon="@drawable/app_icon"' \
+          '        android:roundIcon="@drawable/app_icon"' \
+          '        android:theme="@style/AppTheme">' \
+          '' \
+          '        <activity' \
+          '            android:name=".MainActivity"' \
+          '            android:screenOrientation="portrait"' \
+          '            android:exported="true">' \
+          '' \
+          '            <intent-filter>' \
+          '                <action android:name="android.intent.action.MAIN" />' \
+          '                <category android:name="android.intent.category.LAUNCHER" />' \
+          '            </intent-filter>' \
+          '' \
+          '        </activity>' \
+          '' \
+          '    </application>' \
+          '' \
+          '</manifest>' \
+          > app/src/main/AndroidManifest.xml
 
-        <activity
-            android:name=".MainActivity"
-            android:screenOrientation="portrait"
-            android:exported="true">
-
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-
-        </activity>
-    </application>
-</manifest>
-EOF
-
-      - name: Create styles
+      - name: Create styles.xml
         run: |
-          cat > app/src/main/res/values/styles.xml <<'EOF'
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <style
-        name="AppTheme"
-        parent="android:style/Theme.Material.NoActionBar">
-        <item name="android:fontFamily">sans</item>
-        <item name="android:windowLightStatusBar">false</item>
-        <item name="android:statusBarColor">#060810</item>
-        <item name="android:navigationBarColor">#060810</item>
-    </style>
-</resources>
-EOF
+          printf '%s\n' \
+          '<?xml version="1.0" encoding="utf-8"?>' \
+          '<resources>' \
+          '' \
+          '    <style name="AppTheme" parent="android:style/Theme.Material.NoActionBar">' \
+          '        <item name="android:fontFamily">sans</item>' \
+          '        <item name="android:windowLightStatusBar">false</item>' \
+          '        <item name="android:statusBarColor">#060810</item>' \
+          '        <item name="android:navigationBarColor">#060810</item>' \
+          '    </style>' \
+          '' \
+          '</resources>' \
+          > app/src/main/res/values/styles.xml
 
-      - name: Create MainActivity
+      - name: Create MainActivity.java
         run: |
-          cat > app/src/main/java/com/shadowsunknown/game/MainActivity.java <<'EOF'
-package com.shadowsunknown.game;
+          printf '%s\n' \
+          'package com.shadowsunknown.game;' \
+          '' \
+          'import android.app.Activity;' \
+          'import android.os.Bundle;' \
+          'import android.webkit.WebSettings;' \
+          'import android.webkit.WebView;' \
+          'import android.webkit.WebViewClient;' \
+          '' \
+          'public class MainActivity extends Activity {' \
+          '' \
+          '    private WebView webView;' \
+          '' \
+          '    @Override' \
+          '    protected void onCreate(Bundle savedInstanceState) {' \
+          '        super.onCreate(savedInstanceState);' \
+          '' \
+          '        webView = new WebView(this);' \
+          '' \
+          '        WebSettings settings = webView.getSettings();' \
+          '        settings.setJavaScriptEnabled(true);' \
+          '        settings.setDomStorageEnabled(true);' \
+          '        settings.setAllowFileAccess(true);' \
+          '        settings.setAllowContentAccess(true);' \
+          '' \
+          '        webView.setWebViewClient(new WebViewClient());' \
+          '        webView.loadUrl("file:///android_asset/index.html");' \
+          '' \
+          '        setContentView(webView);' \
+          '    }' \
+          '' \
+          '    @Override' \
+          '    public void onBackPressed() {' \
+          '        if (webView != null && webView.canGoBack()) {' \
+          '            webView.goBack();' \
+          '        } else {' \
+          '            super.onBackPressed();' \
+          '        }' \
+          '    }' \
+          '}' \
+          > app/src/main/java/com/shadowsunknown/game/MainActivity.java
 
-import android.app.Activity;
-import android.os.Bundle;
-import android.webkit.WebSettings;
-import android.webkit.WebView;
-import android.webkit.WebViewClient;
-
-public class MainActivity extends Activity {
-
-    private WebView webView;
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-
-        webView = new WebView(this);
-
-        WebSettings settings = webView.getSettings();
-        settings.setJavaScriptEnabled(true);
-        settings.setDomStorageEnabled(true);
-        settings.setAllowFileAccess(true);
-        settings.setAllowContentAccess(true);
-
-        webView.setWebViewClient(new WebViewClient());
-        webView.loadUrl("file:///android_asset/index.html");
-
-        setContentView(webView);
-    }
-
-    @Override
-    public void onBackPressed() {
-        if (webView != null && webView.canGoBack()) {
-            webView.goBack();
-        } else {
-            super.onBackPressed();
-        }
-    }
-}
-EOF
-
-      - name: Verify Java files
+      - name: Verify project
         run: |
-          echo "Java files:"
+          echo "===== JAVA ====="
           find app/src/main/java -type f -name "*.java" -print
+
+          echo "===== RESOURCES ====="
+          find app/src/main/res -type f -print
+
+          echo "===== ASSETS ====="
+          find app/src/main/assets -type f -print
+
+          echo "===== ICON ====="
+          ls -lh app/src/main/res/drawable/app_icon.png
 
       - name: Build APK
         run: |
           gradle assembleDebug --stacktrace
 
-      - name: Check APK
+      - name: Verify APK
         run: |
-          find app/build/outputs/apk/debug -type f -name "*.apk" -print
+          APK=$(find app/build/outputs/apk/debug -type f -name "*.apk" | head -n 1)
+
+          if [ -z "$APK" ]; then
+            echo "ERROR: APK was not generated"
+            exit 1
+          fi
+
+          echo "APK:"
+          ls -lh "$APK"
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
