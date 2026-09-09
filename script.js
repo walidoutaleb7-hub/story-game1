@@ -160,10 +160,6 @@
     return Number.isFinite(n) ? n : fallback;
   }
 
-  function hasElement(el) {
-    return !!el;
-  }
-
   /* =========================================================
      FLAGS
      ========================================================= */
@@ -227,9 +223,7 @@
   function createInitialState() {
     return {
       version: 4,
-
       started: false,
-
       chapter: 1,
       scene: "c1_start",
 
@@ -238,7 +232,10 @@
         GAME.maxHealth || 100
       ),
 
-      coins: safeNumber(GAME.startingCoins, 25),
+      coins: safeNumber(
+        GAME.startingCoins,
+        25
+      ),
 
       inventory: [],
 
@@ -309,15 +306,18 @@
 
   function updateSettingsUI() {
     if (DOM.sfxToggle) {
-      DOM.sfxToggle.checked = !!state.settings.sfx;
+      DOM.sfxToggle.checked =
+        !!state.settings.sfx;
     }
 
     if (DOM.musicToggle) {
-      DOM.musicToggle.checked = !!state.settings.music;
+      DOM.musicToggle.checked =
+        !!state.settings.music;
     }
 
     if (DOM.motionToggle) {
-      DOM.motionToggle.checked = !!state.settings.motion;
+      DOM.motionToggle.checked =
+        !!state.settings.motion;
     }
 
     updateSoundIcon();
@@ -337,12 +337,15 @@
       );
 
       if (showMessage) {
-        notify("تم حفظ تقدمك بنجاح.");
+        notify(
+          "تم حفظ تقدمك بنجاح."
+        );
       }
 
       updateContinueButton();
 
       return true;
+
     } catch (error) {
       console.error(error);
 
@@ -356,19 +359,27 @@
 
   function loadGame() {
     try {
-      const raw = localStorage.getItem(SAVE_KEY);
+      const raw =
+        localStorage.getItem(
+          SAVE_KEY
+        );
 
       if (!raw) {
         return false;
       }
 
-      const saved = JSON.parse(raw);
+      const saved =
+        JSON.parse(raw);
 
-      if (!saved || typeof saved !== "object") {
+      if (
+        !saved ||
+        typeof saved !== "object"
+      ) {
         return false;
       }
 
-      const fresh = createInitialState();
+      const fresh =
+        createInitialState();
 
       state = {
         ...fresh,
@@ -389,21 +400,23 @@
           ...(saved.stats || {})
         },
 
-        inventory: Array.isArray(saved.inventory)
-          ? saved.inventory
-          : [],
+        inventory:
+          Array.isArray(saved.inventory)
+            ? saved.inventory
+            : [],
 
-        achievements: Array.isArray(saved.achievements)
-          ? saved.achievements
-          : [],
+        achievements:
+          Array.isArray(saved.achievements)
+            ? saved.achievements
+            : [],
 
-        history: Array.isArray(saved.history)
-          ? saved.history
-          : []
+        history:
+          Array.isArray(saved.history)
+            ? saved.history
+            : []
       };
 
       normalizeState();
-
       updateSettingsUI();
 
       return true;
@@ -416,7 +429,9 @@
 
   function deleteSave() {
     try {
-      localStorage.removeItem(SAVE_KEY);
+      localStorage.removeItem(
+        SAVE_KEY
+      );
     } catch (_) {}
 
     updateContinueButton();
@@ -424,14 +439,18 @@
 
   function hasSave() {
     try {
-      return !!localStorage.getItem(SAVE_KEY);
+      return !!localStorage.getItem(
+        SAVE_KEY
+      );
     } catch (_) {
       return false;
     }
   }
 
   function updateContinueButton() {
-    if (!DOM.continueBtn) return;
+    if (!DOM.continueBtn) {
+      return;
+    }
 
     DOM.continueBtn.style.display =
       hasSave() ? "" : "none";
@@ -443,29 +462,49 @@
 
   function normalizeState() {
     state.health = clamp(
-      safeNumber(state.health, GAME.startingHealth),
+      safeNumber(
+        state.health,
+        GAME.startingHealth
+      ),
       0,
-      safeNumber(GAME.maxHealth, 100)
+      safeNumber(
+        GAME.maxHealth,
+        100
+      )
     );
 
     state.coins = Math.max(
       0,
-      safeNumber(state.coins, GAME.startingCoins)
+      safeNumber(
+        state.coins,
+        GAME.startingCoins
+      )
     );
 
-    if (!Array.isArray(state.inventory)) {
+    if (
+      !Array.isArray(state.inventory)
+    ) {
       state.inventory = [];
     }
 
-    if (!Array.isArray(state.achievements)) {
+    if (
+      !Array.isArray(
+        state.achievements
+      )
+    ) {
       state.achievements = [];
     }
 
-    if (!state.flags || typeof state.flags !== "object") {
+    if (
+      !state.flags ||
+      typeof state.flags !== "object"
+    ) {
       state.flags = {};
     }
 
-    Object.keys(defaultFlags).forEach(flag => {
+    Object.keys(
+      defaultFlags
+    ).forEach(flag => {
       if (!(flag in state.flags)) {
         state.flags[flag] =
           defaultFlags[flag];
@@ -480,7 +519,9 @@
   function allChapters() {
     return (
       typeof GAME_DATA !== "undefined" &&
-      Array.isArray(GAME_DATA.chapters)
+      Array.isArray(
+        GAME_DATA.chapters
+      )
     )
       ? GAME_DATA.chapters
       : [];
@@ -489,20 +530,31 @@
   function findChapterByNumber(number) {
     return allChapters().find(
       chapter =>
-        Number(chapter.number || chapter.id) ===
-        Number(number)
+        Number(
+          chapter.number ||
+          chapter.id
+        ) === Number(number)
     );
   }
 
   function findScene(sceneId) {
-    for (const chapter of allChapters()) {
-      if (!Array.isArray(chapter.scenes)) {
+    for (
+      const chapter of allChapters()
+    ) {
+      if (
+        !Array.isArray(
+          chapter.scenes
+        )
+      ) {
         continue;
       }
 
-      const scene = chapter.scenes.find(
-        s => s && s.id === sceneId
-      );
+      const scene =
+        chapter.scenes.find(
+          s =>
+            s &&
+            s.id === sceneId
+        );
 
       if (scene) {
         return {
@@ -516,32 +568,49 @@
   }
 
   function currentSceneData() {
-    return findScene(state.scene);
+    return findScene(
+      state.scene
+    );
   }
 
   /* =========================================================
      REQUIREMENTS
      ========================================================= */
 
-  function checkRequirement(requirement) {
+  function checkRequirement(
+    requirement
+  ) {
     if (!requirement) {
       return true;
     }
 
-    if (typeof requirement === "boolean") {
+    if (
+      typeof requirement ===
+      "boolean"
+    ) {
       return requirement;
     }
 
-    if (typeof requirement !== "object") {
+    if (
+      typeof requirement !==
+      "object"
+    ) {
       return true;
     }
 
     if (requirement.flags) {
-      for (const [key, expected] of Object.entries(
-        requirement.flags
-      )) {
+      for (
+        const [
+          key,
+          expected
+        ] of Object.entries(
+          requirement.flags
+        )
+      ) {
         if (
-          Boolean(state.flags[key]) !==
+          Boolean(
+            state.flags[key]
+          ) !==
           Boolean(expected)
         ) {
           return false;
@@ -549,25 +618,56 @@
       }
     }
 
-    if (Array.isArray(requirement.items)) {
-      for (const item of requirement.items) {
-        if (!state.inventory.includes(item)) {
+    if (
+      Array.isArray(
+        requirement.items
+      )
+    ) {
+      for (
+        const item of
+          requirement.items
+      ) {
+        if (
+          !state.inventory.includes(
+            item
+          )
+        ) {
           return false;
         }
       }
     }
 
-    if (Array.isArray(requirement.notItems)) {
-      for (const item of requirement.notItems) {
-        if (state.inventory.includes(item)) {
+    if (
+      Array.isArray(
+        requirement.notItems
+      )
+    ) {
+      for (
+        const item of
+          requirement.notItems
+      ) {
+        if (
+          state.inventory.includes(
+            item
+          )
+        ) {
           return false;
         }
       }
     }
 
-    if (Array.isArray(requirement.notFlags)) {
-      for (const flag of requirement.notFlags) {
-        if (state.flags[flag]) {
+    if (
+      Array.isArray(
+        requirement.notFlags
+      )
+    ) {
+      for (
+        const flag of
+          requirement.notFlags
+      ) {
+        if (
+          state.flags[flag]
+        ) {
           return false;
         }
       }
@@ -576,7 +676,9 @@
     if (
       requirement.minHealth != null &&
       state.health <
-        safeNumber(requirement.minHealth)
+        safeNumber(
+          requirement.minHealth
+        )
     ) {
       return false;
     }
@@ -584,7 +686,9 @@
     if (
       requirement.minCoins != null &&
       state.coins <
-        safeNumber(requirement.minCoins)
+        safeNumber(
+          requirement.minCoins
+        )
     ) {
       return false;
     }
@@ -592,7 +696,9 @@
     if (
       requirement.minChapter != null &&
       state.chapter <
-        safeNumber(requirement.minChapter)
+        safeNumber(
+          requirement.minChapter
+        )
     ) {
       return false;
     }
@@ -601,22 +707,34 @@
   }
 
   function choiceAvailable(choice) {
-    if (!choice) return false;
+    if (!choice) {
+      return false;
+    }
 
     if (choice.requires) {
-      return checkRequirement(choice.requires);
+      return checkRequirement(
+        choice.requires
+      );
     }
 
     if (choice.condition) {
-      if (typeof choice.condition === "function") {
+      if (
+        typeof choice.condition ===
+        "function"
+      ) {
         try {
-          return !!choice.condition(state);
+          return !!choice.condition(
+            state
+          );
         } catch (_) {
           return false;
         }
       }
 
-      if (typeof choice.condition === "object") {
+      if (
+        typeof choice.condition ===
+        "object"
+      ) {
         return checkRequirement(
           choice.condition
         );
@@ -633,7 +751,8 @@
   function itemData(id) {
     return (
       (
-        typeof GAME_DATA !== "undefined" &&
+        typeof GAME_DATA !==
+          "undefined" &&
         GAME_DATA &&
         GAME_DATA.items
       )?.[id]
@@ -647,9 +766,13 @@
   }
 
   function addItem(id) {
-    if (!id) return false;
+    if (!id) {
+      return false;
+    }
 
-    if (state.inventory.includes(id)) {
+    if (
+      state.inventory.includes(id)
+    ) {
       return false;
     }
 
@@ -668,7 +791,10 @@
       return false;
     }
 
-    state.inventory.splice(index, 1);
+    state.inventory.splice(
+      index,
+      1
+    );
 
     return true;
   }
@@ -693,12 +819,15 @@
      EFFECTS
      ========================================================= */
 
-  function applyEffects(effects = {}) {
-    if (!effects || typeof effects !== "object") {
+  function applyEffects(
+    effects = {}
+  ) {
+    if (
+      !effects ||
+      typeof effects !== "object"
+    ) {
       return;
     }
-
-    /* Health */
 
     if (effects.health != null) {
       state.health += safeNumber(
@@ -706,49 +835,52 @@
       );
     }
 
-    /* Coins */
-
     if (effects.coins != null) {
       state.coins += safeNumber(
         effects.coins
       );
     }
 
-    /* Items */
-
     if (effects.addItem) {
-      addItem(effects.addItem);
+      addItem(
+        effects.addItem
+      );
     }
 
     if (effects.addItem2) {
-      addItem(effects.addItem2);
+      addItem(
+        effects.addItem2
+      );
     }
 
     if (effects.item) {
-      addItem(effects.item);
+      addItem(
+        effects.item
+      );
     }
 
     if (effects.addItems) {
-      addItems(effects.addItems);
+      addItems(
+        effects.addItems
+      );
     }
 
     if (effects.removeItems) {
-      removeItems(effects.removeItems);
+      removeItems(
+        effects.removeItems
+      );
     }
-
-    /* Flags */
 
     if (effects.setFlags) {
       Object.entries(
         effects.setFlags
-      ).forEach(([flag, value]) => {
-        state.flags[flag] = !!value;
-      });
+      ).forEach(
+        ([flag, value]) => {
+          state.flags[flag] =
+            !!value;
+        }
+      );
     }
-
-    /*
-      دعم الصيغ القديمة الموجودة في بعض نسخ data.js
-    */
 
     [
       "flag",
@@ -757,7 +889,8 @@
       "flag4"
     ].forEach(key => {
       if (
-        typeof effects[key] === "string"
+        typeof effects[key] ===
+        "string"
       ) {
         state.flags[
           effects[key]
@@ -765,44 +898,54 @@
       }
     });
 
-    /* Evidence */
-
     if (effects.evidence) {
       const evidenceList =
-        Array.isArray(effects.evidence)
+        Array.isArray(
+          effects.evidence
+        )
           ? effects.evidence
           : [effects.evidence];
 
-      evidenceList.forEach(id => {
-        state.flags[id] = true;
-      });
+      evidenceList.forEach(
+        id => {
+          state.flags[id] =
+            true;
+        }
+      );
     }
-
-    /* Memories */
 
     if (effects.memory) {
       const memoryList =
-        Array.isArray(effects.memory)
+        Array.isArray(
+          effects.memory
+        )
           ? effects.memory
           : [effects.memory];
 
-      memoryList.forEach(id => {
-        state.flags[id] = true;
-      });
+      memoryList.forEach(
+        id => {
+          state.flags[id] =
+            true;
+        }
+      );
     }
-
-    /* Achievements */
 
     if (effects.achievement) {
       const list =
-        Array.isArray(effects.achievement)
+        Array.isArray(
+          effects.achievement
+        )
           ? effects.achievement
           : [effects.achievement];
 
-      list.forEach(unlockAchievement);
+      list.forEach(
+        unlockAchievement
+      );
     }
 
-    if (effects.unlockAchievement) {
+    if (
+      effects.unlockAchievement
+    ) {
       const list =
         Array.isArray(
           effects.unlockAchievement
@@ -810,15 +953,18 @@
           ? effects.unlockAchievement
           : [effects.unlockAchievement];
 
-      list.forEach(unlockAchievement);
+      list.forEach(
+        unlockAchievement
+      );
     }
-
-    /* Clamp */
 
     state.health = clamp(
       state.health,
       0,
-      safeNumber(GAME.maxHealth, 100)
+      safeNumber(
+        GAME.maxHealth,
+        100
+      )
     );
 
     state.coins = Math.max(
@@ -836,7 +982,11 @@
   function calculateStats() {
     let evidence = 0;
 
-    for (let i = 1; i <= 5; i++) {
+    for (
+      let i = 1;
+      i <= 5;
+      i++
+    ) {
       if (
         state.flags[
           `collectedEvidence${i}`
@@ -848,7 +998,11 @@
 
     let memories = 0;
 
-    for (let i = 1; i <= 3; i++) {
+    for (
+      let i = 1;
+      i <= 3;
+      i++
+    ) {
       if (
         state.flags[
           `sawMemory${i}`
@@ -858,8 +1012,11 @@
       }
     }
 
-    state.stats.evidence = evidence;
-    state.stats.memories = memories;
+    state.stats.evidence =
+      evidence;
+
+    state.stats.memories =
+      memories;
   }
 
   /* =========================================================
@@ -868,8 +1025,11 @@
 
   function getAchievements() {
     return (
-      typeof GAME_DATA !== "undefined" &&
-      Array.isArray(GAME_DATA.achievements)
+      typeof GAME_DATA !==
+        "undefined" &&
+      Array.isArray(
+        GAME_DATA.achievements
+      )
     )
       ? GAME_DATA.achievements
       : [];
@@ -883,10 +1043,14 @@
   }
 
   function unlockAchievement(id) {
-    if (!id) return;
+    if (!id) {
+      return;
+    }
 
     if (
-      state.achievements.includes(id)
+      state.achievements.includes(
+        id
+      )
     ) {
       return;
     }
@@ -911,13 +1075,17 @@
     if (
       state.stats.scenes >= 1
     ) {
-      unlockAchievement("first_step");
+      unlockAchievement(
+        "first_step"
+      );
     }
 
     if (
       state.stats.evidence >= 1
     ) {
-      unlockAchievement("detective");
+      unlockAchievement(
+        "detective"
+      );
     }
 
     if (
@@ -1004,12 +1172,16 @@
 
     if (DOM.health) {
       DOM.health.textContent =
-        Math.round(state.health);
+        Math.round(
+          state.health
+        );
     }
 
     if (DOM.coins) {
       DOM.coins.textContent =
-        Math.round(state.coins);
+        Math.round(
+          state.coins
+        );
     }
 
     if (DOM.chapter) {
@@ -1055,13 +1227,20 @@
 
     const current =
       clamp(
-        safeNumber(state.chapter, 1),
+        safeNumber(
+          state.chapter,
+          1
+        ),
         1,
         total
       );
 
     const percent =
-      ((current - 1) / Math.max(1, total - 1)) *
+      ((current - 1) /
+        Math.max(
+          1,
+          total - 1
+        )) *
       100;
 
     if (DOM.progressBar) {
@@ -1080,7 +1259,9 @@
      ========================================================= */
 
   function updateSoundIcon() {
-    if (!DOM.soundIcon) return;
+    if (!DOM.soundIcon) {
+      return;
+    }
 
     DOM.soundIcon.textContent =
       state.settings.sfx ||
@@ -1089,21 +1270,22 @@
         : "🔇";
   }
 
-  function playSfx(type = "click") {
-    if (!state.settings.sfx) {
+  function playSfx(
+    type = "click"
+  ) {
+    if (
+      !state.settings.sfx
+    ) {
       return;
     }
 
-    /*
-      إذا وضعت ملفات صوتية لاحقًا داخل:
-      assets/audio/
-      يمكنك تعديل المسارات هنا.
-    */
-
     const sources = {
-      click: "assets/audio/click.mp3",
-      choice: "assets/audio/choice.mp3",
-      item: "assets/audio/item.mp3",
+      click:
+        "assets/audio/click.mp3",
+      choice:
+        "assets/audio/choice.mp3",
+      item:
+        "assets/audio/item.mp3",
       achievement:
         "assets/audio/achievement.mp3",
       transition:
@@ -1112,7 +1294,8 @@
         "assets/audio/ending.mp3"
     };
 
-    const src = sources[type];
+    const src =
+      sources[type];
 
     if (
       !src ||
@@ -1122,8 +1305,11 @@
     }
 
     try {
-      DOM.sfxAudio.src = src;
-      DOM.sfxAudio.currentTime = 0;
+      DOM.sfxAudio.src =
+        src;
+
+      DOM.sfxAudio.currentTime =
+        0;
 
       const promise =
         DOM.sfxAudio.play();
@@ -1133,7 +1319,9 @@
         typeof promise.catch ===
           "function"
       ) {
-        promise.catch(() => {});
+        promise.catch(
+          () => {}
+        );
       }
     } catch (_) {}
   }
@@ -1171,7 +1359,8 @@
     }
 
     try {
-      DOM.bgMusic.loop = true;
+      DOM.bgMusic.loop =
+        true;
 
       const promise =
         DOM.bgMusic.play();
@@ -1181,13 +1370,17 @@
         typeof promise.catch ===
           "function"
       ) {
-        promise.catch(() => {});
+        promise.catch(
+          () => {}
+        );
       }
     } catch (_) {}
   }
 
   function stopMusic() {
-    if (!DOM.bgMusic) return;
+    if (!DOM.bgMusic) {
+      return;
+    }
 
     try {
       DOM.bgMusic.pause();
@@ -1198,7 +1391,10 @@
      TOASTS
      ========================================================= */
 
-  function notify(message, duration = 2400) {
+  function notify(
+    message,
+    duration = 2400
+  ) {
     if (!DOM.notification) {
       return;
     }
@@ -1215,11 +1411,14 @@
     );
 
     notify.timer =
-      setTimeout(() => {
-        DOM.notification.classList.remove(
-          "show"
-        );
-      }, duration);
+      setTimeout(
+        () => {
+          DOM.notification.classList.remove(
+            "show"
+          );
+        },
+        duration
+      );
   }
 
   function showItemToast(id) {
@@ -1227,7 +1426,8 @@
       return;
     }
 
-    const item = itemData(id);
+    const item =
+      itemData(id);
 
     DOM.itemToast.textContent =
       `تم العثور على: ${item.name || id}`;
@@ -1243,17 +1443,22 @@
     );
 
     showItemToast.timer =
-      setTimeout(() => {
-        DOM.itemToast.classList.remove(
-          "show"
-        );
-      }, 2800);
+      setTimeout(
+        () => {
+          DOM.itemToast.classList.remove(
+            "show"
+          );
+        },
+        2800
+      );
   }
 
   function showAchievementToast(
     achievement
   ) {
-    if (!DOM.achievementToast) {
+    if (
+      !DOM.achievementToast
+    ) {
       return;
     }
 
@@ -1269,18 +1474,23 @@
       "show"
     );
 
-    playSfx("achievement");
+    playSfx(
+      "achievement"
+    );
 
     clearTimeout(
       showAchievementToast.timer
     );
 
     showAchievementToast.timer =
-      setTimeout(() => {
-        DOM.achievementToast.classList.remove(
-          "show"
-        );
-      }, 3500);
+      setTimeout(
+        () => {
+          DOM.achievementToast.classList.remove(
+            "show"
+          );
+        },
+        3500
+      );
   }
 
   /* =========================================================
@@ -1288,7 +1498,9 @@
      ========================================================= */
 
   function stopTyping() {
-    clearInterval(typingTimer);
+    clearInterval(
+      typingTimer
+    );
 
     typingTimer = null;
 
@@ -1297,7 +1509,8 @@
         currentTypingText;
     }
 
-    typingFinished = true;
+    typingFinished =
+      true;
 
     if (DOM.skipTextBtn) {
       DOM.skipTextBtn.style.display =
@@ -1306,23 +1519,28 @@
   }
 
   function typeText(text) {
-    clearInterval(typingTimer);
+    clearInterval(
+      typingTimer
+    );
 
     currentTypingText =
       String(text || "");
 
-    typingFinished = false;
+    typingFinished =
+      false;
 
     if (!DOM.storyText) {
       return;
     }
 
-    DOM.storyText.textContent = "";
+    DOM.storyText.textContent =
+      "";
 
     if (
       !currentTypingText.length
     ) {
-      typingFinished = true;
+      typingFinished =
+        true;
       return;
     }
 
@@ -1341,28 +1559,35 @@
         : 1;
 
     typingTimer =
-      setInterval(() => {
-        if (
-          index >=
-          currentTypingText.length
-        ) {
-          stopTyping();
-          return;
-        }
+      setInterval(
+        () => {
+          if (
+            index >=
+            currentTypingText.length
+          ) {
+            stopTyping();
+            return;
+          }
 
-        DOM.storyText.textContent +=
-          currentTypingText[index];
+          DOM.storyText.textContent +=
+            currentTypingText[index];
 
-        index++;
-      }, speed);
+          index++;
+        },
+        speed
+      );
   }
 
   /* =========================================================
      VISUAL SCENE
      ========================================================= */
 
-  function updateSceneVisual(scene) {
-    if (!scene) return;
+  function updateSceneVisual(
+    scene
+  ) {
+    if (!scene) {
+      return;
+    }
 
     if (DOM.sceneImage) {
       const image =
@@ -1370,32 +1595,54 @@
         scene.background ||
         "";
 
-      if (image) {
-        DOM.sceneImage.src =
-          image;
+      /*
+        sceneImage في HTML قد يكون div،
+        لذلك ندعم الحالتين img و div.
+      */
 
-        DOM.sceneImage.style.display =
-          "";
+      if (
+        DOM.sceneImage.tagName ===
+        "IMG"
+      ) {
+        if (image) {
+          DOM.sceneImage.src =
+            image;
+
+          DOM.sceneImage.style.display =
+            "";
+        } else {
+          DOM.sceneImage.removeAttribute(
+            "src"
+          );
+
+          DOM.sceneImage.style.display =
+            "none";
+        }
       } else {
-        DOM.sceneImage.removeAttribute(
-          "src"
-        );
+        if (image) {
+          DOM.sceneImage.style.backgroundImage =
+            `url("${image}")`;
 
-        DOM.sceneImage.style.display =
-          "none";
+          DOM.sceneImage.style.display =
+            "";
+        } else {
+          DOM.sceneImage.style.backgroundImage =
+            "none";
+
+          DOM.sceneImage.style.display =
+            "none";
+        }
       }
     }
 
     if (DOM.sceneWeather) {
       DOM.sceneWeather.textContent =
-        scene.weather ||
-        "";
+        scene.weather || "";
     }
 
     if (DOM.sceneTime) {
       DOM.sceneTime.textContent =
-        scene.time ||
-        "";
+        scene.time || "";
     }
 
     if (DOM.sceneVisual) {
@@ -1425,7 +1672,9 @@
     }
   }
 
-  function createParticles(scene) {
+  function createParticles(
+    scene
+  ) {
     const weather =
       String(
         scene.weather || ""
@@ -1535,19 +1784,28 @@
       "active"
     );
 
-    playSfx("transition");
+    playSfx(
+      "transition"
+    );
 
-    setTimeout(() => {
-      callback?.();
+    setTimeout(
+      () => {
+        callback?.();
 
-      setTimeout(() => {
-        DOM.sceneTransition.classList.remove(
-          "active"
+        setTimeout(
+          () => {
+            DOM.sceneTransition.classList.remove(
+              "active"
+            );
+
+            transitionBusy =
+              false;
+          },
+          450
         );
-
-        transitionBusy = false;
-      }, 450);
-    }, 550);
+      },
+      550
+    );
   }
 
   /* =========================================================
@@ -1569,17 +1827,23 @@
       chapter?.title ||
       `الفصل ${chapter?.number || ""}`;
 
-    if (DOM.cinematicLabel) {
+    if (
+      DOM.cinematicLabel
+    ) {
       DOM.cinematicLabel.textContent =
         `الفصل ${chapter?.number || ""}`;
     }
 
-    if (DOM.cinematicTitle) {
+    if (
+      DOM.cinematicTitle
+    ) {
       DOM.cinematicTitle.textContent =
         title;
     }
 
-    if (DOM.cinematicText) {
+    if (
+      DOM.cinematicText
+    ) {
       DOM.cinematicText.textContent =
         chapter?.intro ||
         chapter?.description ||
@@ -1606,7 +1870,8 @@
     const callback =
       cinematicNext;
 
-    cinematicNext = null;
+    cinematicNext =
+      null;
 
     callback?.();
   }
@@ -1696,7 +1961,9 @@
           "";
       }
 
-      updateSceneVisual(scene);
+      updateSceneVisual(
+        scene
+      );
 
       typeText(
         scene.text ||
@@ -1705,7 +1972,9 @@
         ""
       );
 
-      renderChoices(scene);
+      renderChoices(
+        scene
+      );
 
       updateHUD();
 
@@ -1729,7 +1998,8 @@
      ========================================================= */
 
   function canUnlockSecretEnding() {
-    const f = state.flags;
+    const f =
+      state.flags;
 
     return (
       !!f.finalTruth &&
@@ -1748,30 +2018,40 @@
     );
   }
 
-  function getSceneChoices(scene) {
+  function getSceneChoices(
+    scene
+  ) {
     const original =
-      Array.isArray(scene?.choices)
+      Array.isArray(
+        scene?.choices
+      )
         ? scene.choices
         : [];
 
     const choices =
       original.filter(
         choice =>
-          choiceAvailable(choice)
+          choiceAvailable(
+            choice
+          )
       );
 
     if (
-      scene?.id === "c12_final" &&
+      scene?.id ===
+        "c12_final" &&
       canUnlockSecretEnding()
     ) {
       choices.push({
-        id: "secret_ending",
+        id:
+          "secret_ending",
         text:
           "تقرأ الحقيقة الأخيرة المخفية خلف الملف الأسود.",
-        next: "ending_secret",
+        next:
+          "ending_secret",
         effects: {
           setFlags: {
-            finalTruth: true
+            finalTruth:
+              true
           }
         }
       });
@@ -1784,15 +2064,20 @@
      CHOICES
      ========================================================= */
 
-  function renderChoices(scene) {
+  function renderChoices(
+    scene
+  ) {
     if (!DOM.choices) {
       return;
     }
 
-    DOM.choices.innerHTML = "";
+    DOM.choices.innerHTML =
+      "";
 
     const choices =
-      getSceneChoices(scene);
+      getSceneChoices(
+        scene
+      );
 
     if (!choices.length) {
       const empty =
@@ -1820,7 +2105,8 @@
             "button"
           );
 
-        button.type = "button";
+        button.type =
+          "button";
 
         button.className =
           "choice-btn";
@@ -1875,7 +2161,9 @@
     );
   }
 
-  function choose(choice) {
+  function choose(
+    choice
+  ) {
     if (
       !choice ||
       transitionBusy
@@ -1890,11 +2178,14 @@
     state.stats.choices++;
 
     state.history.push({
-      scene: state.scene,
-      choice: choice.id ||
+      scene:
+        state.scene,
+      choice:
+        choice.id ||
         choice.text ||
         "",
-      time: Date.now()
+      time:
+        Date.now()
     });
 
     if (choice.effects) {
@@ -1940,6 +2231,7 @@
       notify(
         "توقفت القصة هنا مؤقتًا."
       );
+
       return;
     }
 
@@ -1952,22 +2244,28 @@
      NEXT SCENE / ENDINGS
      ========================================================= */
 
-  function handleNext(next) {
+  function handleNext(
+    next
+  ) {
     if (
-      typeof next !== "string"
+      typeof next !==
+      "string"
     ) {
       return;
     }
 
     if (
-      next.startsWith("END_")
+      next.startsWith(
+        "END_"
+      )
     ) {
       finishGame(next);
       return;
     }
 
     if (
-      next === "GAME_OVER"
+      next ===
+      "GAME_OVER"
     ) {
       gameOver();
       return;
@@ -1992,7 +2290,8 @@
     const previousChapter =
       state.chapter;
 
-    state.scene = next;
+    state.scene =
+      next;
 
     state.chapter =
       safeNumber(
@@ -2013,14 +2312,18 @@
       showCinematic(
         target.chapter,
         () => {
-          renderScene(true);
+          renderScene(
+            true
+          );
         }
       );
 
       return;
     }
 
-    renderScene(true);
+    renderScene(
+      true
+    );
   }
 
   /* =========================================================
@@ -2034,6 +2337,10 @@
       DOM.gameScreen.classList.add(
         "hidden"
       );
+
+      DOM.gameScreen.classList.remove(
+        "active"
+      );
     }
 
     if (
@@ -2041,6 +2348,10 @@
     ) {
       DOM.endScreen.classList.remove(
         "hidden"
+      );
+
+      DOM.endScreen.classList.add(
+        "active"
       );
     }
 
@@ -2068,11 +2379,14 @@
      ENDINGS
      ========================================================= */
 
-  function finishGame(type) {
+  function finishGame(
+    type
+  ) {
     stopTyping();
 
     state.flags.escapedVillage =
-      type === "END_ESCAPE";
+      type ===
+      "END_ESCAPE";
 
     if (
       type === "END_TRUE"
@@ -2099,6 +2413,10 @@
       DOM.gameScreen.classList.add(
         "hidden"
       );
+
+      DOM.gameScreen.classList.remove(
+        "active"
+      );
     }
 
     if (
@@ -2107,11 +2425,16 @@
       DOM.endScreen.classList.remove(
         "hidden"
       );
+
+      DOM.endScreen.classList.add(
+        "active"
+      );
     }
 
     const endings = {
       END_TRUE: {
-        icon: "◈",
+        icon:
+          "◈",
         title:
           "الحقيقة التي لم يكن يجب أن تُعرف",
         text:
@@ -2119,7 +2442,8 @@
       },
 
       END_ESCAPE: {
-        icon: "↗",
+        icon:
+          "↗",
         title:
           "الخروج من الظلال",
         text:
@@ -2127,7 +2451,8 @@
       },
 
       END_DESTROY: {
-        icon: "✦",
+        icon:
+          "✦",
         title:
           "نهاية التجربة",
         text:
@@ -2135,7 +2460,8 @@
       },
 
       END_SECRET: {
-        icon: "◇",
+        icon:
+          "◇",
         title:
           "الحقيقة الأخيرة",
         text:
@@ -2223,15 +2549,22 @@
     state.settings =
       oldSettings;
 
-    state.started = true;
+    state.started =
+      true;
 
     deleteSave();
+
+    /* إصلاح الانتقال إلى شاشة اللعبة */
 
     if (
       DOM.startScreen
     ) {
       DOM.startScreen.classList.add(
         "hidden"
+      );
+
+      DOM.startScreen.classList.remove(
+        "active"
       );
     }
 
@@ -2241,6 +2574,10 @@
       DOM.endScreen.classList.add(
         "hidden"
       );
+
+      DOM.endScreen.classList.remove(
+        "active"
+      );
     }
 
     if (
@@ -2249,19 +2586,27 @@
       DOM.gameScreen.classList.remove(
         "hidden"
       );
+
+      DOM.gameScreen.classList.add(
+        "active"
+      );
     }
 
     state.scene =
       "c1_start";
 
-    state.chapter = 1;
+    state.chapter =
+      1;
 
-    state.stats.scenes = 1;
+    state.stats.scenes =
+      1;
 
     updateHUD();
 
     showCinematic(
-      findChapterByNumber(1),
+      findChapterByNumber(
+        1
+      ),
       () => {
         renderScene();
       }
@@ -2272,21 +2617,31 @@
     startMusic();
   }
 
+  /* =========================================================
+     CONTINUE GAME
+     ========================================================= */
+
   function continueGame() {
     if (!loadGame()) {
       notify(
         "لا يوجد حفظ سابق."
       );
+
       return;
     }
 
-    state.started = true;
+    state.started =
+      true;
 
     if (
       DOM.startScreen
     ) {
       DOM.startScreen.classList.add(
         "hidden"
+      );
+
+      DOM.startScreen.classList.remove(
+        "active"
       );
     }
 
@@ -2296,6 +2651,10 @@
       DOM.endScreen.classList.add(
         "hidden"
       );
+
+      DOM.endScreen.classList.remove(
+        "active"
+      );
     }
 
     if (
@@ -2303,6 +2662,10 @@
     ) {
       DOM.gameScreen.classList.remove(
         "hidden"
+      );
+
+      DOM.gameScreen.classList.add(
+        "active"
       );
     }
 
@@ -2312,6 +2675,10 @@
 
     startMusic();
   }
+
+  /* =========================================================
+     RETURN TO TITLE
+     ========================================================= */
 
   function returnToTitle() {
     saveGame(false);
@@ -2324,6 +2691,10 @@
       DOM.gameScreen.classList.add(
         "hidden"
       );
+
+      DOM.gameScreen.classList.remove(
+        "active"
+      );
     }
 
     if (
@@ -2332,6 +2703,10 @@
       DOM.endScreen.classList.add(
         "hidden"
       );
+
+      DOM.endScreen.classList.remove(
+        "active"
+      );
     }
 
     if (
@@ -2339,6 +2714,10 @@
     ) {
       DOM.startScreen.classList.remove(
         "hidden"
+      );
+
+      DOM.startScreen.classList.add(
+        "active"
       );
     }
 
@@ -2406,7 +2785,8 @@
           "inventory-icon";
 
         icon.textContent =
-          item.icon || "◈";
+          item.icon ||
+          "◈";
 
         const body =
           document.createElement(
@@ -2425,7 +2805,8 @@
           "inventory-name";
 
         name.textContent =
-          item.name || id;
+          item.name ||
+          id;
 
         const description =
           document.createElement(
@@ -2439,13 +2820,21 @@
           item.description ||
           "دليل غامض.";
 
-        body.appendChild(name);
+        body.appendChild(
+          name
+        );
+
         body.appendChild(
           description
         );
 
-        card.appendChild(icon);
-        card.appendChild(body);
+        card.appendChild(
+          icon
+        );
+
+        card.appendChild(
+          body
+        );
 
         DOM.inventoryContent.appendChild(
           card
@@ -2562,13 +2951,21 @@
                 "إنجاز مخفي."
               );
 
-        body.appendChild(title);
+        body.appendChild(
+          title
+        );
+
         body.appendChild(
           description
         );
 
-        card.appendChild(icon);
-        card.appendChild(body);
+        card.appendChild(
+          icon
+        );
+
+        card.appendChild(
+          body
+        );
 
         DOM.achievementsContent.appendChild(
           card
@@ -2584,10 +2981,12 @@
   function journalEntries() {
     const entries = [];
 
-    const f = state.flags;
+    const f =
+      state.flags;
 
     entries.push({
-      title: "البداية",
+      title:
+        "البداية",
       text:
         "استيقظ آدم في مكان لا يتذكر كيف وصل إليه. كان هناك شيء واحد واضح: المكان يعرفه أكثر مما يعرف نفسه."
     });
@@ -2596,7 +2995,8 @@
       f.foundPhotograph
     ) {
       entries.push({
-        title: "الصورة",
+        title:
+          "الصورة",
         text:
           "ظهرت صورة قديمة تحمل تفصيلًا لم يكن من المفترض أن يكون موجودًا."
       });
@@ -2606,7 +3006,8 @@
       f.foundDiary
     ) {
       entries.push({
-        title: "المذكرات",
+        title:
+          "المذكرات",
         text:
           "كلمات مجهولة كشفت أن ما يحدث ليس وليد هذه الليلة."
       });
@@ -2616,7 +3017,8 @@
       f.foundBasement
     ) {
       entries.push({
-        title: "القبو",
+        title:
+          "القبو",
         text:
           "وجد آدم طريقًا إلى مكان أخفي عن الجميع."
       });
@@ -2626,7 +3028,8 @@
       f.discoveredFile
     ) {
       entries.push({
-        title: "الملف الأسود",
+        title:
+          "الملف الأسود",
         text:
           "الملف يحمل معلومات لا تتعلق بشخص غريب... بل بآدم نفسه."
       });
@@ -2636,7 +3039,8 @@
       f.sawMemory1
     ) {
       entries.push({
-        title: "الذكرى الأولى",
+        title:
+          "الذكرى الأولى",
         text:
           "بدأت أجزاء من الماضي بالعودة، لكن كل إجابة جلبت سؤالًا جديدًا."
       });
@@ -2646,7 +3050,8 @@
       f.sawMemory2
     ) {
       entries.push({
-        title: "الذكرى الثانية",
+        title:
+          "الذكرى الثانية",
         text:
           "هناك أحداث في الماضي تم إخفاؤها عمدًا."
       });
@@ -2656,7 +3061,8 @@
       f.sawMemory3
     ) {
       entries.push({
-        title: "الذكرى الثالثة",
+        title:
+          "الذكرى الثالثة",
         text:
           "الحقيقة أصبحت قريبة جدًا... وربما أخطر مما توقع."
       });
@@ -2666,7 +3072,8 @@
       f.knowsWhoIsAdam
     ) {
       entries.push({
-        title: "من هو آدم؟",
+        title:
+          "من هو آدم؟",
         text:
           "السؤال الذي بدأ القصة تغيّر معناه بالكامل."
       });
@@ -2676,7 +3083,8 @@
       f.finalTruth
     ) {
       entries.push({
-        title: "الحقيقة",
+        title:
+          "الحقيقة",
         text:
           "لم تكن الأحداث مصادفة. كل خطوة قادت إلى الخطوة التالية."
       });
@@ -2724,8 +3132,13 @@
         text.textContent =
           entry.text;
 
-        card.appendChild(title);
-        card.appendChild(text);
+        card.appendChild(
+          title
+        );
+
+        card.appendChild(
+          text
+        );
 
         DOM.journalContent.appendChild(
           card
@@ -2741,7 +3154,9 @@
   function openOverlay(
     overlay
   ) {
-    if (!overlay) return;
+    if (!overlay) {
+      return;
+    }
 
     overlay.classList.add(
       "active"
@@ -2751,7 +3166,9 @@
   function closeOverlay(
     overlay
   ) {
-    if (!overlay) return;
+    if (!overlay) {
+      return;
+    }
 
     overlay.classList.remove(
       "active"
@@ -2776,6 +3193,7 @@
      ========================================================= */
 
   function bindEvents() {
+
     /* Start */
 
     DOM.newGameBtn?.addEventListener(
@@ -2802,15 +3220,17 @@
       ?.querySelectorAll(
         "[data-close], .close-btn, .overlay-close"
       )
-      .forEach(button => {
-        button.addEventListener(
-          "click",
-          () =>
-            closeOverlay(
-              DOM.howToPlayOverlay
-            )
-        );
-      });
+      .forEach(
+        button => {
+          button.addEventListener(
+            "click",
+            () =>
+              closeOverlay(
+                DOM.howToPlayOverlay
+              )
+          );
+        }
+      );
 
     /* Menu */
 
@@ -2869,26 +3289,28 @@
       }
     );
 
-    /* Generic close buttons */
+    /* Generic close */
 
     document
       .querySelectorAll(
         "[data-close-overlay]"
       )
-      .forEach(button => {
-        button.addEventListener(
-          "click",
-          () => {
-            const target =
-              button.dataset
-                .closeOverlay;
+      .forEach(
+        button => {
+          button.addEventListener(
+            "click",
+            () => {
+              const target =
+                button.dataset
+                  .closeOverlay;
 
-            closeOverlay(
-              $(target)
-            );
-          }
-        );
-      });
+              closeOverlay(
+                $(target)
+              );
+            }
+          );
+        }
+      );
 
     /* Settings */
 
@@ -2962,7 +3384,6 @@
       "click",
       () => {
         saveGame(true);
-
         closeAllOverlays();
       }
     );
@@ -2973,9 +3394,7 @@
       "click",
       () => {
         saveGame(false);
-
         closeAllOverlays();
-
         returnToTitle();
       }
     );
@@ -2992,33 +3411,36 @@
       returnToTitle
     );
 
-    /* Close overlays by clicking outside */
+    /* Close overlays outside */
 
     document
       .querySelectorAll(
         ".overlay"
       )
-      .forEach(overlay => {
-        overlay.addEventListener(
-          "click",
-          event => {
-            if (
-              event.target ===
-              overlay
-            ) {
-              closeOverlay(
+      .forEach(
+        overlay => {
+          overlay.addEventListener(
+            "click",
+            event => {
+              if (
+                event.target ===
                 overlay
-              );
+              ) {
+                closeOverlay(
+                  overlay
+                );
+              }
             }
-          }
-        );
-      });
+          );
+        }
+      );
 
     /* Keyboard */
 
     document.addEventListener(
       "keydown",
       event => {
+
         if (
           event.key ===
           "Escape"
@@ -3038,7 +3460,7 @@
 
         if (
           event.key ===
-          " " &&
+            " " &&
           !typingFinished
         ) {
           event.preventDefault();
@@ -3047,7 +3469,9 @@
         }
 
         const number =
-          Number(event.key);
+          Number(
+            event.key
+          );
 
         if (
           number >= 1 &&
@@ -3089,110 +3513,165 @@
     ];
 
     const interval =
-      setInterval(() => {
-        progress +=
-          Math.random() * 16 + 7;
+      setInterval(
+        () => {
+
+          progress +=
+            Math.random() *
+              16 +
+            7;
+
+          if (
+            progress >=
+            100
+          ) {
+            progress = 100;
+          }
+
+          if (
+            DOM.loadingProgress
+          ) {
+            DOM.loadingProgress.style.width =
+              `${progress}%`;
+          }
+
+          const index =
+            Math.min(
+              messages.length -
+                1,
+              Math.floor(
+                (progress /
+                  100) *
+                  messages.length
+              )
+            );
+
+          if (
+            DOM.loadingStatus
+          ) {
+            DOM.loadingStatus.textContent =
+              messages[index];
+          }
+
+          if (
+            progress >=
+            100
+          ) {
+            clearInterval(
+              interval
+            );
+
+            setTimeout(
+              showTitleScreen,
+              450
+            );
+          }
+
+        },
+        180
+      );
+
+    setTimeout(
+      () => {
+        clearInterval(
+          interval
+        );
 
         if (
-          progress >= 100
+          DOM.loadingScreen &&
+          !DOM.loadingScreen.classList.contains(
+            "hidden"
+          )
         ) {
-          progress = 100;
+          if (
+            DOM.loadingProgress
+          ) {
+            DOM.loadingProgress.style.width =
+              "100%";
+          }
+
+          if (
+            DOM.loadingStatus
+          ) {
+            DOM.loadingStatus.textContent =
+              "تم تجهيز اللعبة";
+          }
+
+          showTitleScreen();
         }
-
-        if (
-          DOM.loadingProgress
-        ) {
-          DOM.loadingProgress.style.width =
-            `${progress}%`;
-        }
-
-        const index =
-          Math.min(
-            messages.length - 1,
-            Math.floor(
-              (progress / 100) *
-                messages.length
-            )
-          );
-
-        if (
-          DOM.loadingStatus
-        ) {
-          DOM.loadingStatus.textContent =
-            messages[index];
-        }
-
-        if (
-          progress >= 100
-        ) {
-          clearInterval(interval);
-
-          setTimeout(
-            showTitleScreen,
-            450
-          );
-        }
-      }, 180);
-
-    /*
-      حماية إضافية:
-      إذا علقت عملية التحميل لأي سبب،
-      لا تبقى الشاشة عالقة للأبد.
-    */
-
-    setTimeout(() => {
-      clearInterval(interval);
-
-      if (
-        DOM.loadingScreen &&
-        !DOM.loadingScreen.classList.contains(
-          "hidden"
-        )
-      ) {
-        if (DOM.loadingProgress) {
-          DOM.loadingProgress.style.width =
-            "100%";
-        }
-
-        if (DOM.loadingStatus) {
-          DOM.loadingStatus.textContent =
-            "تم تجهيز اللعبة";
-        }
-
-        showTitleScreen();
-      }
-    }, 5000);
+      },
+      5000
+    );
   }
 
   function showTitleScreen() {
-    DOM.loadingScreen?.classList.add(
-      "hidden"
-    );
 
-    DOM.startScreen?.classList.remove(
-      "hidden"
-    );
+    if (
+      DOM.loadingScreen
+    ) {
+      DOM.loadingScreen.classList.add(
+        "hidden"
+      );
 
-    DOM.gameScreen?.classList.add(
-      "hidden"
-    );
+      DOM.loadingScreen.classList.remove(
+        "active"
+      );
+    }
 
-    DOM.endScreen?.classList.add(
-      "hidden"
-    );
+    if (
+      DOM.startScreen
+    ) {
+      DOM.startScreen.classList.remove(
+        "hidden"
+      );
 
-    if (DOM.versionText) {
+      DOM.startScreen.classList.add(
+        "active"
+      );
+    }
+
+    if (
+      DOM.gameScreen
+    ) {
+      DOM.gameScreen.classList.add(
+        "hidden"
+      );
+
+      DOM.gameScreen.classList.remove(
+        "active"
+      );
+    }
+
+    if (
+      DOM.endScreen
+    ) {
+      DOM.endScreen.classList.add(
+        "hidden"
+      );
+
+      DOM.endScreen.classList.remove(
+        "active"
+      );
+    }
+
+    if (
+      DOM.versionText
+    ) {
       DOM.versionText.textContent =
         `الإصدار ${GAME.version || "1.0.0"}`;
     }
 
-    if (DOM.gameLogo) {
+    if (
+      DOM.gameLogo
+    ) {
       DOM.gameLogo.textContent =
         GAME.title ||
         "ظلال المجهول";
     }
 
-    if (DOM.gameSubtitle) {
+    if (
+      DOM.gameSubtitle
+    ) {
       DOM.gameSubtitle.textContent =
         GAME.intro?.subtitle ||
         "كل اختيار له أثر... وكل باب يخفي قصة.";
@@ -3205,16 +3684,19 @@
      AUTO SAVE
      ========================================================= */
 
-  setInterval(() => {
-    if (
-      state.started &&
-      !DOM.gameScreen?.classList.contains(
-        "hidden"
-      )
-    ) {
-      saveGame(false);
-    }
-  }, 20000);
+  setInterval(
+    () => {
+      if (
+        state.started &&
+        !DOM.gameScreen?.classList.contains(
+          "hidden"
+        )
+      ) {
+        saveGame(false);
+      }
+    },
+    20000
+  );
 
   /* =========================================================
      VISIBILITY SAVE
@@ -3235,7 +3717,9 @@
   window.addEventListener(
     "beforeunload",
     () => {
-      if (state.started) {
+      if (
+        state.started
+      ) {
         saveGame(false);
       }
     }
@@ -3246,8 +3730,11 @@
      ========================================================= */
 
   window.ShadowsGame = {
+
     getState() {
-      return clone(state);
+      return clone(
+        state
+      );
     },
 
     getScene() {
@@ -3255,7 +3742,9 @@
     },
 
     save() {
-      return saveGame(true);
+      return saveGame(
+        true
+      );
     },
 
     reset() {
@@ -3269,7 +3758,10 @@
 
     addItem,
 
-    setFlag(flag, value = true) {
+    setFlag(
+      flag,
+      value = true
+    ) {
       state.flags[flag] =
         !!value;
 
@@ -3280,13 +3772,17 @@
 
     go(sceneId) {
       if (
-        findScene(sceneId)
+        findScene(
+          sceneId
+        )
       ) {
         state.scene =
           sceneId;
 
         const result =
-          findScene(sceneId);
+          findScene(
+            sceneId
+          );
 
         state.chapter =
           safeNumber(
@@ -3300,7 +3796,9 @@
     },
 
     ending(type) {
-      finishGame(type);
+      finishGame(
+        type
+      );
     }
   };
 
@@ -3309,6 +3807,7 @@
      ========================================================= */
 
   function init() {
+
     try {
       normalizeState();
     } catch (error) {
