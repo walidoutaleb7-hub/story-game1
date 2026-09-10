@@ -1,112 +1,209 @@
 /* =========================================================
-   ظلال المجهول
-   DATA ENGINE — ULTRA 3.0
+   ظلال المجهول — SHADOWS OF THE UNKNOWN
+   DATA ENGINE — ULTRA 4.0
+   =========================================================
+   PROTAGONIST: وليد
+   CHAPTERS: 20
+   STYLE: CINEMATIC MYSTERY / PSYCHOLOGICAL THRILLER
    ========================================================= */
 
 const GAME_DATA = {
 
     /* =====================================================
-       GAME
-       ===================================================== */
+       GAME INFO
+    ===================================================== */
 
     game: {
+
         title: "ظلال المجهول",
-        version: "3.0.0 ULTRA",
-        protagonist: "آدم",
+
+        subtitle:
+            "كل باب يخفي حقيقة... وكل حقيقة تترك ظلاً.",
+
+        version: "4.0.0 ULTRA",
+
+        protagonist: "وليد",
 
         maxHealth: 100,
-        startingHealth: 100,
-        startingCoins: 25,
 
-        chaptersCount: 12,
+        startingHealth: 100,
+
+        startingCoins: 50,
+
+        chaptersCount: 20,
 
         intro: {
+
             title: "ظلال المجهول",
-            subtitle: "كل اختيار له أثر... وكل باب يخفي قصة."
+
+            subtitle:
+                "في الساعة 03:17 بدأ كل شيء."
+
         }
+
     },
 
 
     /* =====================================================
        ITEMS
-       ===================================================== */
+    ===================================================== */
 
     items: {
 
         oldKey: {
             name: "المفتاح الصدئ",
-            icon: "🗝️"
+            icon: "🗝️",
+            description:
+                "مفتاح قديم يحمل آثاراً غريبة."
         },
 
         photograph: {
             name: "الصورة القديمة",
-            icon: "🖼️"
+            icon: "🖼️",
+            description:
+                "صورة يظهر فيها شخص يشبه وليد."
         },
 
         brokenPhone: {
             name: "الهاتف المكسور",
-            icon: "📱"
+            icon: "📱",
+            description:
+                "هاتف توقف عند الساعة 03:17."
         },
 
         diary: {
             name: "المذكرات السوداء",
-            icon: "📓"
+            icon: "📓",
+            description:
+                "مذكرات مجهولة تحتوي على رموز وأرقام."
         },
 
         basementKey: {
             name: "مفتاح القبو",
-            icon: "🔑"
+            icon: "🔑",
+            description:
+                "يفتح باباً تحت البيت رقم 17."
         },
 
         flashlight: {
             name: "المصباح اليدوي",
-            icon: "🔦"
+            icon: "🔦",
+            description:
+                "مصباح قديم لكنه ما زال يعمل."
         },
 
         tape: {
             name: "شريط التسجيل",
-            icon: "📼"
+            icon: "📼",
+            description:
+                "تسجيل يحتوي على صوت وليد."
         },
 
         photograph2: {
-            name: "صورة الغرفة",
-            icon: "🖼️"
+            name: "الصورة الثانية",
+            icon: "🖼️",
+            description:
+                "الصورة نفسها... لكن بتفاصيل مختلفة."
         },
 
         metalCard: {
             name: "البطاقة المعدنية",
-            icon: "▣"
+            icon: "▣",
+            description:
+                "بطاقة تحمل الرمز 0317."
         },
 
         crowSymbol: {
             name: "رمز الغراب",
-            icon: "◈"
+            icon: "◈",
+            description:
+                "رمز يتكرر في أماكن كثيرة."
         },
 
         letter: {
             name: "الرسالة",
-            icon: "✉️"
+            icon: "✉️",
+            description:
+                "رسالة موجهة إلى وليد بالاسم."
         },
 
         masterKey: {
             name: "المفتاح الرئيسي",
-            icon: "🗝️"
+            icon: "🗝️",
+            description:
+                "يفتح الأبواب الأخيرة في المنشأة."
         },
 
         archiveBadge: {
             name: "شارة الأرشيف",
-            icon: "◇"
+            icon: "◇",
+            description:
+                "شارة تسمح بالوصول إلى الأرشيف."
         },
 
         blackFile: {
             name: "الملف الأسود",
-            icon: "📁"
+            icon: "📁",
+            description:
+                "أخطر ملف في المنشأة."
         },
 
         memoryFragment: {
             name: "شظية ذاكرة",
-            icon: "✦"
+            icon: "✦",
+            description:
+                "جزء من ذاكرة وليد المفقودة."
+        },
+
+        redKey: {
+            name: "المفتاح الأحمر",
+            icon: "🔐",
+            description:
+                "مفتاح لا يظهر إلا لمن يعرف الحقيقة."
+        },
+
+        compass: {
+            name: "البوصلة",
+            icon: "🧭",
+            description:
+                "إبرة البوصلة تشير دائماً إلى مكان مجهول."
+        },
+
+        mirrorShard: {
+            name: "قطعة المرآة",
+            icon: "◇",
+            description:
+                "قطعة تعكس أشياء لا تظهر بالعين."
+        },
+
+        archiveMap: {
+            name: "خريطة الأرشيف",
+            icon: "▤",
+            description:
+                "خريطة للممرات القديمة."
+        },
+
+        voiceRecorder: {
+            name: "مسجل الصوت",
+            icon: "◉",
+            description:
+                "يسجل الأصوات التي لا يسمعها الآخرون."
+        },
+
+        blackCoin: {
+            name: "العملة السوداء",
+            icon: "●",
+            description:
+                "عملة تحمل الرقم 17."
+        },
+
+        finalFragment: {
+            name: "الشظية الأخيرة",
+            icon: "✧",
+            description:
+                "آخر قطعة من الذاكرة."
         }
+
     },
 
 
@@ -117,6 +214,7 @@ const GAME_DATA = {
     flags: {
 
         metLian: false,
+        metYoussef: false,
         metStranger: false,
 
         trustedLian: false,
@@ -133,6 +231,10 @@ const GAME_DATA = {
         discoveredLab: false,
         discoveredFile: false,
 
+        discoveredArchive: false,
+        discoveredTower: false,
+        discoveredUndergroundCity: false,
+
         liedToLian: false,
         liedToYoussef: false,
 
@@ -142,23 +244,29 @@ const GAME_DATA = {
         sawMemory1: false,
         sawMemory2: false,
         sawMemory3: false,
+        sawMemory4: false,
+        sawMemory5: false,
+        sawMemory6: false,
 
         knowsNumber0317: false,
         knowsAboutExperiment: false,
         knowsAboutAdam: false,
+
+        knowsTruth: false,
+        knowsWhoIsLian: false,
+        knowsWhoIsWaleed: false,
 
         collectedEvidence1: false,
         collectedEvidence2: false,
         collectedEvidence3: false,
         collectedEvidence4: false,
         collectedEvidence5: false,
+        collectedEvidence6: false,
+        collectedEvidence7: false,
+        collectedEvidence8: false,
 
         enteredForbiddenArea: false,
         escapedVillage: false,
-
-        knowsTruth: false,
-        knowsWhoIsLian: false,
-        knowsWhoIsAdam: false,
 
         openedFinalDoor: false,
 
@@ -168,7 +276,11 @@ const GAME_DATA = {
         completedArchive: false,
         foundFinalMessage: false,
 
+        secretPath: false,
+        secretEndingUnlocked: false,
+
         finalTruth: false
+
     },
 
 
@@ -190,12 +302,12 @@ const GAME_DATA = {
 
         photographer: {
             name: "الصورة",
-            description: "اكتشفت صورة قديمة."
+            description: "اكتشفت الصورة القديمة."
         },
 
         basement: {
             name: "ما تحت الأرض",
-            description: "وصلت إلى القبو."
+            description: "دخلت القبو."
         },
 
         listener: {
@@ -203,14 +315,34 @@ const GAME_DATA = {
             description: "استمعت إلى التسجيل."
         },
 
+        code_breaker: {
+            name: "كاسر الشيفرة",
+            description: "حللت أول شيفرة."
+        },
+
+        puzzle_master: {
+            name: "سيد الألغاز",
+            description: "حللت خمسة ألغاز."
+        },
+
         truth_seeker: {
             name: "باحث الحقيقة",
             description: "اقتربت من الحقيقة."
         },
 
-        survivor: {
-            name: "الناجي",
-            description: "وصلت إلى النهاية."
+        memory: {
+            name: "الذاكرة",
+            description: "استعدت أول شظية."
+        },
+
+        complete_memory: {
+            name: "الذاكرة الكاملة",
+            description: "جمعت شظايا الذاكرة."
+        },
+
+        collector: {
+            name: "جامع الأدلة",
+            description: "جمعت ثمانية أدلة."
         },
 
         trust: {
@@ -220,23 +352,959 @@ const GAME_DATA = {
 
         secret_room: {
             name: "الغرفة السرية",
-            description: "فتحت الطريق المخفي."
+            description: "وجدت الغرفة المخفية."
         },
 
-        complete_memory: {
-            name: "الذاكرة الكاملة",
-            description: "استعدت شظايا الذاكرة."
+        archive: {
+            name: "حارس الأرشيف",
+            description: "دخلت الأرشيف."
         },
 
-        collector: {
-            name: "جامع الأدلة",
-            description: "جمعت مجموعة من الأدلة."
+        shadow: {
+            name: "الظل",
+            description: "اكتشفت وجود الظل."
+        },
+
+        survivor: {
+            name: "الناجي",
+            description: "وصلت إلى النهاية."
         },
 
         true_ending: {
             name: "الحقيقة",
             description: "وصلت إلى النهاية الحقيقية."
+        },
+
+        secret_ending: {
+            name: "الظل الرابع",
+            description: "اكتشفت النهاية السرية."
         }
+
+    },
+
+
+    /* =====================================================
+       PUZZLES
+       ===================================================== */
+
+    puzzles: {
+
+        /* -------------------------------------------------
+           PUZZLE 01
+           ------------------------------------------------- */
+
+        clock0317: {
+
+            id: "clock0317",
+
+            title: "الساعة المتوقفة",
+
+            description:
+                "الهاتف متوقف عند 03:17. أمامك لوحة بأربعة أرقام.",
+
+            clue:
+                "الوقت الذي بدأت فيه المكالمة هو المفتاح.",
+
+            question:
+                "ما الرقم الذي يجب إدخاله؟",
+
+            options: [
+                "0317",
+                "1730",
+                "3017",
+                "0713"
+            ],
+
+            answer: "0317",
+
+            reward: {
+                coins: 20,
+                item: "oldKey",
+                flag: "knowsNumber0317"
+            },
+
+            successText:
+                "سمعت صوت قفل يفتح في مكان قريب.",
+
+            failText:
+                "صوت معدني يخرج من الظلام... حاول مرة أخرى.",
+
+            effectSuccess: "light",
+            effectFail: "shake"
+
+        },
+
+
+        /* -------------------------------------------------
+           PUZZLE 02
+           ------------------------------------------------- */
+
+        villageSymbols: {
+
+            id: "villageSymbols",
+
+            title: "رموز القرية",
+
+            description:
+                "ثلاثة رموز محفورة على الحائط: غراب، عين، ساعة.",
+
+            clue:
+                "القرية لا تنسى الساعة التي تغيرت فيها الأمور.",
+
+            question:
+                "أي رمز يجب الضغط عليه أولاً؟",
+
+            options: [
+                "الغراب",
+                "العين",
+                "الساعة",
+                "لا شيء"
+            ],
+
+            answer: "الساعة",
+
+            reward: {
+                coins: 25,
+                item: "crowSymbol"
+            },
+
+            successText:
+                "تتحرك حجارة الجدار... يظهر ممر ضيق.",
+
+            failText:
+                "الرموز تضيء للحظة ثم تنطفئ.",
+
+            effectSuccess: "fog",
+            effectFail: "flicker"
+
+        },
+
+
+        /* -------------------------------------------------
+           PUZZLE 03
+           ------------------------------------------------- */
+
+        diaryCipher: {
+
+            id: "diaryCipher",
+
+            title: "شيفرة المذكرات",
+
+            description:
+                "المذكرات تحتوي على: 3 - 1 - 17 - 7.",
+
+            clue:
+                "كل رقم يشير إلى شيء في المكان.",
+
+            question:
+                "ما الرقم الذي يتكرر في كل الأدلة؟",
+
+            options: [
+                "03",
+                "07",
+                "17",
+                "71"
+            ],
+
+            answer: "17",
+
+            reward: {
+                coins: 30,
+                item: "basementKey",
+                flag: "foundDiary"
+            },
+
+            successText:
+                "تظهر كلمة واحدة بين الصفحات: القبو.",
+
+            failText:
+                "الحبر على الصفحة يتحرك كأنه حي.",
+
+            effectSuccess: "flash",
+            effectFail: "glitch"
+
+        },
+
+
+        /* -------------------------------------------------
+           PUZZLE 04
+           ------------------------------------------------- */
+
+        photoDifference: {
+
+            id: "photoDifference",
+
+            title: "الصورة المستحيلة",
+
+            description:
+                "صورتان للغرفة نفسها. شيء واحد تغير.",
+
+            clue:
+                "انظر إلى الساعة وليس إلى الشخص.",
+
+            question:
+                "ما الشيء المختلف؟",
+
+            options: [
+                "النافذة",
+                "الساعة",
+                "الباب",
+                "المصباح"
+            ],
+
+            answer: "الساعة",
+
+            reward: {
+                coins: 35,
+                item: "photograph2",
+                flag: "sawMemory1"
+            },
+
+            successText:
+                "للحظة ترى نفسك واقفاً خلف الشخص الموجود في الصورة.",
+
+            failText:
+                "تظهر بقعة سوداء على الصورة.",
+
+            effectSuccess: "memory",
+            effectFail: "shadow"
+
+        },
+
+
+        /* -------------------------------------------------
+           PUZZLE 05
+           ------------------------------------------------- */
+
+        tapeSequence: {
+
+            id: "tapeSequence",
+
+            title: "التسجيل",
+
+            description:
+                "التسجيل يقول: واحد... ثلاثة... واحد... سبعة.",
+
+            clue:
+                "لا تسمع الأرقام فقط. اسمع ترتيبها.",
+
+            question:
+                "ما التسلسل الصحيح؟",
+
+            options: [
+                "1317",
+                "1137",
+                "0317",
+                "1731"
+            ],
+
+            answer: "1317",
+
+            reward: {
+                coins: 40,
+                item: "metalCard",
+                flag: "heardTape"
+            },
+
+            successText:
+                "الصوت يتوقف ويقول: أحسنت يا وليد.",
+
+            failText:
+                "الصوت يكرر اسمك.",
+
+            effectSuccess: "whisper",
+            effectFail: "darkness"
+
+        },
+
+
+        /* -------------------------------------------------
+           PUZZLE 06
+           ------------------------------------------------- */
+
+        undergroundDoor: {
+
+            id: "undergroundDoor",
+
+            title: "الباب السفلي",
+
+            description:
+                "ثلاثة أقفال تحمل الأرقام 3 و1 و7.",
+
+            clue:
+                "ابدأ بالرقم الذي ظهر أولاً.",
+
+            question:
+                "ما ترتيب الأقفال؟",
+
+            options: [
+                "3 → 1 → 7",
+                "7 → 1 → 3",
+                "1 → 7 → 3",
+                "3 → 7 → 1"
+            ],
+
+            answer: "3 → 1 → 7",
+
+            reward: {
+                coins: 45,
+                item: "flashlight",
+                flag: "foundBasement"
+            },
+
+            successText:
+                "الباب ينفتح إلى ممر تحت الأرض.",
+
+            failText:
+                "الإنذار يعمل لثانيتين.",
+
+            effectSuccess: "light",
+            effectFail: "danger"
+
+        },
+
+
+        /* -------------------------------------------------
+           PUZZLE 07
+           ------------------------------------------------- */
+
+        mirrorIdentity: {
+
+            id: "mirrorIdentity",
+
+            title: "المرآة",
+
+            description:
+                "المرآة تعرض ثلاث نسخ من وليد.",
+
+            clue:
+                "واحد منهم لا يملك ظلاً.",
+
+            question:
+                "أي نسخة هي الحقيقية؟",
+
+            options: [
+                "الأولى",
+                "الثانية",
+                "الثالثة",
+                "كلهم"
+            ],
+
+            answer: "الثانية",
+
+            reward: {
+                coins: 50,
+                item: "mirrorShard",
+                flag: "knowsWhoIsWaleed"
+            },
+
+            successText:
+                "النسخة الثانية تبتسم... ثم تختفي.",
+
+            failText:
+                "المرآة تتشقق.",
+
+            effectSuccess: "glitch",
+            effectFail: "shake"
+
+        },
+
+
+        /* -------------------------------------------------
+           PUZZLE 08
+           ------------------------------------------------- */
+
+        labAccess: {
+
+            id: "labAccess",
+
+            title: "دخول المختبر",
+
+            description:
+                "لوحة دخول تطلب الرمز الصحيح.",
+
+            clue:
+                "الرمز موجود في الأدلة التي جمعتها.",
+
+            question:
+                "ما الرمز؟",
+
+            options: [
+                "0317",
+                "1713",
+                "1307",
+                "0717"
+            ],
+
+            answer: "0317",
+
+            reward: {
+                coins: 55,
+                item: "archiveBadge",
+                flag: "discoveredLab"
+            },
+
+            successText:
+                "تم التعرف على هويتك: وليد.",
+
+            failText:
+                "النظام: الهوية غير متطابقة.",
+
+            effectSuccess: "light",
+            effectFail: "alert"
+
+        },
+
+
+        /* -------------------------------------------------
+           PUZZLE 09
+           ------------------------------------------------- */
+
+        blackFile: {
+
+            id: "blackFile",
+
+            title: "الملف الأسود",
+
+            description:
+                "أمامك أربعة ملفات. واحد فقط يحمل رمز الغراب.",
+
+            clue:
+                "الرمز موجود في الصورة القديمة.",
+
+            question:
+                "أي ملف تختار؟",
+
+            options: [
+                "A-03",
+                "B-17",
+                "C-31",
+                "D-71"
+            ],
+
+            answer: "B-17",
+
+            reward: {
+                coins: 60,
+                item: "blackFile",
+                flag: "discoveredFile"
+            },
+
+            successText:
+                "تفتح الصفحة الأولى: SUBJECT — WALEED.",
+
+            failText:
+                "صفحة فارغة... ثم يظهر عليها اسمك.",
+
+            effectSuccess: "darkness",
+            effectFail: "glitch"
+
+        },
+
+
+        /* -------------------------------------------------
+           PUZZLE 10
+           ------------------------------------------------- */
+
+        memoryOrder: {
+
+            id: "memoryOrder",
+
+            title: "ترتيب الذاكرة",
+
+            description:
+                "ثلاث ذكريات تظهر: البيت، المختبر، الحادث.",
+
+            clue:
+                "ابدأ من المكان الذي بدأ فيه كل شيء.",
+
+            question:
+                "ما الترتيب الصحيح؟",
+
+            options: [
+                "البيت → المختبر → الحادث",
+                "الحادث → البيت → المختبر",
+                "المختبر → البيت → الحادث",
+                "البيت → الحادث → المختبر"
+            ],
+
+            answer: "البيت → المختبر → الحادث",
+
+            reward: {
+                coins: 65,
+                item: "memoryFragment",
+                flag: "sawMemory3"
+            },
+
+            successText:
+                "تتذكر يدك وهي تفتح باباً لم تره من قبل.",
+
+            failText:
+                "الذكرى تنهار.",
+
+            effectSuccess: "memory",
+            effectFail: "flash"
+
+        },
+
+
+        /* -------------------------------------------------
+           PUZZLE 11
+           ------------------------------------------------- */
+
+        silentCity: {
+
+            id: "silentCity",
+
+            title: "المدينة الصامتة",
+
+            description:
+                "خريطة تحتوي على أربعة طرق.",
+
+            clue:
+                "كل طريق يحمل رمزاً. الغراب لا يعود للخلف.",
+
+            question:
+                "أي طريق يؤدي إلى البرج؟",
+
+            options: [
+                "الشمال",
+                "الجنوب",
+                "الشرق",
+                "الغرب"
+            ],
+
+            answer: "الشمال",
+
+            reward: {
+                coins: 70,
+                item: "compass",
+                flag: "discoveredTower"
+            },
+
+            successText:
+                "إبرة البوصلة تتحرك نحو الشمال.",
+
+            failText:
+                "الضباب يبتلع الطريق.",
+
+            effectSuccess: "wind",
+            effectFail: "fog"
+
+        },
+
+
+        /* -------------------------------------------------
+           PUZZLE 12
+           ------------------------------------------------- */
+
+        voiceCode: {
+
+            id: "voiceCode",
+
+            title: "صوت وليد",
+
+            description:
+                "صوت مسجل يقول ثلاث كلمات: باب... ساعة... ظل.",
+
+            clue:
+                "اجمع الأشياء التي تكررت منذ البداية.",
+
+            question:
+                "ما الكلمة الأخيرة؟",
+
+            options: [
+                "نور",
+                "ظل",
+                "ماء",
+                "صمت"
+            ],
+
+            answer: "ظل",
+
+            reward: {
+                coins: 75,
+                item: "voiceRecorder",
+                flag: "knowsTruth"
+            },
+
+            successText:
+                "الصوت يقول: الآن تذكرت.",
+
+            failText:
+                "الصوت يتحول إلى همس.",
+
+            effectSuccess: "whisper",
+            effectFail: "darkness"
+
+        },
+
+
+        /* -------------------------------------------------
+           PUZZLE 13
+           ------------------------------------------------- */
+
+        archiveMap: {
+
+            id: "archiveMap",
+
+            title: "خريطة الأرشيف",
+
+            description:
+                "الممرات تحمل الرموز: عين، غراب، دائرة، ساعة.",
+
+            clue:
+                "الساعة دائماً في البداية.",
+
+            question:
+                "أي مسار تختار؟",
+
+            options: [
+                "ساعة → عين → غراب",
+                "غراب → عين → ساعة",
+                "عين → ساعة → غراب",
+                "ساعة → غراب → عين"
+            ],
+
+            answer: "ساعة → غراب → عين",
+
+            reward: {
+                coins: 80,
+                item: "archiveMap",
+                flag: "discoveredArchive"
+            },
+
+            successText:
+                "باب الأرشيف السري يفتح.",
+
+            failText:
+                "تسمع خطوات خلفك.",
+
+            effectSuccess: "light",
+            effectFail: "danger"
+
+        },
+
+
+        /* -------------------------------------------------
+           PUZZLE 14
+           ------------------------------------------------- */
+
+        archiveSorting: {
+
+            id: "archiveSorting",
+
+            title: "ترتيب الملفات",
+
+            description:
+                "أربعة ملفات تحمل سنوات مختلفة.",
+
+            clue:
+                "الأقدم يسبق كل شيء.",
+
+            question:
+                "أي ترتيب صحيح؟",
+
+            options: [
+                "2017 → 2019 → 2021 → 2024",
+                "2024 → 2021 → 2019 → 2017",
+                "2019 → 2017 → 2024 → 2021",
+                "2021 → 2017 → 2019 → 2024"
+            ],
+
+            answer: "2017 → 2019 → 2021 → 2024",
+
+            reward: {
+                coins: 85,
+                item: "blackCoin",
+                flag: "completedArchive"
+            },
+
+            successText:
+                "تظهر عبارة: PROJECT SHADOW.",
+
+            failText:
+                "الملفات تختفي للحظة.",
+
+            effectSuccess: "glitch",
+            effectFail: "flicker"
+
+        },
+
+
+        /* -------------------------------------------------
+           PUZZLE 15
+           ------------------------------------------------- */
+
+        undergroundCity: {
+
+            id: "undergroundCity",
+
+            title: "المدينة تحت المدينة",
+
+            description:
+                "أمامك خريطة لمدينة مهجورة تحت الأرض.",
+
+            clue:
+                "كل الطرق تنتهي عند الرقم 17.",
+
+            question:
+                "أي منطقة تبحث فيها؟",
+
+            options: [
+                "القطاع 03",
+                "القطاع 07",
+                "القطاع 17",
+                "القطاع 31"
+            ],
+
+            answer: "القطاع 17",
+
+            reward: {
+                coins: 90,
+                item: "masterKey",
+                flag: "discoveredUndergroundCity"
+            },
+
+            successText:
+                "باب هائل يظهر من بين الأنقاض.",
+
+            failText:
+                "المدينة تتحرك كأنها حية.",
+
+            effectSuccess: "shake",
+            effectFail: "fog"
+
+        },
+
+
+        /* -------------------------------------------------
+           PUZZLE 16
+           ------------------------------------------------- */
+
+        redDoor: {
+
+            id: "redDoor",
+
+            title: "الباب الأحمر",
+
+            description:
+                "الباب لا يملك مقبضاً. أمامه ثلاثة رموز.",
+
+            clue:
+                "المفتاح الحقيقي ليس شيئاً مادياً.",
+
+            question:
+                "ما الذي يفتح الباب؟",
+
+            options: [
+                "الخوف",
+                "الحقيقة",
+                "الغضب",
+                "الصمت"
+            ],
+
+            answer: "الحقيقة",
+
+            reward: {
+                coins: 100,
+                item: "redKey",
+                flag: "openedFinalDoor"
+            },
+
+            successText:
+                "الباب يفتح دون أن تلمسه.",
+
+            failText:
+                "الظلام يقترب.",
+
+            effectSuccess: "light",
+            effectFail: "darkness"
+
+        },
+
+
+        /* -------------------------------------------------
+           PUZZLE 17
+           ------------------------------------------------- */
+
+        finalMemory: {
+
+            id: "finalMemory",
+
+            title: "الذاكرة الأخيرة",
+
+            description:
+                "أمامك خمس صور من حياة وليد.",
+
+            clue:
+                "الصورة التي لا تنتمي للماضي هي المفتاح.",
+
+            question:
+                "أي صورة تختار؟",
+
+            options: [
+                "الطفولة",
+                "البيت 17",
+                "المختبر",
+                "المدينة",
+                "الطريق"
+            ],
+
+            answer: "الطريق",
+
+            reward: {
+                coins: 110,
+                item: "finalFragment",
+                flag: "foundFinalMessage"
+            },
+
+            successText:
+                "تعود آخر ذكرى... وتظهر الحقيقة.",
+
+            failText:
+                "الصورة تتحول إلى اللون الأسود.",
+
+            effectSuccess: "memory",
+            effectFail: "flash"
+
+        },
+
+
+        /* -------------------------------------------------
+           PUZZLE 18
+           ------------------------------------------------- */
+
+        truthChoice: {
+
+            id: "truthChoice",
+
+            title: "الحقيقة",
+
+            description:
+                "ثلاثة تسجيلات تعرض ثلاث روايات.",
+
+            clue:
+                "الرواية الحقيقية هي التي تتوافق مع الأدلة.",
+
+            question:
+                "من بدأ التجربة؟",
+
+            options: [
+                "ليان",
+                "الطبيب",
+                "وليد",
+                "الشخص المجهول"
+            ],
+
+            answer: "وليد",
+
+            reward: {
+                coins: 120,
+                flag: "finalTruth"
+            },
+
+            successText:
+                "تتوقف الشاشة. ثم يظهر وجه وليد على التسجيل.",
+
+            failText:
+                "الصوت يقول: لم تكتمل الذاكرة.",
+
+            effectSuccess: "darkness",
+            effectFail: "glitch"
+
+        },
+
+
+        /* -------------------------------------------------
+           PUZZLE 19
+           ------------------------------------------------- */
+
+        shadowIdentity: {
+
+            id: "shadowIdentity",
+
+            title: "هوية الظل",
+
+            description:
+                "الظل يعرف كل شيء عن وليد.",
+
+            clue:
+                "ليس شخصاً آخر... لكنه أيضاً ليس وليد الحالي.",
+
+            question:
+                "ما هو الظل؟",
+
+            options: [
+                "ذاكرة",
+                "نسخة",
+                "وهم",
+                "كل ما سبق"
+            ],
+
+            answer: "كل ما سبق",
+
+            reward: {
+                coins: 150,
+                flag: "secretPath"
+            },
+
+            successText:
+                "الظل يضحك لأول مرة.",
+
+            failText:
+                "الظل يختفي.",
+
+            effectSuccess: "shadow",
+            effectFail: "flicker"
+
+        },
+
+
+        /* -------------------------------------------------
+           PUZZLE 20
+           ------------------------------------------------- */
+
+        ultimateTruth: {
+
+            id: "ultimateTruth",
+
+            title: "اللغز الأخير",
+
+            description:
+                "أمام وليد أربعة أبواب. كل باب يمثل نهاية.",
+
+            clue:
+                "الباب الصحيح لا يحمل رقماً.",
+
+            question:
+                "أي باب تختار؟",
+
+            options: [
+                "03",
+                "17",
+                "31",
+                "الباب بلا رقم"
+            ],
+
+            answer: "الباب بلا رقم",
+
+            reward: {
+                coins: 300,
+                flag: "secretEndingUnlocked"
+            },
+
+            successText:
+                "لا يوجد شيء خلف الباب... سوى الحقيقة.",
+
+            failText:
+                "تعود الساعة إلى 03:17.",
+
+            effectSuccess: "supernatural",
+            effectFail: "darkness"
+
+        }
+
     },
 
 
@@ -246,3105 +1314,1595 @@ const GAME_DATA = {
 
     chapters: [
 
-
         /* =================================================
-           CHAPTER 1
+           CHAPTER 01
            ================================================= */
 
         {
+
             id: 1,
+
             title: "03:17",
+
+            subtitle: "المكالمة التي لا يجب أن تصل",
+
+            location: "الطريق الجبلي",
 
             scenes: [
 
                 {
+
                     id: "c1_start",
 
-                    title: "الاستيقاظ",
-                    location: "مكان مجهول",
+                    title: "الطريق",
+
+                    location: "الطريق الجبلي",
+
                     time: "03:17",
 
-                    events: [
-
-                        {
-                            type: "darkness",
-                            duration: 650
-                        },
-
-                        {
-                            type: "flash",
-                            color: "#d9ecff",
-                            duration: 180
-                        },
-
-                        {
-                            type: "shake",
-                            intensity: 2,
-                            duration: 220
-                        },
-
-                        {
-                            type: "light",
-                            color: "#55a8ff",
-                            intensity: 0.7,
-                            duration: 1000
-                        }
-                    ],
+                    weather: "fog",
 
                     text:
-                        "فتح آدم عينيه ببطء. كان أول ما شعر به هو البرد. " +
-                        "مصباح وحيد في السقف يومض بصورة متقطعة. " +
-                        "وعلى الجدار المقابل ظهرت أرقام محفورة بعناية: 03:17. " +
-                        "حاول آدم أن يتذكر آخر شيء حدث له... لكن ذاكرته كانت فارغة.",
+                        "كان الطريق خالياً تماماً. الضباب يغطي الجبال، والضوء الذهبي البعيد بالكاد يظهر خلف القمم. كان وليد يقود وحده عندما توقفت الساعة في السيارة عند 03:17.",
+
+                    event: "fog",
 
                     choices: [
 
                         {
-                            text: "تفقد المكان",
+                            text: "أكمل الطريق",
                             next: "c1_car",
-
                             effects: {
-                                coins: 2
+                                coins: 5,
+                                flags: {
+                                    first_step: true
+                                }
                             }
                         },
 
                         {
-                            text: "ابحث عن هاتفك",
+                            text: "أوقف السيارة",
+                            next: "c1_phone"
+                        }
+
+                    ]
+
+                },
+
+                {
+
+                    id: "c1_car",
+
+                    title: "الصوت",
+
+                    location: "داخل السيارة",
+
+                    text:
+                        "قبل أن يقرر وليد ماذا يفعل، اشتغل الراديو وحده. لم تكن هناك موسيقى. كان هناك صوت شخص يتنفس.",
+
+                    event: "whisper",
+
+                    choices: [
+
+                        {
+                            text: "أخفض الصوت",
                             next: "c1_phone"
                         },
 
                         {
-                            text: "اخرج فورًا",
-                            next: "c1_exit"
+                            text: "استمع",
+                            next: "c1_call",
+                            effects: {
+                                flags: {
+                                    sawMemory1: true
+                                }
+                            }
                         }
+
                     ]
+
                 },
 
-
                 {
-                    id: "c1_car",
 
-                    title: "السيارة السوداء",
-                    location: "طريق ريفي",
-                    time: "03:21",
+                    id: "c1_phone",
 
-                    events: [
+                    title: "الهاتف",
 
-                        {
-                            type: "light",
-                            color: "#dcecff",
-                            duration: 900
-                        },
-
-                        {
-                            type: "fog",
-                            duration: 1300
-                        }
-                    ],
+                    location: "داخل السيارة",
 
                     text:
-                        "خرج آدم إلى طريق تحيطه الأشجار. " +
-                        "سيارة سوداء متوقفة في الظلام، ومصابيحها الأمامية مضاءة " +
-                        "رغم عدم وجود أحد بداخلها.",
+                        "اهتز الهاتف على المقعد. لا يوجد رقم ظاهر. فقط كلمة واحدة: وليد.",
+
+                    event: "flash",
 
                     choices: [
 
                         {
-                            text: "اقترب من السيارة",
-                            next: "c1_stranger",
-
-                            events: [
-                                {
-                                    type: "flash",
-                                    color: "#8ecbff",
-                                    duration: 220
-                                }
-                            ]
+                            text: "أجيب",
+                            next: "c1_call"
                         },
 
                         {
-                            text: "انظر من النافذة",
+                            text: "أتجاهل المكالمة",
+                            next: "c1_wait"
+                        }
+
+                    ]
+
+                },
+
+                {
+
+                    id: "c1_call",
+
+                    title: "03:17",
+
+                    location: "داخل السيارة",
+
+                    text:
+                        "صوت مجهول قال بهدوء: لا تدخل القرية... لا تثق بالرجل الذي ينتظرك... وإذا سألك أحد عن الساعة، لا تجبه.",
+
+                    event: "darkness",
+
+                    choices: [
+
+                        {
+                            text: "من أنت؟",
+                            next: "c1_stranger"
+                        },
+
+                        {
+                            text: "ماذا تريد؟",
+                            next: "c1_stranger"
+                        }
+
+                    ]
+
+                },
+
+                {
+
+                    id: "c1_stranger",
+
+                    title: "الرجل",
+
+                    location: "الطريق",
+
+                    text:
+                        "عندما نزل وليد من السيارة، رأى رجلاً واقفاً وسط الضباب. لم يتحرك. فقط رفع يده وأشار نحو القرية.",
+
+                    event: "shadow",
+
+                    choices: [
+
+                        {
+                            text: "أتبع الإشارة",
                             next: "c1_window"
                         },
 
                         {
-                            text: "تجاهلها وتابع الطريق",
-                            next: "c1_silent"
+                            text: "أعود للسيارة",
+                            next: "c1_wait"
                         }
+
                     ]
+
                 },
 
-
                 {
-                    id: "c1_phone",
 
-                    title: "الهاتف",
-                    location: "الغرفة",
-                    time: "03:17",
-
-                    events: [
-
-                        {
-                            type: "glitch",
-                            duration: 600
-                        },
-
-                        {
-                            type: "shake",
-                            intensity: 2,
-                            duration: 180
-                        }
-                    ],
-
-                    text:
-                        "وجد آدم هاتفًا مكسور الشاشة تحت الكرسي. " +
-                        "الرقم الظاهر الوحيد هو 0317. " +
-                        "بدأ الهاتف يرن فجأة.",
-
-                    choices: [
-
-                        {
-                            text: "أجب على الاتصال",
-                            next: "c1_call",
-
-                            effects: {
-
-                                items: [
-                                    "brokenPhone"
-                                ],
-
-                                flags: {
-                                    knowsNumber0317: true
-                                }
-                            },
-
-                            events: [
-
-                                {
-                                    type: "alert",
-                                    duration: 450
-                                },
-
-                                {
-                                    type: "flash",
-                                    color: "#65b8ff",
-                                    duration: 160
-                                }
-                            ]
-                        },
-
-                        {
-                            text: "لا تجب",
-                            next: "c1_exit",
-
-                            effects: {
-                                items: [
-                                    "brokenPhone"
-                                ]
-                            }
-                        }
-                    ]
-                },
-
-
-                {
-                    id: "c1_call",
-
-                    title: "الصوت",
-                    location: "الغرفة",
-                    time: "03:17",
-
-                    events: [
-
-                        {
-                            type: "darkness",
-                            duration: 300
-                        },
-
-                        {
-                            type: "glitch",
-                            duration: 700
-                        },
-
-                        {
-                            type: "whisper",
-                            duration: 700
-                        }
-                    ],
-
-                    text:
-                        "صمت الطرف الآخر لثوانٍ. " +
-                        "ثم جاء صوت منخفض: «لا تثق بمن يعرف اسمك.» " +
-                        "انقطع الاتصال فورًا.",
-
-                    choices: [
-
-                        {
-                            text: "انتظر",
-                            next: "c1_wait",
-
-                            events: [
-
-                                {
-                                    type: "pause",
-                                    duration: 500
-                                },
-
-                                {
-                                    type: "flash",
-                                    color: "#ffffff",
-                                    duration: 100
-                                }
-                            ]
-                        },
-
-                        {
-                            text: "اخرج",
-                            next: "c1_exit"
-                        }
-                    ]
-                },
-
-
-                {
-                    id: "c1_stranger",
-
-                    title: "الرجل بين الأشجار",
-                    location: "الغابة",
-                    time: "03:25",
-
-                    events: [
-
-                        {
-                            type: "fog",
-                            duration: 1200
-                        },
-
-                        {
-                            type: "light",
-                            color: "#5faaff",
-                            duration: 900
-                        }
-                    ],
-
-                    text:
-                        "بين الأشجار وقف رجل لا يظهر وجهه بوضوح. " +
-                        "قال بهدوء: «تأخرت كثيرًا يا آدم.»",
-
-                    choices: [
-
-                        {
-                            text: "اتبعه",
-                            next: "c2_village",
-
-                            effects: {
-
-                                flags: {
-                                    metStranger: true,
-                                    trustedStranger: true
-                                }
-                            }
-                        },
-
-                        {
-                            text: "ابتعد عنه",
-                            next: "c2_village",
-
-                            effects: {
-
-                                flags: {
-                                    metStranger: true
-                                }
-                            }
-                        }
-                    ]
-                },
-
-
-                {
                     id: "c1_window",
 
-                    title: "الانعكاس",
-                    location: "السيارة",
+                    title: "النافذة",
 
-                    events: [
+                    location: "الطريق",
+
+                    text:
+                        "قبل أن يعود وليد للسيارة، ظهر انعكاس في النافذة. انعكاسه هو... لكنه لم يكن يقلده.",
+
+                    event: "glitch",
+
+                    choices: [
 
                         {
-                            type: "memory",
-                            duration: 850
+                            text: "ألمس النافذة",
+                            next: "c1_exit",
+                            effects: {
+                                items: ["brokenPhone"]
+                            }
                         },
 
                         {
-                            type: "glitch",
-                            duration: 500
+                            text: "أهرب",
+                            next: "c1_exit"
                         }
-                    ],
 
-                    text:
-                        "في زجاج السيارة رأى آدم انعكاس وجهه... " +
-                        "وخلفه شخصًا واقفًا. " +
-                        "التفت بسرعة. لم يكن هناك أحد.",
-
-                    choices: [
-
-                        {
-                            text: "اذهب إلى القرية",
-                            next: "c2_village"
-                        }
                     ]
+
                 },
 
-
                 {
-                    id: "c1_silent",
 
-                    title: "الطريق",
-                    location: "الغابة",
-
-                    events: [
-
-                        {
-                            type: "fog",
-                            duration: 1400
-                        }
-                    ],
-
-                    text:
-                        "تابع آدم السير. " +
-                        "في نهاية الطريق ظهرت أضواء قرية هادئة بشكل غير طبيعي.",
-
-                    choices: [
-
-                        {
-                            text: "ادخل القرية",
-                            next: "c2_village"
-                        }
-                    ]
-                },
-
-
-                {
                     id: "c1_wait",
 
-                    title: "نحن نراك",
-                    location: "الغرفة",
+                    title: "الانتظار",
 
-                    events: [
-
-                        {
-                            type: "darkness",
-                            duration: 350
-                        },
-
-                        {
-                            type: "glitch",
-                            duration: 500
-                        }
-                    ],
+                    location: "الطريق",
 
                     text:
-                        "انتظر آدم. " +
-                        "أضاء الهاتف وحده وظهرت رسالة واحدة: «نحن نراك.»",
+                        "انتظر وليد دقيقة واحدة. عندما نظر إلى الساعة، كانت لا تزال 03:17. لكن السيارة أصبحت في مكان مختلف.",
+
+                    event: "shake",
 
                     choices: [
 
                         {
-                            text: "اذهب إلى القرية",
-                            next: "c2_village"
+                            text: "أدخل القرية",
+                            next: "c1_exit"
                         }
+
                     ]
+
                 },
 
-
                 {
+
                     id: "c1_exit",
 
-                    title: "الخروج",
-                    location: "طريق الغابة",
+                    title: "القرية",
 
-                    events: [
-
-                        {
-                            type: "flash",
-                            color: "#6bb8ff",
-                            duration: 120
-                        },
-
-                        {
-                            type: "fog",
-                            duration: 1000
-                        }
-                    ],
+                    location: "مدخل القرية",
 
                     text:
-                        "خرج آدم من المبنى. " +
-                        "الهواء بارد والطريق ممتد نحو أضواء بعيدة. " +
-                        "في الأفق ظهرت قرية لا تنام.",
+                        "ظهر اسم القرية على لوحة خشبية قديمة. كانت الحروف ممسوحة تقريباً، لكن رقماً واحداً بقي واضحاً: 17.",
+
+                    event: "light",
 
                     choices: [
 
                         {
-                            text: "اتجه إلى القرية",
+                            text: "أدخل القرية",
                             next: "c2_village"
                         }
+
                     ]
+
                 }
+
             ]
+
         },
 
 
         /* =================================================
-           CHAPTER 2
+           CHAPTER 02
            ================================================= */
 
         {
+
             id: 2,
+
             title: "القرية التي لا تنام",
+
+            subtitle: "لا أحد هنا ينام بعد الثالثة",
+
+            location: "القرية",
 
             scenes: [
 
                 {
+
                     id: "c2_village",
 
-                    title: "القرية",
+                    title: "المدخل",
+
                     location: "القرية",
-                    time: "03:41",
-
-                    events: [
-
-                        {
-                            type: "fog",
-                            duration: 1200
-                        }
-                    ],
 
                     text:
-                        "كل مصابيح القرية مضاءة، لكن الشوارع خالية. " +
-                        "عند المدخل كُتبت عبارة: «من يدخل يعرف... ومن يعرف لا يعود كما كان.»",
+                        "لم تكن القرية مهجورة. كانت هناك نوافذ مضاءة في كل بيت، لكن لا أحد يظهر خلفها.",
+
+                    event: "fog",
 
                     choices: [
 
                         {
-                            text: "ابحث عن شخص",
+                            text: "أبحث عن شخص",
                             next: "c2_youssef"
                         },
 
                         {
-                            text: "ابحث عن مكان تعرفه",
-                            next: "c2_identity"
-                        },
-
-                        {
-                            text: "حاول المغادرة",
-                            next: "c2_leave"
+                            text: "أتجه للساحة",
+                            next: "c2_square"
                         }
+
                     ]
+
                 },
 
-
                 {
+
                     id: "c2_youssef",
 
                     title: "يوسف",
-                    location: "القرية",
 
-                    events: [
-
-                        {
-                            type: "light",
-                            color: "#6bb8ff",
-                            duration: 700
-                        }
-                    ],
+                    location: "مقهى قديم",
 
                     text:
-                        "ظهر رجل اسمه يوسف. " +
-                        "قال: «أخيرًا وصلت.» " +
-                        "ثم أخرج مفتاحًا صدئًا وقال إن البيت رقم 17 ينتظرك.",
+                        "جلس رجل مسن خلف نافذة المقهى. عندما رأى وليد قال: تأخرت كثيراً.",
+
+                    event: "whisper",
 
                     choices: [
 
                         {
-                            text: "ثق به",
+                            text: "ماذا تقصد؟",
                             next: "c2_key",
-
                             effects: {
-
-                                items: [
-                                    "oldKey"
-                                ],
-
                                 flags: {
+                                    metYoussef: true,
                                     trustedYoussef: true
                                 }
                             }
                         },
 
                         {
-                            text: "لا تثق به",
-                            next: "c2_square"
+                            text: "من أنت؟",
+                            next: "c2_identity"
                         }
+
                     ]
+
                 },
 
-
                 {
+
                     id: "c2_key",
 
-                    title: "المفتاح 17",
-                    location: "القرية",
+                    title: "المفتاح",
+
+                    location: "المقهى",
 
                     text:
-                        "وضع يوسف المفتاح في يد آدم. " +
-                        "«لا تسأل لماذا أنت هنا. اذهب إلى البيت 17.»",
+                        "وضع يوسف مفتاحاً صدئاً على الطاولة. قال: إذا كنت فعلاً وليد، ستعرف أين تستخدمه.",
+
+                    event: "light",
 
                     choices: [
 
                         {
-                            text: "اذهب إلى البيت",
-                            next: "c3_house"
+                            text: "آخذ المفتاح",
+                            next: "c2_identity",
+                            effects: {
+                                items: ["oldKey"]
+                            }
                         }
+
                     ]
+
                 },
 
-
                 {
+
                     id: "c2_identity",
 
-                    title: "الاسم",
-                    location: "الساحة",
+                    title: "من أنت؟",
 
-                    events: [
-
-                        {
-                            type: "memory",
-                            duration: 700
-                        }
-                    ],
+                    location: "المقهى",
 
                     text:
-                        "وجد آدم لوحًا حجريًا قديمًا. " +
-                        "الاسم المحفور عليه يشبه اسمه بشكل مخيف.",
+                        "ابتسم يوسف وقال: السؤال ليس من أنا... السؤال هو من أنت؟",
+
+                    event: "darkness",
 
                     choices: [
 
                         {
-                            text: "دقق في الكتابة",
-                            next: "c2_identity2"
+                            text: "أنا وليد",
+                            next: "c2_identity2",
+                            effects: {
+                                flags: {
+                                    knowsWhoIsWaleed: true
+                                }
+                            }
                         },
 
                         {
-                            text: "ابتعد",
-                            next: "c2_square"
+                            text: "لا أعرف",
+                            next: "c2_identity2"
                         }
+
                     ]
+
                 },
 
-
                 {
+
                     id: "c2_identity2",
 
-                    title: "آدم نادر",
-                    location: "الساحة",
+                    title: "الساعة",
+
+                    location: "المقهى",
 
                     text:
-                        "ظهر الاسم: «آدم نادر — قبل 17 عامًا». " +
-                        "لم يتذكر آدم أي شيء.",
+                        "دقت الساعة الثالثة وسبع عشرة دقيقة. توقف يوسف عن الكلام تماماً.",
+
+                    event: "heartbeat",
+
+                    puzzle: "clock0317",
 
                     choices: [
 
                         {
-                            text: "تابع إلى الساحة",
+                            text: "حل اللغز",
                             next: "c2_square"
                         }
+
                     ]
+
                 },
 
-
                 {
+
                     id: "c2_square",
 
-                    title: "رمز الغراب",
-                    location: "الساحة",
+                    title: "الساحة",
 
-                    events: [
+                    location: "ساحة القرية",
+
+                    text:
+                        "في وسط الساحة تمثال لغراب حجري. تحته ثلاث رموز قديمة.",
+
+                    event: "fog",
+
+                    puzzle: "villageSymbols",
+
+                    choices: [
 
                         {
-                            type: "flash",
-                            color: "#d9b867",
-                            duration: 180
+                            text: "حل لغز الرموز",
+                            next: "c2_symbol"
+                        }
+
+                    ]
+
+                },
+
+                {
+
+                    id: "c2_symbol",
+
+                    title: "الممر",
+
+                    location: "الساحة",
+
+                    text:
+                        "تحرك الجدار ببطء، وظهر ممر ضيق يقود نحو أطراف القرية.",
+
+                    event: "wind",
+
+                    choices: [
+
+                        {
+                            text: "أدخل الممر",
+                            next: "c2_child"
+                        }
+
+                    ]
+
+                },
+
+                {
+
+                    id: "c2_child",
+
+                    title: "الطفل",
+
+                    location: "الزقاق",
+
+                    text:
+                        "ظهر طفل صغير وقال: البيت رقم 17 ينتظرك يا وليد.",
+
+                    event: "shadow",
+
+                    choices: [
+
+                        {
+                            text: "أين البيت؟",
+                            next: "c2_inn"
                         },
 
                         {
-                            type: "shake",
-                            intensity: 2,
-                            duration: 220
+                            text: "من أخبرك باسمي؟",
+                            next: "c2_inn"
                         }
-                    ],
+
+                    ]
+
+                },
+
+                {
+
+                    id: "c2_inn",
+
+                    title: "النزل",
+
+                    location: "نزل القرية",
 
                     text:
-                        "على حجر قديم نُحت رمز غراب. " +
-                        "عندما لمسه آدم شعر بوخزة، ثم سمع: " +
-                        "«لا تلمس الأشياء التي تتذكرك.»",
+                        "وجد وليد غرفة تحمل الرقم 17. فوق الباب كان رمز الغراب.",
+
+                    event: "light",
 
                     choices: [
 
                         {
-                            text: "افحص الرمز",
-                            next: "c2_symbol",
+                            text: "أنام حتى الصباح",
+                            next: "c2_leave"
+                        },
 
+                        {
+                            text: "أفتح الباب",
+                            next: "c2_leave",
                             effects: {
-
-                                items: [
-                                    "crowSymbol"
-                                ],
-
                                 flags: {
+                                    enteredForbiddenArea: true
+                                }
+                            }
+                        }
+
+                    ]
+
+                },
+
+                {
+
+                    id: "c2_leave",
+
+                    title: "البيت 17",
+
+                    location: "أمام البيت",
+
+                    text:
+                        "في نهاية الطريق ظهر بيت قديم. الباب كان مفتوحاً بالفعل.",
+
+                    event: "darkness",
+
+                    choices: [
+
+                        {
+                            text: "أدخل",
+                            next: "c3_house"
+                        }
+
+                    ]
+
+                }
+
+            ]
+
+        },
+
+
+        /* =================================================
+           CHAPTER 03
+           ================================================= */
+
+        {
+
+            id: 3,
+
+            title: "البيت رقم 17",
+
+            subtitle: "بعض البيوت تتذكر سكانها",
+
+            location: "البيت 17",
+
+            scenes: [
+
+                {
+
+                    id: "c3_house",
+
+                    title: "الباب",
+
+                    location: "البيت 17",
+
+                    text:
+                        "دخل وليد. الهواء بارد رغم أن جميع النوافذ مغلقة.",
+
+                    event: "fog",
+
+                    choices: [
+
+                        {
+                            text: "أدخل",
+                            next: "c3_inside"
+                        }
+
+                    ]
+
+                },
+
+                {
+
+                    id: "c3_inside",
+
+                    title: "الردهة",
+
+                    location: "البيت 17",
+
+                    text:
+                        "على الجدار صور لعائلة مجهولة. إحدى الصور كانت لوليد.",
+
+                    event: "flash",
+
+                    choices: [
+
+                        {
+                            text: "آخذ الصورة",
+                            next: "c3_hall",
+                            effects: {
+                                items: ["photograph"],
+                                flags: {
+                                    foundPhotograph: true,
                                     collectedEvidence1: true
                                 }
                             }
                         },
 
                         {
-                            text: "اذهب إلى النزل",
-                            next: "c2_inn"
+                            text: "أتركها",
+                            next: "c3_hall"
                         }
+
                     ]
+
                 },
 
-
                 {
-                    id: "c2_symbol",
 
-                    title: "الرقم 17",
-                    location: "الساحة",
+                    id: "c3_hall",
 
-                    events: [
+                    title: "الممر",
 
-                        {
-                            type: "light",
-                            color: "#d9b867",
-                            duration: 650
-                        }
-                    ],
+                    location: "الممر",
 
                     text:
-                        "كان الرمز موجودًا أيضًا على خاتم قديم. " +
-                        "بجانبه ورقة تحمل الرقم 17.",
+                        "كل باب يحمل رقماً. 03... 07... 17... ثم باب بلا رقم.",
+
+                    event: "glitch",
 
                     choices: [
 
                         {
-                            text: "ابحث عن الطفل",
-                            next: "c2_child"
+                            text: "أدخل الباب 17",
+                            next: "c3_room"
                         },
 
                         {
-                            text: "اتجه إلى النزل",
-                            next: "c2_inn"
+                            text: "أدخل الباب بلا رقم",
+                            next: "c3_secret"
                         }
+
                     ]
+
                 },
 
-
                 {
-                    id: "c2_child",
 
-                    title: "الطفل",
-                    location: "القرية",
+                    id: "c3_room",
 
-                    events: [
+                    title: "الغرفة",
 
-                        {
-                            type: "whisper",
-                            duration: 600
-                        }
-                    ],
+                    location: "الغرفة 17",
 
                     text:
-                        "قال طفل من بعيد: «كنت هنا من قبل... أخذوا الجزء المهم.» " +
-                        "ثم اختفى خلف باب.",
+                        "وجد وليد مكتباً. فوقه مذكرات سوداء.",
+
+                    event: "darkness",
 
                     choices: [
 
                         {
-                            text: "اذهب إلى البيت 17",
-                            next: "c3_house",
-
-                            effects: {
-
-                                flags: {
-                                    knowsAboutAdam: true
-                                }
-                            }
+                            text: "أقرأ المذكرات",
+                            next: "c3_diary"
                         }
+
                     ]
+
                 },
 
-
                 {
-                    id: "c2_inn",
 
-                    title: "الصورة",
-                    location: "النزل",
+                    id: "c3_diary",
 
-                    events: [
+                    title: "المذكرات",
 
-                        {
-                            type: "memory",
-                            duration: 700
-                        }
-                    ],
+                    location: "الغرفة 17",
 
                     text:
-                        "كان النزل فارغًا. " +
-                        "على الحائط صورة قديمة لآدم أمام البيت رقم 17.",
+                        "الصفحة الأولى: إذا وصل وليد إلى هنا، فهذا يعني أن التجربة فشلت مرة أخرى.",
+
+                    event: "memory",
 
                     choices: [
 
                         {
-                            text: "خذ الصورة",
-                            next: "c3_house",
-
+                            text: "أتابع القراءة",
+                            next: "c3_diary2",
                             effects: {
-
-                                items: [
-                                    "photograph"
-                                ],
-
+                                items: ["diary"],
                                 flags: {
-                                    foundPhotograph: true,
+                                    foundDiary: true,
                                     collectedEvidence2: true
                                 }
                             }
                         }
+
                     ]
+
                 },
 
-
                 {
-                    id: "c2_leave",
 
-                    title: "الطريق الدائري",
-                    location: "خارج القرية",
-
-                    events: [
-
-                        {
-                            type: "glitch",
-                            duration: 650
-                        }
-                    ],
-
-                    text:
-                        "مشى آدم طويلًا ثم وجد نفسه أمام القرية نفسها. " +
-                        "في الجهة الأخرى ظهر مبنى يحمل الرقم 17.",
-
-                    choices: [
-
-                        {
-                            text: "ادخل المبنى",
-                            next: "c3_house"
-                        }
-                    ]
-                }
-            ]
-        },
-
-
-        /* =================================================
-           CHAPTER 3
-           ================================================= */
-
-        {
-            id: 3,
-            title: "البيت رقم 17",
-
-            scenes: [
-
-                {
-                    id: "c3_house",
-
-                    title: "البيت",
-                    location: "البيت 17",
-
-                    events: [
-
-                        {
-                            type: "light",
-                            duration: 800
-                        },
-
-                        {
-                            type: "fog",
-                            duration: 900
-                        }
-                    ],
-
-                    text:
-                        "الباب نصف مفتوح. " +
-                        "خلف إحدى النوافذ يتحرك ضوء بطيء كأن أحدًا يراقبك.",
-
-                    choices: [
-
-                        {
-                            text: "ادخل",
-                            next: "c3_inside"
-                        },
-
-                        {
-                            text: "ارجع",
-                            next: "c2_village"
-                        }
-                    ]
-                },
-
-
-                {
-                    id: "c3_inside",
-
-                    title: "الغرفة النظيفة",
-                    location: "البيت 17",
-
-                    text:
-                        "الغبار يغطي كل شيء باستثناء صورة واحدة نظيفة فوق الطاولة.",
-
-                    choices: [
-
-                        {
-                            text: "اتبع الممر",
-                            next: "c3_hall"
-                        },
-
-                        {
-                            text: "افحص الصورة",
-                            next: "c3_hall"
-                        }
-                    ]
-                },
-
-
-                {
-                    id: "c3_hall",
-
-                    title: "الصورة",
-                    location: "الممر",
-
-                    events: [
-
-                        {
-                            type: "memory",
-                            duration: 650
-                        }
-                    ],
-
-                    text:
-                        "الصورة تُظهر غرفة تشبه المكان الذي استيقظ فيه آدم تمامًا.",
-
-                    choices: [
-
-                        {
-                            text: "اذهب إلى الغرفة",
-                            next: "c3_room",
-
-                            effects: {
-
-                                items: [
-                                    "photograph2"
-                                ],
-
-                                flags: {
-                                    collectedEvidence3: true
-                                }
-                            }
-                        }
-                    ]
-                },
-
-
-                {
-                    id: "c3_room",
-
-                    title: "الغرفة السرية",
-                    location: "البيت 17",
-
-                    events: [
-
-                        {
-                            type: "light",
-                            duration: 500
-                        }
-                    ],
-
-                    text:
-                        "وجد آدم مذكرات سوداء ومسجلًا وبابًا صغيرًا مخفيًا خلف خزانة.",
-
-                    choices: [
-
-                        {
-                            text: "اقرأ المذكرات",
-                            next: "c3_diary"
-                        },
-
-                        {
-                            text: "شغل المسجل",
-                            next: "c3_tape"
-                        },
-
-                        {
-                            text: "افحص الباب",
-                            next: "c3_secret"
-                        }
-                    ]
-                },
-
-
-                {
-                    id: "c3_diary",
-
-                    title: "المذكرات السوداء",
-                    location: "الغرفة",
-
-                    events: [
-
-                        {
-                            type: "glitch",
-                            duration: 500
-                        }
-                    ],
-
-                    text:
-                        "«يمكن فصل الذاكرة عن صاحبها. " +
-                        "لكن الذكريات لا تموت بسهولة.»",
-
-                    choices: [
-
-                        {
-                            text: "تابع القراءة",
-                            next: "c3_diary2",
-
-                            effects: {
-
-                                items: [
-                                    "diary"
-                                ],
-
-                                flags: {
-                                    foundDiary: true
-                                }
-                            }
-                        }
-                    ]
-                },
-
-
-                {
                     id: "c3_diary2",
 
-                    title: "التجربة 0317",
-                    location: "الغرفة",
+                    title: "الشيفرة",
 
-                    events: [
-
-                        {
-                            type: "alert",
-                            duration: 500
-                        },
-
-                        {
-                            type: "flash",
-                            color: "#65b8ff",
-                            duration: 150
-                        }
-                    ],
+                    location: "الغرفة 17",
 
                     text:
-                        "«التجربة 0317: تعديل الذاكرة. " +
-                        "الهدف ليس العقل... الهدف هو ما يحمله العقل.»",
+                        "وجد وليد أربعة أرقام مكتوبة بطريقة غريبة.",
+
+                    puzzle: "diaryCipher",
 
                     choices: [
 
                         {
-                            text: "تذكر",
-                            next: "c3_memory1",
-
-                            effects: {
-
-                                flags: {
-                                    knowsAboutExperiment: true
-                                }
-                            }
+                            text: "حل الشيفرة",
+                            next: "c3_memory1"
                         }
+
                     ]
+
                 },
 
-
                 {
+
                     id: "c3_memory1",
 
-                    title: "الذكرى الأولى",
-                    location: "ذاكرة آدم",
+                    title: "الذكرى",
 
-                    events: [
-
-                        {
-                            type: "memory",
-                            duration: 1000
-                        },
-
-                        {
-                            type: "flash",
-                            color: "#ffffff",
-                            duration: 260
-                        },
-
-                        {
-                            type: "shake",
-                            intensity: 2,
-                            duration: 200
-                        }
-                    ],
+                    location: "ذاكرة مجهولة",
 
                     text:
-                        "غرفة بيضاء. " +
-                        "زجاج يفصل آدم عن شخص يقف خلفه. " +
-                        "جاء صوت: «ابدأ التسجيل... الثالثة وسبع عشرة دقيقة.»",
+                        "رأى وليد نفسه صغيراً أمام البيت. بجانبه فتاة لم يتذكر اسمها.",
+
+                    event: "memory",
 
                     choices: [
 
                         {
-                            text: "افتح عينيك",
-                            next: "c3_secret",
-
+                            text: "أقترب من الذكرى",
+                            next: "c3_tape",
                             effects: {
-
                                 flags: {
-                                    sawMemory1: true
+                                    sawMemory2: true
                                 }
                             }
                         }
+
                     ]
+
                 },
 
-
                 {
+
                     id: "c3_tape",
 
                     title: "التسجيل",
+
                     location: "الغرفة",
 
-                    events: [
-
-                        {
-                            type: "whisper",
-                            duration: 800
-                        },
-
-                        {
-                            type: "glitch",
-                            duration: 650
-                        }
-                    ],
-
                     text:
-                        "جاء صوت آدم من التسجيل: " +
-                        "«إذا كنت تسمع هذا، فقد فشلت الخطة الأولى. " +
-                        "لا تصدق أي نسخة منك.»",
+                        "وجد جهاز تسجيل. ضغط على الزر. سمع صوته هو.",
+
+                    event: "whisper",
+
+                    puzzle: "tapeSequence",
 
                     choices: [
 
                         {
-                            text: "أوقف التسجيل",
-                            next: "c3_secret",
-
-                            effects: {
-
-                                items: [
-                                    "tape"
-                                ],
-
-                                flags: {
-                                    heardTape: true
-                                }
-                            }
+                            text: "أستمع للتسجيل",
+                            next: "c3_secret"
                         }
+
                     ]
+
                 },
 
-
                 {
+
                     id: "c3_secret",
 
-                    title: "الطريق إلى الأسفل",
-                    location: "البيت 17",
+                    title: "الباب بلا رقم",
 
-                    events: [
-
-                        {
-                            type: "darkness",
-                            duration: 400
-                        },
-
-                        {
-                            type: "light",
-                            color: "#4d9dff",
-                            duration: 900
-                        },
-
-                        {
-                            type: "shake",
-                            intensity: 3,
-                            duration: 260
-                        }
-                    ],
+                    location: "ممر سري",
 
                     text:
-                        "خلف الخزانة آلية مخفية. " +
-                        "فُتح باب يؤدي إلى درج طويل تحت الأرض. " +
-                        "في نهايته باب كتب عليه: ممنوع.",
+                        "خلف الباب يوجد سلم ينزل إلى الأسفل. على الجدار كلمة واحدة: تذكّر.",
+
+                    event: "darkness",
 
                     choices: [
 
                         {
-                            text: "انزل",
-                            next: "c3_basement",
-
-                            effects: {
-
-                                items: [
-                                    "metalCard",
-                                    "basementKey"
-                                ],
-
-                                flags: {
-                                    foundBasement: true,
-                                    openedSecretRoom: true
-                                }
-                            }
+                            text: "أنزل",
+                            next: "c3_basement"
                         }
+
                     ]
+
                 },
 
-
                 {
+
                     id: "c3_basement",
 
                     title: "القبو",
-                    location: "المنشأة تحت الأرض",
 
-                    events: [
-
-                        {
-                            type: "darkness",
-                            duration: 500
-                        },
-
-                        {
-                            type: "fog",
-                            duration: 1000
-                        },
-
-                        {
-                            type: "glitch",
-                            duration: 600
-                        }
-                    ],
+                    location: "القبو",
 
                     text:
-                        "ممر إسمنتي طويل. " +
-                        "الرقم 0317 يتكرر على الجدران. " +
-                        "في النهاية باب معدني يهتز من الجهة الأخرى.",
+                        "في نهاية الدرج وجد وليد باباً معدنياً بثلاثة أقفال.",
+
+                    puzzle: "undergroundDoor",
 
                     choices: [
 
                         {
-                            text: "افتح الباب",
+                            text: "فتح الباب",
                             next: "c4_underground"
                         }
+
                     ]
+
                 }
+
             ]
+
         },
 
 
         /* =================================================
-           CHAPTER 4
+           CHAPTER 04
            ================================================= */
 
         {
+
             id: 4,
+
             title: "الشخص الذي يشبهك",
+
+            subtitle: "ماذا لو كان لك ظل آخر؟",
+
+            location: "المنشأة تحت الأرض",
 
             scenes: [
 
                 {
+
                     id: "c4_underground",
 
                     title: "المنشأة",
-                    location: "تحت الأرض",
 
-                    events: [
-
-                        {
-                            type: "light",
-                            duration: 700
-                        }
-                    ],
-
-                    text:
-                        "من خلف الباب ظهرت منشأة قديمة. " +
-                        "وفي الممر وقف شخص يشبه آدم.",
-
-                    choices: [
-
-                        {
-                            text: "اقترب",
-                            next: "c4_mirror"
-                        },
-
-                        {
-                            text: "ابق بعيدًا",
-                            next: "c4_room"
-                        }
-                    ]
-                },
-
-
-                {
-                    id: "c4_mirror",
-
-                    title: "النسخة",
                     location: "المنشأة",
 
-                    events: [
-
-                        {
-                            type: "memory",
-                            duration: 800
-                        },
-
-                        {
-                            type: "glitch",
-                            duration: 600
-                        }
-                    ],
-
                     text:
-                        "كان وجهه قريبًا جدًا من وجه آدم. " +
-                        "قال: «لا تقلق... أنت لست أول من وصل.»",
+                        "ممر طويل يمتد تحت الأرض. أضواء بيضاء تشتغل وتنطفئ وحدها.",
+
+                    event: "flicker",
 
                     choices: [
 
                         {
-                            text: "اسأله من يكون",
-                            next: "c4_room"
+                            text: "أتابع",
+                            next: "c4_mirror"
                         }
+
                     ]
+
                 },
 
-
                 {
-                    id: "c4_room",
 
-                    title: "الملفات",
-                    location: "الأرشيف",
+                    id: "c4_mirror",
+
+                    title: "المرآة",
+
+                    location: "قاعة المرايا",
 
                     text:
-                        "ملفات كثيرة تحمل اسم آدم، " +
-                        "لكن بجانب الاسم أرقام مختلفة.",
+                        "ثلاث مرايا. في كل واحدة يقف وليد... لكن أحدهم لا يتحرك معه.",
+
+                    event: "glitch",
+
+                    puzzle: "mirrorIdentity",
 
                     choices: [
 
                         {
-                            text: "افتح ملفًا",
-                            next: "c4_double"
-                        },
+                            text: "أحل اللغز",
+                            next: "c4_room"
+                        }
+
+                    ]
+
+                },
+
+                {
+
+                    id: "c4_room",
+
+                    title: "الغرفة البيضاء",
+
+                    location: "مختبر قديم",
+
+                    text:
+                        "سرير طبي في الوسط. بجانبه شاشة تعرض: SUBJECT 17.",
+
+                    event: "light",
+
+                    choices: [
 
                         {
-                            text: "ابحث عن مخرج",
+                            text: "ألمس الشاشة",
+                            next: "c4_double"
+                        }
+                    ]
+
+                },
+
+                {
+
+                    id: "c4_double",
+
+                    title: "النسخة",
+
+                    location: "المختبر",
+
+                    text:
+                        "ظهرت على الشاشة صورة لشخص يشبه وليد تماماً.",
+
+                    event: "shadow",
+
+                    choices: [
+
+                        {
+                            text: "من هذا؟",
+                            next: "c4_truth"
+                        }
+                    ]
+
+                },
+
+                {
+
+                    id: "c4_truth",
+
+                    title: "الحقيقة الأولى",
+
+                    location: "المختبر",
+
+                    text:
+                        "الصوت الآلي: النسخة ليست جسداً... النسخة ذاكرة.",
+
+                    event: "darkness",
+
+                    choices: [
+
+                        {
+                            text: "تابع",
+                            next: "c4_experiment"
+                        }
+                    ]
+
+                },
+
+                {
+
+                    id: "c4_experiment",
+
+                    title: "التجربة",
+
+                    location: "غرفة التحكم",
+
+                    text:
+                        "ظهرت كلمة PROJECT SHADOW على الشاشة.",
+
+                    event: "glitch",
+
+                    choices: [
+
+                        {
+                            text: "أبحث عن ملف المشروع",
                             next: "c4_escape"
                         }
                     ]
+
                 },
 
-
                 {
-                    id: "c4_double",
 
-                    title: "الحقيقة الأولى",
-                    location: "الأرشيف",
+                    id: "c4_escape",
 
-                    events: [
+                    title: "الهروب",
 
-                        {
-                            type: "flash",
-                            color: "#d9b867",
-                            duration: 180
-                        }
-                    ],
+                    location: "الممر",
 
                     text:
-                        "قال الشخص: «أنا لا أشبهك... أنت الذي تشبهني.» " +
-                        "ثم أشار إلى شاشة تحمل 0317.",
+                        "بدأت أجهزة الإنذار تعمل. باب حديدي فتح في نهاية الممر.",
+
+                    event: "danger",
 
                     choices: [
 
                         {
-                            text: "استمع إليه",
-                            next: "c4_truth",
+                            text: "أهرب",
+                            next: "c5_lian"
+                        }
+                    ]
 
+                }
+
+            ]
+
+        },
+
+
+        /* =================================================
+           CHAPTER 05
+           ================================================= */
+
+        {
+
+            id: 5,
+
+            title: "ليان",
+
+            subtitle: "الشخص الوحيد الذي يعرف اسمك",
+
+            location: "الممر السفلي",
+
+            scenes: [
+
+                {
+
+                    id: "c5_lian",
+
+                    title: "الفتاة",
+
+                    location: "الممر",
+
+                    text:
+                        "ظهرت فتاة من الظلام. قالت: وليد... أخيراً وجدتك.",
+
+                    event: "light",
+
+                    choices: [
+
+                        {
+                            text: "من أنت؟",
+                            next: "c5_lian_intro"
+                        },
+
+                        {
+                            text: "كيف تعرفين اسمي؟",
+                            next: "c5_lian_intro"
+                        }
+
+                    ]
+
+                },
+
+                {
+
+                    id: "c5_lian_intro",
+
+                    title: "ليان",
+
+                    location: "الممر",
+
+                    text:
+                        "أنا ليان. وإذا بقيت هنا أكثر، لن تتذكر حتى اسمك.",
+
+                    event: "danger",
+
+                    choices: [
+
+                        {
+                            text: "أثق بها",
+                            next: "c5_lian_name",
                             effects: {
-
                                 flags: {
-                                    trustedStranger: true
+                                    metLian: true,
+                                    trustedLian: true
                                 }
                             }
                         },
 
                         {
-                            text: "اهرب",
-                            next: "c4_escape"
+                            text: "لا أثق بها",
+                            next: "c5_lian_name",
+                            effects: {
+                                flags: {
+                                    metLian: true,
+                                    liedToLian: true
+                                }
+                            }
                         }
+
                     ]
+
                 },
 
-
                 {
-                    id: "c4_truth",
 
-                    title: "ما حُذف",
-                    location: "غرفة المراقبة",
+                    id: "c5_lian_name",
 
-                    events: [
+                    title: "الاسم",
 
-                        {
-                            type: "glitch",
-                            duration: 700
-                        }
-                    ],
+                    location: "الممر",
 
                     text:
-                        "«التجربة حذفت شيئًا من شخص موجود أصلًا. " +
-                        "لكن شيئًا واحدًا لم يستطعوا حذفه.»",
+                        "قالت ليان: أنت لم تأت إلى هنا صدفة. أنت من بدأ كل هذا.",
+
+                    event: "memory",
 
                     choices: [
 
                         {
-                            text: "ما هو؟",
-                            next: "c4_experiment"
-                        }
-                    ]
-                },
-
-
-                {
-                    id: "c4_experiment",
-
-                    title: "ذاكرتك",
-                    location: "غرفة المراقبة",
-
-                    events: [
-
-                        {
-                            type: "memory",
-                            duration: 850
-                        }
-                    ],
-
-                    text:
-                        "«ذاكرتك. ولهذا أعادوك إلى هنا.» " +
-                        "في الشاشة ظهر اسم ليان.",
-
-                    choices: [
-
-                        {
-                            text: "اذهب إلى ليان",
-                            next: "c5_lian"
-                        }
-                    ]
-                },
-
-
-                {
-                    id: "c4_escape",
-
-                    title: "الهروب",
-                    location: "المنشأة",
-
-                    events: [
-
-                        {
-                            type: "shake",
-                            intensity: 4,
-                            duration: 350
-                        }
-                    ],
-
-                    text:
-                        "ركض آدم. " +
-                        "على إحدى الشاشات ظهرت ليان وكأنها كانت تنتظره.",
-
-                    choices: [
-
-                        {
-                            text: "اتبع الإشارة",
-                            next: "c5_lian"
-                        }
-                    ]
-                }
-            ]
-        },
-
-
-        /* =================================================
-           CHAPTER 5
-           ================================================= */
-
-        {
-            id: 5,
-            title: "ليان",
-
-            scenes: [
-
-                {
-                    id: "c5_lian",
-
-                    title: "ليان",
-                    location: "الباب المعدني",
-
-                    events: [
-
-                        {
-                            type: "light",
-                            color: "#65b8ff",
-                            duration: 700
-                        }
-                    ],
-
-                    text:
-                        "كانت ليان تقف عند باب معدني. " +
-                        "قالت: «كنت أعرف أنك ستصل.»",
-
-                    choices: [
-
-                        {
-                            text: "اسألها عن اسمك",
-                            next: "c5_lian_name"
+                            text: "مستحيل",
+                            next: "c5_photo"
                         },
 
                         {
-                            text: "اسألها عن التجربة",
-                            next: "c5_lian_intro"
+                            text: "أريد الدليل",
+                            next: "c5_photo"
                         }
+
                     ]
+
                 },
 
-
                 {
-                    id: "c5_lian_intro",
 
-                    title: "الثقة",
-                    location: "المنشأة",
+                    id: "c5_photo",
+
+                    title: "الصورة الثانية",
+
+                    location: "غرفة قديمة",
 
                     text:
-                        "قالت ليان إنها تستطيع مساعدتك على تذكر البداية، " +
-                        "لكن عليها أن تعرف هل تثق بها.",
+                        "أخرجت ليان صورة أخرى. الصورة نفسها التي وجدتها في البيت... لكن وليد كان يقف في مكان مختلف.",
+
+                    puzzle: "photoDifference",
 
                     choices: [
 
                         {
-                            text: "أثق بك",
-                            next: "c5_help",
+                            text: "أحل اللغز",
+                            next: "c5_help"
+                        }
 
+                    ]
+
+                },
+
+                {
+
+                    id: "c5_help",
+
+                    title: "المساعدة",
+
+                    location: "غرفة التحكم",
+
+                    text:
+                        "قالت ليان: إذا أردت الحقيقة، ساعدني على الوصول إلى المختبر الرئيسي.",
+
+                    choices: [
+
+                        {
+                            text: "أساعدها",
+                            next: "c5_lab",
                             effects: {
-
                                 flags: {
-                                    metLian: true,
-                                    trustedLian: true,
                                     helpedLian: true
                                 }
                             }
                         },
 
                         {
-                            text: "لن أثق بك",
+                            text: "أتركها",
                             next: "c5_alone",
-
                             effects: {
-
                                 flags: {
-                                    metLian: true,
                                     abandonedLian: true
                                 }
                             }
                         }
+
                     ]
+
                 },
 
-
                 {
-                    id: "c5_lian_name",
 
-                    title: "بدأت تتذكر",
-                    location: "المنشأة",
-
-                    events: [
-
-                        {
-                            type: "memory",
-                            duration: 700
-                        }
-                    ],
-
-                    text:
-                        "ابتسمت ليان: «إذن بدأت تتذكر.» " +
-                        "أخرجت صورة قديمة لكما أمام المنشأة.",
-
-                    choices: [
-
-                        {
-                            text: "خذ الصورة",
-                            next: "c5_photo",
-
-                            effects: {
-
-                                items: [
-                                    "photograph2"
-                                ],
-
-                                flags: {
-                                    collectedEvidence4: true
-                                }
-                            }
-                        },
-
-                        {
-                            text: "اتبعها إلى المختبر",
-                            next: "c5_lab"
-                        }
-                    ]
-                },
-
-
-                {
-                    id: "c5_photo",
-
-                    title: "الصورة المشتركة",
-                    location: "الأرشيف",
-
-                    text:
-                        "في الصورة يقف آدم وليان بجانب جهاز التجربة. " +
-                        "خلفهما الرقم 0317.",
-
-                    choices: [
-
-                        {
-                            text: "اذهب للمختبر",
-                            next: "c5_lab"
-                        }
-                    ]
-                },
-
-
-                {
-                    id: "c5_help",
-
-                    title: "التحالف",
-                    location: "المنشأة",
-
-                    events: [
-
-                        {
-                            type: "light",
-                            duration: 700
-                        }
-                    ],
-
-                    text:
-                        "قادته ليان إلى مدخل جانبي. " +
-                        "قالت إن العودة إلى قلب التجربة هي الطريق الوحيد للحقيقة.",
-
-                    choices: [
-
-                        {
-                            text: "اذهب معها",
-                            next: "c5_lab"
-                        }
-                    ]
-                },
-
-
-                {
                     id: "c5_alone",
 
                     title: "وحدك",
-                    location: "المنشأة",
+
+                    location: "الممر",
 
                     text:
-                        "ابتعدت ليان. " +
-                        "بقي الشك في ذهن آدم، لكنه عرف أن المختبر هو الطريق الوحيد.",
+                        "مشى وليد وحده. بعد عدة خطوات سمع صوت ليان خلفه: لا تثق بالظل.",
+
+                    event: "whisper",
 
                     choices: [
 
                         {
-                            text: "اذهب إلى المختبر",
+                            text: "أعود إليها",
                             next: "c5_lab"
-                        }
-                    ]
-                },
-
-
-                {
-                    id: "c5_lab",
-
-                    title: "المختبر",
-                    location: "المنشأة",
-
-                    events: [
-
-                        {
-                            type: "alert",
-                            duration: 450
                         },
 
                         {
-                            type: "light",
-                            duration: 850
+                            text: "أكمل وحدي",
+                            next: "c5_lab"
                         }
-                    ],
+
+                    ]
+
+                },
+
+                {
+
+                    id: "c5_lab",
+
+                    title: "المختبر الرئيسي",
+
+                    location: "المختبر",
 
                     text:
-                        "بطاقة ليان فتحت مدخلًا جانبيًا. " +
-                        "خلفه مختبر لم يتوقف عن العمل رغم مرور السنين.",
+                        "الباب الرئيسي يحتاج إلى بطاقة معدنية. ليان تنظر إلى وليد وكأنها تعرف أين توجد.",
+
+                    puzzle: "labAccess",
 
                     choices: [
 
                         {
-                            text: "ادخل",
+                            text: "أفتح المختبر",
                             next: "c6_facility"
                         }
+
                     ]
+
                 }
+
             ]
+
         },
 
 
         /* =================================================
-           CHAPTER 6
+           CHAPTER 06
            ================================================= */
 
         {
+
             id: 6,
+
             title: "الملف الأسود",
+
+            subtitle: "اسمك مكتوب في كل صفحة",
+
+            location: "المختبر الرئيسي",
 
             scenes: [
 
                 {
+
                     id: "c6_facility",
 
-                    title: "الممر 0317",
-                    location: "المختبر",
+                    title: "المختبر",
 
-                    events: [
-
-                        {
-                            type: "fog",
-                            duration: 800
-                        },
-
-                        {
-                            type: "glitch",
-                            duration: 500
-                        }
-                    ],
+                    location: "المختبر الرئيسي",
 
                     text:
-                        "ممر طويل. " +
-                        "في نهايته باب يحمل 0317. " +
-                        "همست ليان: «لا تفتح أي ملف قبل أن تعرف لماذا.»",
+                        "أجهزة كثيرة تعمل رغم عدم وجود كهرباء في القرية.",
+
+                    event: "flicker",
 
                     choices: [
 
                         {
-                            text: "ابحث عن الملفات",
+                            text: "أبحث عن الملفات",
                             next: "c6_files"
-                        },
-
-                        {
-                            text: "شاهد الكاميرات",
-                            next: "c6_cameras"
                         }
+
                     ]
+
                 },
 
-
                 {
+
                     id: "c6_files",
 
-                    title: "الأرشيف الأسود",
+                    title: "الأرشيف",
+
                     location: "الأرشيف",
 
-                    events: [
-
-                        {
-                            type: "flash",
-                            color: "#d9b867",
-                            duration: 220
-                        },
-
-                        {
-                            type: "light",
-                            color: "#d9b867",
-                            duration: 900
-                        }
-                    ],
-
                     text:
-                        "وجد آدم ملفًا أسود يحمل الرقم 0317. " +
-                        "عند فتحه توقفت كل شاشات الغرفة لثانية.",
+                        "أمامك عشرات الملفات. واحد منها أسود بالكامل.",
+
+                    puzzle: "blackFile",
 
                     choices: [
 
                         {
-                            text: "افتح الملف",
-                            next: "c6_file_truth",
-
-                            effects: {
-
-                                items: [
-                                    "blackFile",
-                                    "archiveBadge"
-                                ],
-
-                                flags: {
-
-                                    discoveredFile: true,
-                                    collectedEvidence5: true,
-                                    knowsTruth: true
-                                }
-                            }
+                            text: "أختار الملف",
+                            next: "c6_file_truth"
                         }
+
                     ]
+
                 },
 
-
                 {
+
                     id: "c6_file_truth",
 
-                    title: "الهدف الحقيقي",
-                    location: "الأرشيف الأسود",
+                    title: "PROJECT SHADOW",
 
-                    events: [
-
-                        {
-                            type: "glitch",
-                            duration: 850
-                        },
-
-                        {
-                            type: "memory",
-                            duration: 600
-                        }
-                    ],
+                    location: "الأرشيف",
 
                     text:
-                        "لم تكن التجربة تستهدف ذاكرة آدم كما ظن. " +
-                        "كانت تستهدف الشيء الذي يحمله آدم داخل ذاكرته.",
+                        "الملف يقول: الهدف ليس إنشاء شخص جديد... الهدف هو إعادة كتابة الذاكرة.",
+
+                    event: "darkness",
 
                     choices: [
 
                         {
-                            text: "تابع",
+                            text: "أتابع",
                             next: "c6_previous"
                         }
                     ]
+
                 },
 
-
                 {
+
                     id: "c6_previous",
 
-                    title: "النسخة الأولى",
-                    location: "الأرشيف الأسود",
+                    title: "قبل وليد",
+
+                    location: "الأرشيف",
 
                     text:
-                        "«إذا وصل آدم... النسخة الأولى فشلت. " +
-                        "لا تدع النسخة الثانية تتذكر كل شيء.»",
+                        "وجد وليد ملفات تحمل اسمه من سنوات مختلفة.",
+
+                    event: "memory",
 
                     choices: [
 
                         {
-                            text: "اذهب إلى الذاكرة",
+                            text: "أفتح أقدم ملف",
+                            next: "c6_cameras",
+                            effects: {
+                                flags: {
+                                    discoveredFile: true,
+                                    collectedEvidence3: true
+                                }
+                            }
+                        }
+                    ]
+
+                },
+
+                {
+
+                    id: "c6_cameras",
+
+                    title: "الكاميرات",
+
+                    location: "غرفة المراقبة",
+
+                    text:
+                        "شاشة المراقبة تعرض البيت رقم 17. في الفيديو يظهر وليد وهو يدخل البيت... قبل سنوات.",
+
+                    event: "glitch",
+
+                    choices: [
+
+                        {
+                            text: "أشاهد الفيديو",
                             next: "c7_memory"
                         }
                     ]
-                },
 
-
-                {
-                    id: "c6_cameras",
-
-                    title: "التسجيل القديم",
-                    location: "غرفة المراقبة",
-
-                    events: [
-
-                        {
-                            type: "memory",
-                            duration: 900
-                        },
-
-                        {
-                            type: "glitch",
-                            duration: 600
-                        }
-                    ],
-
-                    text:
-                        "أظهر التسجيل آدم وليان هنا قبل سنوات. " +
-                        "كان آدم هو من يقود التجربة.",
-
-                    choices: [
-
-                        {
-                            text: "تابع التسجيل",
-                            next: "c7_memory",
-
-                            effects: {
-
-                                flags: {
-                                    discoveredLab: true
-                                }
-                            }
-                        }
-                    ]
                 }
+
             ]
+
         },
 
 
         /* =================================================
-           CHAPTER 7
+           CHAPTER 07
            ================================================= */
 
         {
+
             id: 7,
+
             title: "الذاكرة",
+
+            subtitle: "ليست كل ذكرياتك حقيقية",
+
+            location: "غرفة الذاكرة",
 
             scenes: [
 
                 {
+
                     id: "c7_memory",
 
                     title: "الغرفة البيضاء",
-                    location: "الذاكرة",
 
-                    events: [
-
-                        {
-                            type: "flash",
-                            color: "#ffffff",
-                            duration: 350
-                        },
-
-                        {
-                            type: "memory",
-                            duration: 1100
-                        }
-                    ],
+                    location: "غرفة الذاكرة",
 
                     text:
-                        "دخل آدم ذاكرته. " +
-                        "غرفة بيضاء. " +
-                        "خلف الزجاج رأى نفسه واقفًا في الجهة الأخرى.",
+                        "كل شيء أبيض. لا يوجد باب. فقط شاشة أمام وليد.",
+
+                    event: "light",
 
                     choices: [
 
                         {
-                            text: "اقترب",
-                            next: "c7_memory2",
-
-                            effects: {
-
-                                flags: {
-                                    sawMemory2: true
-                                }
-                            }
+                            text: "ألمس الشاشة",
+                            next: "c7_memory2"
                         }
                     ]
+
                 },
 
-
                 {
+
                     id: "c7_memory2",
 
-                    title: "قبل التجربة",
+                    title: "ثلاث ذكريات",
+
                     location: "الذاكرة",
 
-                    events: [
-
-                        {
-                            type: "light",
-                            duration: 700
-                        }
-                    ],
-
                     text:
-                        "ظهر آدم وليان معًا. " +
-                        "قال لها: «لا تسمحي لهم أن يعيدوا التجربة.»",
+                        "ظهرت ثلاث صور: البيت، المختبر، الحادث.",
+
+                    puzzle: "memoryOrder",
 
                     choices: [
 
                         {
-                            text: "اسأل ليان",
+                            text: "ترتيب الذكريات",
                             next: "c7_lian_truth"
-                        },
-
-                        {
-                            text: "ابحث عن سجل",
-                            next: "c7_archive"
                         }
                     ]
+
                 },
 
-
                 {
+
                     id: "c7_lian_truth",
 
-                    title: "ليان تعرف",
+                    title: "حقيقة ليان",
+
                     location: "الذاكرة",
 
-                    events: [
-
-                        {
-                            type: "glitch",
-                            duration: 600
-                        }
-                    ],
-
                     text:
-                        "قالت ليان إنها كانت تعرف، " +
-                        "لكنها لم تكن تعرف أي نسخة ستعود. " +
-                        "ثم اعترفت بأنها كتبت كل شيء تقريبًا.",
+                        "قالت ليان: أنا لم أكن جزءاً من التجربة. أنا من حاول إيقافها.",
+
+                    event: "memory",
 
                     choices: [
 
                         {
-                            text: "ماذا لم تكتبي؟",
+                            text: "أصدقها",
                             next: "c7_fear",
-
                             effects: {
-
-                                flags: {
-                                    knowsWhoIsLian: true
-                                }
-                            }
-                        }
-                    ]
-                },
-
-
-                {
-                    id: "c7_fear",
-
-                    title: "الشيء الذي لم يُكتب",
-                    location: "الذاكرة",
-
-                    events: [
-
-                        {
-                            type: "darkness",
-                            duration: 400
-                        },
-
-                        {
-                            type: "flash",
-                            color: "#d9b867",
-                            duration: 150
-                        }
-                    ],
-
-                    text:
-                        "«كل ذكرياتك عني مُسحت من الجميع. " +
-                        "لذلك كتبتها. لكن هناك شيئًا واحدًا لم أكتبه.»",
-
-                    choices: [
-
-                        {
-                            text: "ابحث عنه",
-                            next: "c7_archive"
-                        }
-                    ]
-                },
-
-
-                {
-                    id: "c7_archive",
-
-                    title: "السجل المخفي",
-                    location: "الأرشيف",
-
-                    events: [
-
-                        {
-                            type: "alert",
-                            duration: 450
-                        }
-                    ],
-
-                    text:
-                        "في درج مخفي وجد آدم سجلًا: «لم يكن آدم الأول.»",
-
-                    choices: [
-
-                        {
-                            text: "تابع",
-                            next: "c7_accident"
-                        }
-                    ]
-                },
-
-
-                {
-                    id: "c7_accident",
-
-                    title: "ثلاث دوائر",
-                    location: "الأرشيف",
-
-                    events: [
-
-                        {
-                            type: "memory",
-                            duration: 900
-                        },
-
-                        {
-                            type: "flash",
-                            color: "#8cc9ff",
-                            duration: 180
-                        }
-                    ],
-
-                    text:
-                        "ظهر رسم لثلاث دوائر: 0317 / A / فارغ. " +
-                        "في وسطه شظية صورة لوجه آدم.",
-
-                    choices: [
-
-                        {
-                            text: "خذ الشظية",
-                            next: "c8_city",
-
-                            effects: {
-
-                                items: [
-                                    "memoryFragment"
-                                ],
-
-                                flags: {
-                                    sawMemory3: true
-                                }
-                            }
-                        }
-                    ]
-                }
-            ]
-        },
-
-
-        /* =================================================
-           CHAPTER 8
-           ================================================= */
-
-        {
-            id: 8,
-            title: "المدينة الصامتة",
-
-            scenes: [
-
-                {
-                    id: "c8_city",
-
-                    title: "المدينة",
-                    location: "المدينة",
-                    time: "الفجر",
-
-                    events: [
-
-                        {
-                            type: "fog",
-                            duration: 1000
-                        },
-
-                        {
-                            type: "light",
-                            duration: 900
-                        }
-                    ],
-
-                    text:
-                        "خرج آدم إلى مدينة فارغة عند الفجر. " +
-                        "كل شاشة تعرض الرقم 03:17.",
-
-                    choices: [
-
-                        {
-                            text: "اقترب من الشاشة",
-                            next: "c8_answer"
-                        }
-                    ]
-                },
-
-
-                {
-                    id: "c8_answer",
-
-                    title: "الرسالة",
-                    location: "مبنى مهجور",
-
-                    events: [
-
-                        {
-                            type: "glitch",
-                            duration: 800
-                        }
-                    ],
-
-                    text:
-                        "على شاشة مكسورة ظهرت جملة: «ذاكرتك أكثر مما ينبغي.»",
-
-                    choices: [
-
-                        {
-                            text: "ابحث عن مصدرها",
-                            next: "c8_car"
-                        }
-                    ]
-                },
-
-
-                {
-                    id: "c8_car",
-
-                    title: "السيارة السوداء",
-                    location: "المدينة",
-
-                    events: [
-
-                        {
-                            type: "light",
-                            duration: 800
-                        },
-
-                        {
-                            type: "memory",
-                            duration: 700
-                        }
-                    ],
-
-                    text:
-                        "ظهرت السيارة السوداء نفسها من بداية الرحلة. " +
-                        "على المقعد ظرف يحمل اسم آدم.",
-
-                    choices: [
-
-                        {
-                            text: "افتح الظرف",
-                            next: "c8_record",
-
-                            effects: {
-
-                                items: [
-                                    "letter"
-                                ],
-
-                                flags: {
-                                    foundFinalMessage: true
-                                }
-                            }
-                        }
-                    ]
-                },
-
-
-                {
-                    id: "c8_record",
-
-                    title: "لماذا وافقت؟",
-                    location: "السيارة",
-
-                    events: [
-
-                        {
-                            type: "flash",
-                            color: "#d9b867",
-                            duration: 160
-                        }
-                    ],
-
-                    text:
-                        "الرسالة موقعة باسم آدم: " +
-                        "«إذا وصلت إلى هنا، ابحث عن سبب موافقتي على فقدان الذاكرة.»",
-
-                    choices: [
-
-                        {
-                            text: "اتبع التسجيل",
-                            next: "c9_phone"
-                        }
-                    ]
-                }
-            ]
-        },
-
-
-        /* =================================================
-           CHAPTER 9
-           ================================================= */
-
-        {
-            id: 9,
-            title: "الصوت",
-
-            scenes: [
-
-                {
-                    id: "c9_phone",
-
-                    title: "الهاتف يستيقظ",
-                    location: "السيارة",
-
-                    events: [
-
-                        {
-                            type: "glitch",
-                            duration: 700
-                        },
-
-                        {
-                            type: "alert",
-                            duration: 400
-                        }
-                    ],
-
-                    text:
-                        "أضاء الهاتف المكسور وحده. " +
-                        "لم يظهر إلا تسجيل واحد.",
-
-                    choices: [
-
-                        {
-                            text: "استمع",
-                            next: "c9_accident",
-
-                            effects: {
-
-                                flags: {
-                                    heardTape: true
-                                }
-                            }
-                        },
-
-                        {
-                            text: "خذه إلى ليان",
-                            next: "c9_lian"
-                        }
-                    ]
-                },
-
-
-                {
-                    id: "c9_accident",
-
-                    title: "اختياري",
-                    location: "التسجيل",
-
-                    events: [
-
-                        {
-                            type: "memory",
-                            duration: 900
-                        },
-
-                        {
-                            type: "flash",
-                            color: "#ffffff",
-                            duration: 180
-                        }
-                    ],
-
-                    text:
-                        "قال آدم في التسجيل: " +
-                        "«أنا من طلب فقدان الذاكرة. " +
-                        "كنت أحاول حماية الحقيقة من شيء لا يجب أن يصل إليها.»",
-
-                    choices: [
-
-                        {
-                            text: "اذهب إلى ليان",
-                            next: "c9_lian"
-                        }
-                    ]
-                },
-
-
-                {
-                    id: "c9_lian",
-
-                    title: "الذين لم يغادروا",
-                    location: "المنشأة",
-
-                    events: [
-
-                        {
-                            type: "fog",
-                            duration: 700
-                        }
-                    ],
-
-                    text:
-                        "قالت ليان: «الذين دخلوا المنشأة لم يغادروا كلهم. " +
-                        "بعضهم بقي داخل التجربة.»",
-
-                    choices: [
-
-                        {
-                            text: "ماذا نفعل؟",
-                            next: "c9_agreement",
-
-                            effects: {
-
                                 flags: {
                                     trustedLian: true
                                 }
                             }
+                        },
+
+                        {
+                            text: "أشك فيها",
+                            next: "c7_fear"
                         }
+
                     ]
+
                 },
 
-
                 {
-                    id: "c9_agreement",
 
-                    title: "العودة",
-                    location: "البوابة",
+                    id: "c7_fear",
 
-                    events: [
+                    title: "الخوف",
 
-                        {
-                            type: "light",
-                            duration: 900
-                        },
-
-                        {
-                            type: "shake",
-                            intensity: 2,
-                            duration: 200
-                        }
-                    ],
+                    location: "غرفة الذاكرة",
 
                     text:
-                        "عاد آدم وليان إلى المنشأة. " +
-                        "انفتحت البوابة وحدها.",
+                        "ظهر الظل خلف وليد. هذه المرة لم يكن انعكاساً.",
+
+                    event: "shadow",
 
                     choices: [
 
                         {
-                            text: "ادخل",
-                            next: "c10_truth"
-                        }
-                    ]
-                }
-            ]
-        },
-
-
-        /* =================================================
-           CHAPTER 10
-           ================================================= */
-
-        {
-            id: 10,
-            title: "الحقيقة",
-
-            scenes: [
-
-                {
-                    id: "c10_truth",
-
-                    title: "الغرفة الأخيرة",
-                    location: "الغرفة النهائية",
-
-                    events: [
-
-                        {
-                            type: "darkness",
-                            duration: 450
+                            text: "أواجهه",
+                            next: "c7_archive"
                         },
 
                         {
-                            type: "light",
-                            duration: 900
-                        }
-                    ],
-
-                    text:
-                        "غرفة نهائية. " +
-                        "كرسي وشاشة ومرآة. " +
-                        "ظهرت على الشاشة عبارة: «مرحبًا بعودتك.»",
-
-                    choices: [
-
-                        {
-                            text: "شاهد الشاشة",
-                            next: "c10_screen"
-                        },
-
-                        {
-                            text: "انظر إلى المرآة",
-                            next: "c10_mirror"
+                            text: "أهرب",
+                            next: "c7_archive"
                         }
                     ]
+
                 },
 
-
                 {
-                    id: "c10_screen",
 
-                    title: "التسجيل الأخير",
-                    location: "الغرفة النهائية",
+                    id: "c7_archive",
 
-                    events: [
+                    title: "الأرشيف",
 
-                        {
-                            type: "memory",
-                            duration: 900
-                        }
-                    ],
+                    location: "ممر الأرشيف",
 
                     text:
-                        "ظهر آدم القديم على الشاشة: " +
-                        "«نجحت الخطة... منعه من الوصول إليك.»",
+                        "باب يحمل عبارة: ARCHIVE — LEVEL 7.",
 
                     choices: [
 
                         {
-                            text: "تابع",
-                            next: "c10_memory"
+                            text: "أدخل",
+                            next: "c7_accident"
                         }
                     ]
+
                 },
 
-
                 {
-                    id: "c10_mirror",
 
-                    title: "الانعكاس",
-                    location: "الغرفة النهائية",
+                    id: "c7_accident",
 
-                    events: [
+                    title: "الحادث",
 
-                        {
-                            type: "glitch",
-                            duration: 800
-                        },
-
-                        {
-                            type: "flash",
-                            color: "#d9b867",
-                            duration: 160
-                        }
-                    ],
+                    location: "ذاكرة وليد",
 
                     text:
-                        "ابتسم انعكاس آدم بينما وجه آدم الحقيقي لم يتحرك. " +
-                        "على المرآة ظهر الرقم 1.",
+                        "تظهر ذكرى سيارة متوقفة على طريق جبلي. الساعة 03:17.",
+
+                    event: "flash",
 
                     choices: [
 
                         {
-                            text: "اقترب",
-                            next: "c10_memory"
-                        }
-                    ]
-                },
-
-
-                {
-                    id: "c10_memory",
-
-                    title: "الأصل والنسخ",
-                    location: "الغرفة النهائية",
-
-                    events: [
-
-                        {
-                            type: "memory",
-                            duration: 1100
-                        },
-
-                        {
-                            type: "shake",
-                            intensity: 2,
-                            duration: 250
-                        }
-                    ],
-
-                    text:
-                        "اكتشف آدم أن الذكريات استُخدمت لصناعة أشخاص " +
-                        "يحملون أجزاء من ذاكرة الأصل.",
-
-                    choices: [
-
-                        {
-                            text: "اعرف الحقيقة",
-                            next: "c10_truth2",
-
+                            text: "أتذكر",
+                            next: "c8_city",
                             effects: {
-
                                 flags: {
-
-                                    sawMemory3: true,
-                                    knowsWhoIsAdam: true,
-                                    knowsTruth: true
-                                }
-                            }
-                        }
-                    ]
-                },
-
-
-                {
-                    id: "c10_truth2",
-
-                    title: "أنا لست الأول",
-                    location: "الغرفة النهائية",
-
-                    events: [
-
-                        {
-                            type: "flash",
-                            color: "#ffffff",
-                            duration: 220
-                        },
-
-                        {
-                            type: "glitch",
-                            duration: 600
-                        }
-                    ],
-
-                    text:
-                        "قال آدم: «أنا لست النسخة الأولى.» " +
-                        "أجاب النظام: «لكن النسخة الأولى ما زالت هنا.»",
-
-                    choices: [
-
-                        {
-                            text: "افتح الباب الأخير",
-                            next: "c11_choice",
-
-                            effects: {
-
-                                flags: {
-                                    openedFinalDoor: true
-                                }
-                            }
-                        }
-                    ]
-                }
-            ]
-        },
-
-
-        /* =================================================
-           CHAPTER 11
-           ================================================= */
-
-        {
-            id: 11,
-            title: "الاختيار",
-
-            scenes: [
-
-                {
-                    id: "c11_choice",
-
-                    title: "النسخة الأولى",
-                    location: "المنصة الزجاجية",
-
-                    events: [
-
-                        {
-                            type: "light",
-                            duration: 900
-                        },
-
-                        {
-                            type: "heartbeat",
-                            duration: 900
-                        }
-                    ],
-
-                    text:
-                        "خلف الزجاج شخص نائم يحمل وجه آدم. " +
-                        "الشاشة تسأل: «هل تريد استعادة كل شيء؟»",
-
-                    choices: [
-
-                        {
-                            text: "نعم، أعرف الحقيقة",
-                            next: "c11_accept",
-
-                            effects: {
-
-                                flags: {
-                                    acceptedTruth: true
-                                }
-                            }
-                        },
-
-                        {
-                            text: "لا. أوقف التجربة",
-                            next: "c11_refuse",
-
-                            effects: {
-
-                                flags: {
-                                    refusedExperiment: true
-                                }
-                            }
-                        }
-                    ]
-                },
-
-
-                {
-                    id: "c11_accept",
-
-                    title: "الاستيقاظ",
-                    location: "المنصة",
-
-                    events: [
-
-                        {
-                            type: "flash",
-                            color: "#d9b867",
-                            duration: 260
-                        },
-
-                        {
-                            type: "shake",
-                            intensity: 4,
-                            duration: 350
-                        },
-
-                        {
-                            type: "memory",
-                            duration: 1100
-                        }
-                    ],
-
-                    text:
-                        "فتحت النسخة الأولى عينيها. " +
-                        "«أنت الذاكرة التي فقدتها... وأنا الشخص الذي فقدته.»",
-
-                    choices: [
-
-                        {
-                            text: "ادمج الذكريات",
-                            next: "c11_merge"
-                        }
-                    ]
-                },
-
-
-                {
-                    id: "c11_merge",
-
-                    title: "البداية الحقيقية",
-                    location: "المنصة",
-
-                    events: [
-
-                        {
-                            type: "light",
-                            duration: 1200
-                        }
-                    ],
-
-                    text:
-                        "تذكّر آدم أنه هو من بدأ التجربة، " +
-                        "ثم أوقفها، ثم طلب محو ذاكرته " +
-                        "حتى لا تصل الحقيقة إلى الشخص الخطأ.",
-
-                    choices: [
-
-                        {
-                            text: "واجه النهاية",
-                            next: "c12_final"
-                        }
-                    ]
-                },
-
-
-                {
-                    id: "c11_refuse",
-
-                    title: "الرفض",
-                    location: "المنصة",
-
-                    events: [
-
-                        {
-                            type: "darkness",
-                            duration: 700
-                        },
-
-                        {
-                            type: "light",
-                            duration: 500
-                        }
-                    ],
-
-                    text:
-                        "أوقف آدم النظام. " +
-                        "قالت ليان إن السجلات قد تختفي للأبد.",
-
-                    choices: [
-
-                        {
-                            text: "أحفظ الأرشيف",
-                            next: "c12_final",
-
-                            effects: {
-
-                                flags: {
-                                    completedArchive: true
-                                }
-                            }
-                        },
-
-                        {
-                            text: "دع كل شيء يختفي",
-                            next: "c12_final"
-                        }
-                    ]
-                }
-            ]
-        },
-
-
-        /* =================================================
-           CHAPTER 12
-           ================================================= */
-
-        {
-            id: 12,
-            title: "ظلال المجهول",
-
-            scenes: [
-
-                {
-                    id: "c12_final",
-
-                    title: "الباب الأخير",
-                    location: "الخروج",
-
-                    events: [
-
-                        {
-                            type: "darkness",
-                            duration: 500
-                        },
-
-                        {
-                            type: "light",
-                            color: "#d9b867",
-                            duration: 1100
-                        }
-                    ],
-
-                    text:
-                        "وقف آدم أمام الباب الأخير. " +
-                        "لم يعد السؤال من أنت، بل: " +
-                        "من تريد أن تصبح بعد معرفة كل شيء؟",
-
-                    choices: [
-
-                        {
-                            text: "أعرف الحقيقة كاملة",
-                            next: "ending_true",
-
-                            effects: {
-
-                                flags: {
-                                    finalTruth: true
-                                }
-                            }
-                        },
-
-                        {
-                            text: "أخرج وأترك الماضي",
-                            next: "ending_escape",
-
-                            effects: {
-
-                                flags: {
-                                    escapedVillage: true
-                                }
-                            }
-                        },
-
-                        {
-                            text: "أدمر النظام",
-                            next: "ending_destroy",
-
-                            effects: {
-
-                                flags: {
-                                    refusedExperiment: true
-                                }
-                            }
-                        }
-                    ]
-                },
-
-
-                /* =============================================
-                   TRUE ENDING
-                   ============================================= */
-
-                {
-                    id: "ending_true",
-
-                    title: "الحقيقة",
-                    location: "بعد 03:17",
-
-                    events: [
-
-                        {
-                            type: "flash",
-                            color: "#ffffff",
-                            duration: 350
-                        },
-
-                        {
-                            type: "light",
-                            color: "#d9b867",
-                            duration: 1500
-                        },
-
-                        {
-                            type: "memory",
-                            duration: 1200
-                        }
-                    ],
-
-                    text:
-                        "استعاد آدم كل الذكريات. " +
-                        "لم تكن الحقيقة مريحة، لكنها كانت حقيقية. " +
-                        "لأول مرة لم يكن رقمًا ولا نسخة. " +
-                        "كان آدم.",
-
-                    ending: {
-
-                        title: "الحقيقة",
-
-                        text:
-                            "انتهت التجربة. " +
-                            "بقيت الذاكرة، وبقي الاختيار.",
-
-                        type: "true"
-                    }
-                },
-
-
-                /* =============================================
-                   ESCAPE ENDING
-                   ============================================= */
-
-                {
-                    id: "ending_escape",
-
-                    title: "الطريق المفتوح",
-                    location: "الخارج",
-
-                    events: [
-
-                        {
-                            type: "fog",
-                            duration: 1000
-                        },
-
-                        {
-                            type: "light",
-                            color: "#65b8ff",
-                            duration: 1200
-                        }
-                    ],
-
-                    text:
-                        "فتح آدم الباب وترك الماضي خلفه. " +
-                        "الطريق أمامه مفتوح، لكن الهاتف قال مرة أخيرة: " +
-                        "«هذه ليست النهاية.»",
-
-                    ending: {
-
-                        title: "الهروب",
-
-                        text:
-                            "نجوت من الماضي، " +
-                            "لكن بعض الأسئلة ستبقى.",
-
-                        type: "escape"
-                    }
-                },
-
-
-                /* =============================================
-                   DESTROY ENDING
-                   ============================================= */
-
-                {
-                    id: "ending_destroy",
-
-                    title: "الإطفاء",
-                    location: "المنشأة",
-
-                    events: [
-
-                        {
-                            type: "shake",
-                            intensity: 5,
-                            duration: 500
-                        },
-
-                        {
-                            type: "darkness",
-                            duration: 900
-                        },
-
-                        {
-                            type: "flash",
-                            color: "#d9b867",
-                            duration: 250
-                        }
-                    ],
-
-                    text:
-                        "ضغط آدم زر الإيقاف. " +
-                        "أطفئت الشاشات واحدة تلو الأخرى، " +
-                        "واختفى 0317 من آخر شاشة.",
-
-                    ending: {
-
-                        title: "الإطفاء",
-
-                        text:
-                            "دمرت النظام قبل أن يقرر عنك.",
-
-                        type: "destroy"
-                    }
-                },
-
-
-                /* =============================================
-                   SECRET ENDING
-                   ============================================= */
-
-                {
-                    id: "ending_secret",
-
-                    title: "0418",
-                    location: "مكان غير معروف",
-
-                    events: [
-
-                        {
-                            type: "darkness",
-                            duration: 800
-                        },
-
-                        {
-                            type: "glitch",
-                            duration: 900
-                        },
-
-                        {
-                            type: "flash",
-                            color: "#8cc9ff",
-                            duration: 220
-                        },
-
-                        {
-                            type: "light",
-                            color: "#55a8ff",
-                            duration: 1200
-                        }
-                    ],
-
-                    text:
-                        "ظن آدم أن كل شيء انتهى. " +
-                        "لكن شاشة صغيرة أضاءت في الظلام. " +
-                        "لم يظهر عليها 0317... بل ظهر رقم جديد: 0418.",
-
-                    ending: {
-
-                        title: "الظل الرابع",
-
-                        text:
-                            "ربما لم تكن هذه القصة عن آدم وحده.",
-
-                        type: "secret"
-                    }
-                }
-            ]
-        }
-    ]
-};
-
-
-/* =========================================================
-   DATA VALIDATION
-   ========================================================= */
-
-(function validateGameData() {
-
-    const ids = new Set();
-
-    GAME_DATA.chapters.forEach(chapter => {
-
-        chapter.scenes.forEach(scene => {
-
-            if (ids.has(scene.id)) {
-                console.warn(
-                    "Duplicate scene ID:",
-                    scene.id
-                );
-            }
-
-            ids.add(scene.id);
-        });
-    });
-
-    GAME_DATA.chapters.forEach(chapter => {
-
-        chapter.scenes.forEach(scene => {
-
-            (scene.choices || []).forEach(choice => {
-
-                if (!ids.has(choice.next)) {
-
-                    console.error(
-                        "Invalid next scene:",
-                        scene.id,
-                        "=>",
-                        choice.next
-                    );
-                }
-            });
-        });
-    });
-
-})();
+                                    sawMemory
