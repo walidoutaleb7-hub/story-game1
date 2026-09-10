@@ -2905,4 +2905,1582 @@ const GAME_DATA = {
                             next: "c8_city",
                             effects: {
                                 flags: {
-                                    sawMemory
+                                    sawMemory4: true,
+                                    collectedEvidence4: true
+                                },
+                                items: ["memoryFragment"]
+                            }
+                        }
+                    ]
+
+                }
+
+            ]
+
+        },
+
+
+        /* =================================================
+           CHAPTER 08
+           ================================================= */
+
+        {
+
+            id: 8,
+
+            title: "المدينة الصامتة",
+
+            subtitle: "هناك مدينة تحت القرية",
+
+            location: "المدينة السفلى",
+
+            scenes: [
+
+                {
+
+                    id: "c8_city",
+
+                    title: "المدينة",
+
+                    location: "المدينة السفلى",
+
+                    text:
+                        "خرج وليد من النفق ووجد نفسه في مدينة كاملة تحت الأرض. لا سيارات. لا بشر. فقط أضواء بعيدة.",
+
+                    event: "fog",
+
+                    choices: [
+
+                        {
+                            text: "أبحث عن طريق",
+                            next: "c8_answer"
+                        }
+                    ]
+
+                },
+
+                {
+
+                    id: "c8_answer",
+
+                    title: "الخريطة",
+
+                    location: "المدينة السفلى",
+
+                    text:
+                        "وجد وليد لوحة تشير إلى أربعة اتجاهات.",
+
+                    puzzle: "silentCity",
+
+                    choices: [
+
+                        {
+                            text: "حل الخريطة",
+                            next: "c8_car"
+                        }
+                    ]
+
+                },
+
+                {
+
+                    id: "c8_car",
+
+                    title: "السيارة",
+
+                    location: "شارع مهجور",
+
+                    text:
+                        "وجد وليد سيارته القديمة. نفس السيارة التي جاء بها في بداية الرحلة.",
+
+                    event: "glitch",
+
+                    choices: [
+
+                        {
+                            text: "أقترب",
+                            next: "c8_record"
+                        }
+                    ]
+
+                },
+
+                {
+
+                    id: "c8_record",
+
+                    title: "التسجيل القديم",
+
+                    location: "السيارة",
+
+                    text:
+                        "داخل السيارة جهاز تسجيل يعمل وحده: إذا كنت تسمع هذا، فقد وصلت إلى المرحلة الثامنة.",
+
+                    event: "whisper",
+
+                    choices: [
+
+                        {
+                            text: "أكمل",
+                            next: "c9_phone"
+                        }
+                    ]
+
+                }
+
+            ]
+
+        },
+
+
+        /* =================================================
+           CHAPTER 09
+           ================================================= */
+
+        {
+
+            id: 9,
+
+            title: "الصوت",
+
+            subtitle: "الصوت يعرف كل خطواتك",
+
+            location: "البرج",
+
+            scenes: [
+
+                {
+
+                    id: "c9_phone",
+
+                    title: "الهاتف",
+
+                    location: "البرج",
+
+                    text:
+                        "رن الهاتف مرة أخرى. هذه المرة كان المتصل وليد نفسه.",
+
+                    event: "glitch",
+
+                    choices: [
+
+                        {
+                            text: "أجيب",
+                            next: "c9_accident"
+                        }
+                    ]
+
+                },
+
+                {
+
+                    id: "c9_accident",
+
+                    title: "الصوت",
+
+                    location: "البرج",
+
+                    text:
+                        "الصوت: أنت لا تبحث عن الحقيقة يا وليد. أنت تبحث عن سبب نسيانك لها.",
+
+                    event: "darkness",
+
+                    choices: [
+
+                        {
+                            text: "من أنت؟",
+                            next: "c9_lian"
+                        }
+                    ]
+
+                },
+
+                {
+
+                    id: "c9_lian",
+
+                    title: "ليان",
+
+                    location: "البرج",
+
+                    text:
+                        "وصلت ليان. قالت: لدينا فرصة واحدة فقط.",
+
+                    event: "light",
+
+                    choices: [
+
+                        {
+                            text: "أثق بها",
+                            next: "c9_agreement",
+                            effects: {
+                                flags: {
+                                    trustedLian: true
+                                }
+                            }
+                        },
+
+                        {
+                            text: "أرفض",
+                            next: "c9_agreement"
+                        }
+                    ]
+
+                },
+
+                {
+
+                    id: "c9_agreement",
+
+                    title: "الخطة",
+
+                    location: "البرج",
+
+                    text:
+                        "الخطة بسيطة: الوصول إلى قلب المشروع قبل أن يستعيد الظل السيطرة.",
+
+                    choices: [
+
+                        {
+                            text: "أوافق",
+                            next: "c10_truth"
+                        }
+                    ]
+
+                }
+
+            ]
+
+        },
+
+
+        /* =================================================
+           CHAPTER 10
+           ================================================= */
+
+        {
+
+            id: 10,
+
+            title: "الحقيقة",
+
+            subtitle: "الحقيقة لا تشبه ما تخيلته",
+
+            location: "قلب المشروع",
+
+            scenes: [
+
+                {
+
+                    id: "c10_truth",
+
+                    title: "قلب المشروع",
+
+                    location: "قلب المشروع",
+
+                    text:
+                        "وصل وليد إلى غرفة ضخمة. في وسطها جهاز يحمل اسمه.",
+
+                    event: "light",
+
+                    choices: [
+
+                        {
+                            text: "أقترب",
+                            next: "c10_screen"
+                        }
+                    ]
+
+                },
+
+                {
+
+                    id: "c10_screen",
+
+                    title: "الشاشة",
+
+                    location: "غرفة التحكم",
+
+                    text:
+                        "الشاشة: SUBJECT WALEED — MEMORY RESET 19.",
+
+                    event: "glitch",
+
+                    choices: [
+
+                        {
+                            text: "أبحث عن التفاصيل",
+                            next: "c10_mirror"
+                        }
+                    ]
+
+                },
+
+                {
+
+                    id: "c10_mirror",
+
+                    title: "المرآة الأخيرة",
+
+                    location: "غرفة التحكم",
+
+                    text:
+                        "رأى وليد انعكاسه. ثم رأى شخصاً يقف خلفه.",
+
+                    event: "shadow",
+
+                    choices: [
+
+                        {
+                            text: "ألتفت",
+                            next: "c10_memory"
+                        }
+                    ]
+
+                },
+
+                {
+
+                    id: "c10_memory",
+
+                    title: "الذاكرة",
+
+                    location: "الذاكرة",
+
+                    text:
+                        "تذكّر وليد الحقيقة الأولى: هو من طلب التجربة لأنه كان يريد حذف ذكرى مؤلمة.",
+
+                    event: "memory",
+
+                    choices: [
+
+                        {
+                            text: "أتابع",
+                            next: "c10_truth2",
+                            effects: {
+                                flags: {
+                                    knowsAboutExperiment: true,
+                                    sawMemory5: true
+                                }
+                            }
+                        }
+                    ]
+
+                },
+
+                {
+
+                    id: "c10_truth2",
+
+                    title: "لماذا؟",
+
+                    location: "الذاكرة",
+
+                    text:
+                        "لكن التجربة لم تحذف الذكرى. قسمت الذاكرة إلى نسخ متعددة.",
+
+                    choices: [
+
+                        {
+                            text: "أبحث عن النسخة الأصلية",
+                            next: "c11_choice"
+                        }
+                    ]
+
+                }
+
+            ]
+
+        },
+
+
+        /* =================================================
+           CHAPTER 11
+           ================================================= */
+
+        {
+
+            id: 11,
+
+            title: "الاختيار",
+
+            subtitle: "لا يمكن أن تنقذ الجميع",
+
+            location: "غرفة القرار",
+
+            scenes: [
+
+                {
+
+                    id: "c11_choice",
+
+                    title: "غرفة القرار",
+
+                    location: "غرفة القرار",
+
+                    text:
+                        "ثلاثة أبواب. أحدها يعيد الذاكرة، الثاني يمحوها، والثالث يترك كل شيء كما هو.",
+
+                    event: "darkness",
+
+                    choices: [
+
+                        {
+                            text: "أعيد الذاكرة",
+                            next: "c11_accept",
+                            effects: {
+                                flags: {
+                                    acceptedTruth: true
+                                }
+                            }
+                        },
+
+                        {
+                            text: "أمحوها",
+                            next: "c11_refuse",
+                            effects: {
+                                flags: {
+                                    refusedExperiment: true
+                                }
+                            }
+                        },
+
+                        {
+                            text: "أترك كل شيء",
+                            next: "c11_merge"
+                        }
+
+                    ]
+
+                },
+
+                {
+
+                    id: "c11_accept",
+
+                    title: "التذكر",
+
+                    location: "غرفة القرار",
+
+                    text:
+                        "كل الذكريات بدأت بالعودة دفعة واحدة.",
+
+                    event: "memory",
+
+                    choices: [
+
+                        {
+                            text: "أتحملها",
+                            next: "c11_merge"
+                        }
+                    ]
+
+                },
+
+                {
+
+                    id: "c11_merge",
+
+                    title: "الاندماج",
+
+                    location: "قلب المشروع",
+
+                    text:
+                        "ظهر الظل أمام وليد. قال: أنا الجزء الذي حاولت قتله طوال هذه السنوات.",
+
+                    event: "shadow",
+
+                    choices: [
+
+                        {
+                            text: "أواجهه",
+                            next: "c11_refuse"
+                        }
+                    ]
+
+                },
+
+                {
+
+                    id: "c11_refuse",
+
+                    title: "الرفض",
+
+                    location: "قلب المشروع",
+
+                    text:
+                        "مد وليد يده نحو زر الإيقاف. لكن النظام طلب آخر إجابة.",
+
+                    puzzle: "truthChoice",
+
+                    choices: [
+
+                        {
+                            text: "أكشف الحقيقة",
+                            next: "c12_final"
+                        }
+                    ]
+
+                }
+
+            ]
+
+        },
+
+
+        /* =================================================
+           CHAPTER 12
+           ================================================= */
+
+        {
+
+            id: 12,
+
+            title: "العودة",
+
+            subtitle: "لكن الرحلة لم تنته",
+
+            location: "المنشأة",
+
+            scenes: [
+
+                {
+
+                    id: "c12_final",
+
+                    title: "الرسالة",
+
+                    location: "قلب المشروع",
+
+                    text:
+                        "توقفت كل الأجهزة. ظهرت رسالة: المرحلة الأولى انتهت.",
+
+                    event: "flash",
+
+                    choices: [
+
+                        {
+                            text: "المرحلة الأولى؟",
+                            next: "c13_signal"
+                        }
+                    ]
+
+                }
+
+            ]
+
+        },
+
+
+        /* =================================================
+           CHAPTER 13
+           ================================================= */
+
+        {
+
+            id: 13,
+
+            title: "الإشارة",
+
+            subtitle: "شخص آخر يعرف الحقيقة",
+
+            location: "البرج",
+
+            scenes: [
+
+                {
+
+                    id: "c13_signal",
+
+                    title: "الإشارة",
+
+                    location: "البرج",
+
+                    text:
+                        "اشتغلت شاشة صغيرة وأظهرت إحداثيات لمكان مجهول.",
+
+                    event: "glitch",
+
+                    choices: [
+
+                        {
+                            text: "أتبع الإشارة",
+                            next: "c13_map"
+                        }
+                    ]
+
+                },
+
+                {
+
+                    id: "c13_map",
+
+                    title: "الخريطة",
+
+                    location: "غرفة الأرشيف",
+
+                    text:
+                        "وجد وليد خريطة تحتوي على أربعة ممرات.",
+
+                    puzzle: "archiveMap",
+
+                    choices: [
+
+                        {
+                            text: "أحل الخريطة",
+                            next: "c13_archive"
+                        }
+                    ]
+
+                },
+
+                {
+
+                    id: "c13_archive",
+
+                    title: "الأرشيف السري",
+
+                    location: "الأرشيف",
+
+                    text:
+                        "دخل وليد قاعة لم تكن موجودة في أي خريطة.",
+
+                    event: "fog",
+
+                    choices: [
+
+                        {
+                            text: "أدخل",
+                            next: "c14_files"
+                        }
+                    ]
+
+                },
+
+                {
+
+                    id: "c14_files",
+
+                    title: "الملفات القديمة",
+
+                    location: "الأرشيف السري",
+
+                    text:
+                        "مئات الملفات مرتبة حسب السنوات.",
+
+                    puzzle: "archiveSorting",
+
+                    choices: [
+
+                        {
+                            text: "أرتب الملفات",
+                            next: "c14_message"
+                        }
+                    ]
+
+                }
+
+            ]
+
+        },
+
+
+        /* =================================================
+           CHAPTER 14
+           ================================================= */
+
+        {
+
+            id: 14,
+
+            title: "المشروع صفر",
+
+            subtitle: "كان هناك شخص قبلك",
+
+            location: "الأرشيف السري",
+
+            scenes: [
+
+                {
+
+                    id: "c14_message",
+
+                    title: "PROJECT ZERO",
+
+                    location: "الأرشيف",
+
+                    text:
+                        "بعد ترتيب الملفات ظهرت عبارة PROJECT ZERO.",
+
+                    event: "darkness",
+
+                    choices: [
+
+                        {
+                            text: "أفتح الملف",
+                            next: "c14_zero"
+                        }
+                    ]
+
+                },
+
+                {
+
+                    id: "c14_zero",
+
+                    title: "المشروع صفر",
+
+                    location: "الأرشيف",
+
+                    text:
+                        "كان المشروع الأول محاولة لإنشاء ذاكرة يمكن نقلها من شخص إلى آخر.",
+
+                    event: "memory",
+
+                    choices: [
+
+                        {
+                            text: "أتابع",
+                            next: "c15_city"
+                        }
+                    ]
+
+                }
+
+            ]
+
+        },
+
+
+        /* =================================================
+           CHAPTER 15
+           ================================================= */
+
+        {
+
+            id: 15,
+
+            title: "المدينة تحت المدينة",
+
+            subtitle: "الطريق إلى المصدر",
+
+            location: "المدينة السفلى",
+
+            scenes: [
+
+                {
+
+                    id: "c15_city",
+
+                    title: "القطاع 17",
+
+                    location: "المدينة السفلى",
+
+                    text:
+                        "وصل وليد إلى أعمق جزء في المدينة. أمامه بوابة ضخمة.",
+
+                    puzzle: "undergroundCity",
+
+                    choices: [
+
+                        {
+                            text: "أدخل القطاع 17",
+                            next: "c15_gate"
+                        }
+                    ]
+
+                },
+
+                {
+
+                    id: "c15_gate",
+
+                    title: "البوابة",
+
+                    location: "القطاع 17",
+
+                    text:
+                        "البوابة تحمل اسم وليد.",
+
+                    event: "light",
+
+                    choices: [
+
+                        {
+                            text: "أفتحها",
+                            next: "c16_red"
+                        }
+                    ]
+
+                }
+
+            ]
+
+        },
+
+
+        /* =================================================
+           CHAPTER 16
+           ================================================= */
+
+        {
+
+            id: 16,
+
+            title: "الباب الأحمر",
+
+            subtitle: "الحقيقة تفتح الأبواب",
+
+            location: "القطاع 17",
+
+            scenes: [
+
+                {
+
+                    id: "c16_red",
+
+                    title: "الباب الأحمر",
+
+                    location: "القطاع 17",
+
+                    text:
+                        "باب أحمر بلا مقبض. ثلاثة رموز أمامه.",
+
+                    puzzle: "redDoor",
+
+                    choices: [
+
+                        {
+                            text: "أفتح الباب",
+                            next: "c16_room"
+                        }
+                    ]
+
+                },
+
+                {
+
+                    id: "c16_room",
+
+                    title: "الغرفة الأخيرة",
+
+                    location: "خلف الباب الأحمر",
+
+                    text:
+                        "الغرفة تحتوي على ستة شاشات. كل شاشة تعرض جزءاً من حياة وليد.",
+
+                    event: "memory",
+
+                    choices: [
+
+                        {
+                            text: "أشاهد الشاشات",
+                            next: "c17_memory"
+                        }
+                    ]
+
+                }
+
+            ]
+
+        },
+
+
+        /* =================================================
+           CHAPTER 17
+           ================================================= */
+
+        {
+
+            id: 17,
+
+            title: "آخر ذكرى",
+
+            subtitle: "ما حدث في 03:17",
+
+            location: "غرفة الذاكرة الأخيرة",
+
+            scenes: [
+
+                {
+
+                    id: "c17_memory",
+
+                    title: "الصور",
+
+                    location: "غرفة الذاكرة",
+
+                    text:
+                        "ظهرت خمس صور أمام وليد. واحدة منها لم تحدث أبداً.",
+
+                    puzzle: "finalMemory",
+
+                    choices: [
+
+                        {
+                            text: "أحل اللغز",
+                            next: "c17_truth"
+                        }
+                    ]
+
+                },
+
+                {
+
+                    id: "c17_truth",
+
+                    title: "الذكرى الأصلية",
+
+                    location: "الذاكرة",
+
+                    text:
+                        "تذكّر وليد الطريق الجبلي. تذكر أنه جاء إلى القرية بإرادته.",
+
+                    event: "flash",
+
+                    choices: [
+
+                        {
+                            text: "أتذكر كل شيء",
+                            next: "c18_shadow",
+                            effects: {
+                                flags: {
+                                    sawMemory6: true
+                                }
+                            }
+                        }
+                    ]
+
+                }
+
+            ]
+
+        },
+
+
+        /* =================================================
+           CHAPTER 18
+           ================================================= */
+
+        {
+
+            id: 18,
+
+            title: "الظل الرابع",
+
+            subtitle: "لم يكن هناك ثلاثة فقط",
+
+            location: "قلب المنشأة",
+
+            scenes: [
+
+                {
+
+                    id: "c18_shadow",
+
+                    title: "الظل",
+
+                    location: "قلب المنشأة",
+
+                    text:
+                        "ظهر الظل أمام وليد. هذه المرة لم يختفِ.",
+
+                    event: "shadow",
+
+                    choices: [
+
+                        {
+                            text: "أسأله من يكون",
+                            next: "c18_identity"
+                        }
+                    ]
+
+                },
+
+                {
+
+                    id: "c18_identity",
+
+                    title: "هوية الظل",
+
+                    location: "قلب المنشأة",
+
+                    text:
+                        "قال الظل: أنا كل نسخة منك رفضت أن تتذكر.",
+
+                    puzzle: "shadowIdentity",
+
+                    choices: [
+
+                        {
+                            text: "أحل اللغز",
+                            next: "c18_message"
+                        }
+                    ]
+
+                },
+
+                {
+
+                    id: "c18_message",
+
+                    title: "الرسالة",
+
+                    location: "قلب المنشأة",
+
+                    text:
+                        "ظهر على الشاشة: وليد، إذا كنت ترى هذا، لا تثق حتى بذاكرتك.",
+
+                    event: "glitch",
+
+                    choices: [
+
+                        {
+                            text: "أكمل",
+                            next: "c19_final"
+                        }
+                    ]
+
+                }
+
+            ]
+
+        },
+
+
+        /* =================================================
+           CHAPTER 19
+           ================================================= */
+
+        {
+
+            id: 19,
+
+            title: "ما وراء الحقيقة",
+
+            subtitle: "الحقيقة ليست النهاية",
+
+            location: "الباب الأخير",
+
+            scenes: [
+
+                {
+
+                    id: "c19_final",
+
+                    title: "الباب الأخير",
+
+                    location: "الباب الأخير",
+
+                    text:
+                        "أربعة أبواب أمام وليد. ثلاثة تحمل أرقاماً. الرابع بلا رقم.",
+
+                    puzzle: "ultimateTruth",
+
+                    choices: [
+
+                        {
+                            text: "حل اللغز الأخير",
+                            next: "c20_ending"
+                        }
+                    ]
+
+                }
+
+            ]
+
+        },
+
+
+        /* =================================================
+           CHAPTER 20
+           ================================================= */
+
+        {
+
+            id: 20,
+
+            title: "ظلال المجهول",
+
+            subtitle: "كل شيء بدأ عند 03:17",
+
+            location: "المكان الأخير",
+
+            scenes: [
+
+                {
+
+                    id: "c20_ending",
+
+                    title: "النهاية",
+
+                    location: "المكان الأخير",
+
+                    text:
+                        "فتح وليد الباب بلا رقم. لم يجد غرفة ولا مختبراً ولا مدينة. وجد الطريق الجبلي نفسه.",
+
+                    event: "supernatural",
+
+                    choices: [
+
+                        {
+                            text: "أعود إلى الطريق",
+                            next: "ending_escape"
+                        },
+
+                        {
+                            text: "أواجه الظل",
+                            next: "ending_true"
+                        },
+
+                        {
+                            text: "أدمر المشروع",
+                            next: "ending_destroy"
+                        },
+
+                        {
+                            text: "أبحث عن الباب الرابع",
+                            next: "ending_secret",
+                            requires: {
+                                flag: "secretPath"
+                            }
+                        }
+
+                    ]
+
+                },
+
+                /* =========================================
+                   TRUE ENDING
+                   ========================================= */
+
+                {
+
+                    id: "ending_true",
+
+                    title: "الحقيقة",
+
+                    location: "الطريق",
+
+                    ending: true,
+
+                    endingType: "true",
+
+                    text:
+                        "واجه وليد الظل ولم يحاول قتله أو الهرب منه. أدرك أن الظل لم يكن عدواً، بل الجزء الذي أخفاه عن نفسه. عندما قبل ذاكرته كاملة، توقفت الساعة لأول مرة منذ سنوات.",
+
+                    event: "light",
+
+                    choices: []
+
+                },
+
+                /* =========================================
+                   ESCAPE ENDING
+                   ========================================= */
+
+                {
+
+                    id: "ending_escape",
+
+                    title: "الهروب",
+
+                    location: "الطريق الجبلي",
+
+                    ending: true,
+
+                    endingType: "escape",
+
+                    text:
+                        "قاد وليد السيارة بعيداً عن القرية. لم ينظر خلفه. بعد ساعات، توقفت الساعة عن العمل. ظن أن كل شيء انتهى... حتى رن الهاتف.",
+
+                    event: "whisper",
+
+                    choices: []
+
+                },
+
+                /* =========================================
+                   DESTROY ENDING
+                   ========================================= */
+
+                {
+
+                    id: "ending_destroy",
+
+                    title: "الإطفاء",
+
+                    location: "قلب المشروع",
+
+                    ending: true,
+
+                    endingType: "destroy",
+
+                    text:
+                        "اختار وليد تدمير النظام بالكامل. انطفأت الشاشات واحدة تلو الأخرى، وسقطت المنشأة في صمت تام. خرج وليد إلى الفجر، لكنه لم يعرف كم من الوقت مر.",
+
+                    event: "darkness",
+
+                    choices: []
+
+                },
+
+                /* =========================================
+                   SECRET ENDING
+                   ========================================= */
+
+                {
+
+                    id: "ending_secret",
+
+                    title: "الظل الرابع",
+
+                    location: "المكان الذي لا يحمل اسماً",
+
+                    ending: true,
+
+                    endingType: "secret",
+
+                    text:
+                        "فتح وليد الباب الرابع. خلفه لم يكن هناك ظل واحد... بل آلاف الأبواب، وكل باب يحمل اسماً مختلفاً. ثم ظهر صوت يقول: مرحباً بك في البداية الحقيقية.",
+
+                    event: "supernatural",
+
+                    choices: []
+
+                }
+
+            ]
+
+        }
+
+    ]
+
+};
+
+
+/* =========================================================
+   DATA VALIDATION ENGINE
+   ========================================================= */
+
+(function validateGameData() {
+
+    "use strict";
+
+    if (!GAME_DATA) {
+
+        console.error(
+            "[GAME_DATA] GAME_DATA غير موجود."
+        );
+
+        return;
+
+    }
+
+
+    /* -----------------------------------------------------
+       Validate game
+       ----------------------------------------------------- */
+
+    if (
+        !GAME_DATA.game ||
+        !GAME_DATA.game.title
+    ) {
+
+        console.error(
+            "[GAME_DATA] معلومات اللعبة ناقصة."
+        );
+
+    }
+
+
+    /* -----------------------------------------------------
+       Validate protagonist
+       ----------------------------------------------------- */
+
+    if (
+        GAME_DATA.game.protagonist !== "وليد"
+    ) {
+
+        console.warn(
+            "[GAME_DATA] الشخصية الرئيسية يجب أن تكون وليد."
+        );
+
+    }
+
+
+    /* -----------------------------------------------------
+       Validate chapters
+       ----------------------------------------------------- */
+
+    if (
+        !Array.isArray(GAME_DATA.chapters)
+    ) {
+
+        console.error(
+            "[GAME_DATA] chapters يجب أن تكون Array."
+        );
+
+        return;
+
+    }
+
+
+    const chapterIds = new Set();
+
+    const sceneIds = new Set();
+
+
+    GAME_DATA.chapters.forEach(
+        chapter => {
+
+            if (
+                chapterIds.has(chapter.id)
+            ) {
+
+                console.error(
+                    "[GAME_DATA] Chapter مكرر:",
+                    chapter.id
+                );
+
+            }
+
+            chapterIds.add(chapter.id);
+
+
+            if (
+                !Array.isArray(chapter.scenes)
+            ) {
+
+                console.error(
+                    "[GAME_DATA] scenes ناقصة في chapter:",
+                    chapter.id
+                );
+
+                return;
+
+            }
+
+
+            chapter.scenes.forEach(
+                scene => {
+
+                    if (
+                        sceneIds.has(scene.id)
+                    ) {
+
+                        console.error(
+                            "[GAME_DATA] Scene مكرر:",
+                            scene.id
+                        );
+
+                    }
+
+                    sceneIds.add(scene.id);
+
+
+                    if (
+                        scene.puzzle &&
+                        !GAME_DATA.puzzles[
+                            scene.puzzle
+                        ]
+                    ) {
+
+                        console.error(
+                            "[GAME_DATA] Puzzle غير موجود:",
+                            scene.puzzle
+                        );
+
+                    }
+
+
+                    if (
+                        !Array.isArray(scene.choices)
+                    ) {
+
+                        return;
+
+                    }
+
+
+                    scene.choices.forEach(
+                        choice => {
+
+                            if (
+                                !choice.next
+                            ) {
+
+                                return;
+
+                            }
+
+
+                            if (
+                                choice.next.startsWith(
+                                    "ending_"
+                                )
+                            ) {
+
+                                return;
+
+                            }
+
+
+                            if (
+                                !sceneIds.has(
+                                    choice.next
+                                )
+                            ) {
+
+                                /*
+                                 * بعض المشاهد تشير إلى
+                                 * فصول لاحقة يتم تعريفها
+                                 * بعد المشهد الحالي.
+                                 *
+                                 * لذلك لا نعتبرها خطأ
+                                 * أثناء المرور الأول.
+                                 */
+
+                            }
+
+                        }
+                    );
+
+                }
+            );
+
+        }
+    );
+
+
+    /* -----------------------------------------------------
+       Validate puzzle answers
+       ----------------------------------------------------- */
+
+    Object.keys(
+        GAME_DATA.puzzles
+    ).forEach(
+        puzzleId => {
+
+            const puzzle =
+                GAME_DATA.puzzles[puzzleId];
+
+
+            if (
+                !puzzle.question
+            ) {
+
+                console.warn(
+                    "[GAME_DATA] Puzzle بلا سؤال:",
+                    puzzleId
+                );
+
+            }
+
+
+            if (
+                !Array.isArray(
+                    puzzle.options
+                )
+            ) {
+
+                console.warn(
+                    "[GAME_DATA] Puzzle بلا options:",
+                    puzzleId
+                );
+
+            }
+
+
+            if (
+                !puzzle.answer
+            ) {
+
+                console.warn(
+                    "[GAME_DATA] Puzzle بلا answer:",
+                    puzzleId
+                );
+
+            }
+
+        }
+    );
+
+
+    /* -----------------------------------------------------
+       Statistics
+       ----------------------------------------------------- */
+
+    let sceneCount = 0;
+
+    GAME_DATA.chapters.forEach(
+        chapter => {
+
+            sceneCount +=
+                Array.isArray(chapter.scenes)
+                    ? chapter.scenes.length
+                    : 0;
+
+        }
+    );
+
+
+    const puzzleCount =
+        Object.keys(
+            GAME_DATA.puzzles
+        ).length;
+
+
+    console.log(
+        "===================================="
+    );
+
+    console.log(
+        "ظلال المجهول — DATA ENGINE"
+    );
+
+    console.log(
+        "Version:",
+        GAME_DATA.game.version
+    );
+
+    console.log(
+        "Protagonist:",
+        GAME_DATA.game.protagonist
+    );
+
+    console.log(
+        "Chapters:",
+        GAME_DATA.chapters.length
+    );
+
+    console.log(
+        "Scenes:",
+        sceneCount
+    );
+
+    console.log(
+        "Puzzles:",
+        puzzleCount
+    );
+
+    console.log(
+        "===================================="
+
+    );
+
+})();
+
+
+/* =========================================================
+   GLOBAL ACCESS
+   ========================================================= */
+
+window.GAME_DATA = GAME_DATA;
+
+window.SHADOWS_DATA = GAME_DATA;
+
+
+/* =========================================================
+   END
+   ========================================================= */
