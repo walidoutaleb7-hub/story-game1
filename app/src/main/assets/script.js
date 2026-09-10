@@ -1,4281 +1,4755 @@
 /* =========================================================
    ظلال المجهول — SHADOWS OF THE UNKNOWN
-   script.js — ULTRA V6
-   PART 1 / 2
+   script.js
+   ULTRA V8 — COMPLETE GAME ENGINE
    ========================================================= */
 
 (() => {
-  "use strict";
+    "use strict";
 
-  /* =======================================================
-     CORE
-     ======================================================= */
+    /* =====================================================
+       01 — DOM HELPERS
+       ===================================================== */
 
-  const $ = (id) => document.getElementById(id);
+    const $ = id =>
+        document.getElementById(id);
 
-  const clamp = (n, min, max) =>
-    Math.max(min, Math.min(max, n));
+    const $$ = selector =>
+        Array.from(
+            document.querySelectorAll(selector)
+        );
 
-  const random = (min, max) =>
-    Math.floor(Math.random() * (max - min + 1)) + min;
-
-  const pick = (arr) =>
-    Array.isArray(arr) && arr.length
-      ? arr[Math.floor(Math.random() * arr.length)]
-      : null;
-
-  const shuffle = (arr) =>
-    [...arr].sort(() => Math.random() - 0.5);
-
-  const safeNumber = (value, fallback = 0) => {
-    const n = Number(value);
-    return Number.isFinite(n) ? n : fallback;
-  };
-
-  const escapeHTML = (value) =>
-    String(value ?? "")
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#039;");
-
-  const formatNumber = (n) =>
-    safeNumber(n).toLocaleString("ar-DZ");
-
-  const wait = (ms) =>
-    new Promise(resolve => setTimeout(resolve, ms));
-
-
-  /* =======================================================
-     STORAGE
-     ======================================================= */
-
-  const STORAGE_KEY = "shadows_of_unknown_ultra_v6";
-
-  const defaultState = {
-    version: 6,
-
-    firstLaunch: true,
-
-    player: {
-      name: "المحقق",
-      level: 1,
-      xp: 0,
-      coins: 250,
-      score: 0,
-      bestScore: 0,
-      streak: 0,
-      maxStreak: 0
-    },
-
-    game: {
-      active: false,
-      paused: false,
-
-      chapter: 1,
-      sceneIndex: 0,
-
-      health: 100,
-      maxHealth: 100,
-
-      choicesMade: 0,
-      correctChoices: 0,
-
-      totalChoices: 0,
-      totalDeaths: 0,
-
-      startedAt: 0,
-      elapsed: 0
-    },
-
-    settings: {
-      sound: true,
-      music: true,
-      motion: true
-    },
-
-    inventory: [],
-
-    achievements: [],
-
-    journal: [],
-
-    history: [],
-
-    unlockedChapters: [1],
-
-    completedChapters: [],
-
-    flags: {},
-
-    daily: {
-      date: "",
-      completed: false,
-      rewardClaimed: false
-    },
-
-    statistics: {
-      gamesPlayed: 0,
-      endings: 0,
-      choices: 0,
-      correctChoices: 0,
-      coinsEarned: 0,
-      achievementsUnlocked: 0,
-      longestStreak: 0
-    }
-  };
-
-
-  const clone = (obj) =>
-    JSON.parse(JSON.stringify(obj));
-
-
-  function merge(base, saved) {
-    if (!saved || typeof saved !== "object") {
-      return clone(base);
-    }
-
-    const result = clone(base);
-
-    Object.keys(saved).forEach(key => {
-      if (
-        saved[key] &&
-        typeof saved[key] === "object" &&
-        !Array.isArray(saved[key]) &&
-        result[key] &&
-        typeof result[key] === "object" &&
-        !Array.isArray(result[key])
-      ) {
-        result[key] = merge(result[key], saved[key]);
-      } else {
-        result[key] = saved[key];
-      }
-    });
-
-    return result;
-  }
-
-
-  function loadState() {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-
-      if (!raw) {
-        return clone(defaultState);
-      }
-
-      return merge(
-        defaultState,
-        JSON.parse(raw)
-      );
-    } catch {
-      return clone(defaultState);
-    }
-  }
-
-
-  let state = loadState();
-
-
-  function saveState() {
-    try {
-      localStorage.setItem(
-        STORAGE_KEY,
-        JSON.stringify(state)
-      );
-    } catch {}
-  }
-
-
-  function resetState() {
-    state = clone(defaultState);
-    saveState();
-    return state;
-  }
-
-
-  /* =======================================================
-     DATA BRIDGE
-     ======================================================= */
-
-  function getData() {
-    return (
-      window.GAME_DATA ||
-      window.DATA ||
-      window.SHADOWS_DATA ||
-      {}
+    const clamp = (
+        value,
+        min,
+        max
+    ) => Math.max(
+        min,
+        Math.min(max, value)
     );
-  }
 
+    const random = (
+        min,
+        max
+    ) =>
+        Math.floor(
+            Math.random() *
+            (max - min + 1)
+        ) + min;
 
-  function getChapters() {
-    const data = getData();
+    const pick = array =>
+        Array.isArray(array) &&
+        array.length
+            ? array[
+                Math.floor(
+                    Math.random() *
+                    array.length
+                )
+            ]
+            : null;
 
-    return (
-      data.chapters ||
-      data.CHAPTERS ||
-      data.story?.chapters ||
-      []
-    );
-  }
+    const wait = ms =>
+        new Promise(resolve =>
+            setTimeout(resolve, ms)
+        );
 
+    const safeNumber = (
+        value,
+        fallback = 0
+    ) => {
 
-  function getChapter(id) {
-    const chapters = getChapters();
+        const n =
+            Number(value);
 
-    return chapters.find(ch =>
-      Number(
-        ch.id ??
-        ch.chapter ??
-        ch.number
-      ) === Number(id)
-    ) || null;
-  }
-
-
-  function getScenes(chapter) {
-    if (!chapter) return [];
-
-    return (
-      chapter.scenes ||
-      chapter.story ||
-      chapter.events ||
-      []
-    );
-  }
-
-
-  function getScene(chapterId, sceneIndex) {
-    const chapter = getChapter(chapterId);
-
-    if (!chapter) return null;
-
-    const scenes = getScenes(chapter);
-
-    return scenes[sceneIndex] || null;
-  }
-
-
-  function getCurrentScene() {
-    return getScene(
-      state.game.chapter,
-      state.game.sceneIndex
-    );
-  }
-
-
-  /* =======================================================
-     EVENTS
-     ======================================================= */
-
-  const listeners = {};
-
-  function on(event, callback) {
-    if (!listeners[event]) {
-      listeners[event] = [];
-    }
-
-    listeners[event].push(callback);
-
-    return () => {
-      listeners[event] =
-        listeners[event].filter(fn => fn !== callback);
+        return Number.isFinite(n)
+            ? n
+            : fallback;
     };
-  }
 
-
-  function emit(event, payload = {}) {
-    (listeners[event] || []).forEach(fn => {
-      try {
-        fn(payload);
-      } catch {}
-    });
-  }
-
-
-  /* =======================================================
-     AUDIO
-     ======================================================= */
-
-  const AudioEngine = {
-    context: null,
-
-    ensure() {
-      if (!state.settings.sound) return null;
-
-      if (!this.context) {
-        try {
-          this.context =
-            new (window.AudioContext ||
-              window.webkitAudioContext)();
-        } catch {
-          return null;
-        }
-      }
-
-      if (this.context.state === "suspended") {
-        this.context.resume().catch(() => {});
-      }
-
-      return this.context;
-    },
-
-    tone(
-      frequency = 440,
-      duration = 0.08,
-      type = "sine",
-      volume = 0.035
-    ) {
-      const ctx = this.ensure();
-
-      if (!ctx) return;
-
-      try {
-        const oscillator =
-          ctx.createOscillator();
-
-        const gain =
-          ctx.createGain();
-
-        oscillator.type = type;
-        oscillator.frequency.value = frequency;
-
-        gain.gain.setValueAtTime(
-          0.0001,
-          ctx.currentTime
-        );
-
-        gain.gain.exponentialRampToValueAtTime(
-          volume,
-          ctx.currentTime + 0.01
-        );
-
-        gain.gain.exponentialRampToValueAtTime(
-          0.0001,
-          ctx.currentTime + duration
-        );
-
-        oscillator.connect(gain);
-        gain.connect(ctx.destination);
-
-        oscillator.start();
-        oscillator.stop(
-          ctx.currentTime + duration + 0.02
-        );
-      } catch {}
-    },
-
-    click() {
-      this.tone(520, 0.055, "sine", 0.025);
-    },
-
-    choice() {
-      this.tone(390, 0.08, "triangle", 0.03);
-    },
-
-    correct() {
-      this.tone(660, 0.08, "sine", 0.035);
-
-      setTimeout(() => {
-        this.tone(880, 0.12, "sine", 0.03);
-      }, 70);
-    },
-
-    danger() {
-      this.tone(130, 0.18, "sawtooth", 0.025);
-    },
-
-    success() {
-      [523, 659, 784].forEach((f, i) => {
-        setTimeout(() => {
-          this.tone(f, 0.16, "sine", 0.035);
-        }, i * 90);
-      });
-    }
-  };
-
-
-  /* =======================================================
-     NOTIFICATIONS
-     ======================================================= */
-
-  function notify(
-    text,
-    icon = "icon-spark",
-    duration = 2400
-  ) {
-    const box = $("notification");
-
-    if (!box) return;
-
-    const iconEl = $("notificationIcon");
-    const textEl = $("notificationText");
-
-    if (iconEl) {
-      iconEl.className =
-        `notification-icon ${icon}`;
-    }
-
-    if (textEl) {
-      textEl.textContent = text;
-    }
-
-    box.classList.remove("show");
-
-    requestAnimationFrame(() => {
-      box.classList.add("show");
-    });
-
-    clearTimeout(notify.timer);
-
-    notify.timer = setTimeout(() => {
-      box.classList.remove("show");
-    }, duration);
-  }
-
-
-  function toastItem(name, icon = "icon-item") {
-    const toast = $("itemToast");
-
-    if (!toast) return;
-
-    const iconEl = $("itemToastIcon");
-    const nameEl = $("itemToastName");
-
-    if (iconEl) {
-      iconEl.className =
-        `toast-icon ${icon}`;
-    }
-
-    if (nameEl) {
-      nameEl.textContent = name;
-    }
-
-    toast.classList.remove("show");
-
-    requestAnimationFrame(() => {
-      toast.classList.add("show");
-    });
-  }
-
-
-  /* =======================================================
-     PROGRESSION
-     ======================================================= */
-
-  function xpRequired(level) {
-    return 100 + (level - 1) * 60;
-  }
-
-
-  function addXP(amount) {
-    amount = Math.max(0, safeNumber(amount));
-
-    state.player.xp += amount;
-    state.statistics.totalXpEarned =
-      safeNumber(state.statistics.totalXpEarned) + amount;
-
-    let leveledUp = false;
-
-    while (
-      state.player.xp >=
-      xpRequired(state.player.level)
-    ) {
-      state.player.xp -=
-        xpRequired(state.player.level);
-
-      state.player.level++;
-
-      leveledUp = true;
-
-      notify(
-        `وصلت إلى المستوى ${state.player.level}`,
-        "icon-spark"
-      );
-
-      AudioEngine.success();
-    }
-
-    if (leveledUp) {
-      emit("levelUp", {
-        level: state.player.level
-      });
-    }
-
-    saveState();
-
-    return leveledUp;
-  }
-
-
-  function addCoins(amount) {
-    amount = Math.max(0, safeNumber(amount));
-
-    state.player.coins += amount;
-
-    state.statistics.coinsEarned += amount;
-
-    saveState();
-
-    emit("coinsChanged", {
-      amount,
-      total: state.player.coins
-    });
-  }
-
-
-  function spendCoins(amount) {
-    amount = Math.max(0, safeNumber(amount));
-
-    if (state.player.coins < amount) {
-      notify("لا تملك ما يكفي من العملات", "icon-coin");
-      return false;
-    }
-
-    state.player.coins -= amount;
-
-    saveState();
-
-    emit("coinsChanged", {
-      amount: -amount,
-      total: state.player.coins
-    });
-
-    return true;
-  }
-
-
-  /* =======================================================
-     FLAGS
-     ======================================================= */
-
-  function setFlag(key, value = true) {
-    state.flags[key] = value;
-    saveState();
-  }
-
-
-  function getFlag(key, fallback = false) {
-    return Object.prototype.hasOwnProperty.call(
-      state.flags,
-      key
-    )
-      ? state.flags[key]
-      : fallback;
-  }
-
-
-  /* =======================================================
-     INVENTORY
-     ======================================================= */
-
-  function hasItem(id) {
-    return state.inventory.some(
-      item =>
-        typeof item === "string"
-          ? item === id
-          : item?.id === id
-    );
-  }
-
-
-  function addItem(item) {
-    if (!item) return false;
-
-    const id =
-      typeof item === "string"
-        ? item
-        : item.id;
-
-    if (!id || hasItem(id)) {
-      return false;
-    }
-
-    state.inventory.push(
-      typeof item === "string"
-        ? {
-            id: item,
-            name: item,
-            icon: "icon-item"
-          }
-        : clone(item)
-    );
-
-    saveState();
-
-    const name =
-      typeof item === "string"
-        ? item
-        : item.name || item.id;
-
-    toastItem(
-      name,
-      typeof item === "string"
-        ? "icon-item"
-        : item.icon || "icon-item"
-    );
-
-    emit("itemAdded", {
-      item
-    });
-
-    return true;
-  }
-
-
-  function removeItem(id) {
-    const index =
-      state.inventory.findIndex(item =>
-        typeof item === "string"
-          ? item === id
-          : item?.id === id
-      );
-
-    if (index === -1) {
-      return false;
-    }
-
-    state.inventory.splice(index, 1);
-
-    saveState();
-
-    emit("itemRemoved", {
-      id
-    });
-
-    return true;
-  }
-
-
-  /* =======================================================
-     ACHIEVEMENTS
-     ======================================================= */
-
-  const ACHIEVEMENTS = [
-    {
-      id: "first_step",
-      title: "البداية",
-      description: "ابدأ رحلتك الأولى.",
-      icon: "icon-spark",
-      condition: () =>
-        state.statistics.choices >= 1
-    },
-
-    {
-      id: "first_choice",
-      title: "القرار الأول",
-      description: "اتخذ أول قرار في القصة.",
-      icon: "icon-item",
-      condition: () =>
-        state.game.choicesMade >= 1
-    },
-
-    {
-      id: "explorer",
-      title: "المستكشف",
-      description: "اكتشف عدة مواقع.",
-      icon: "icon-chapter",
-      condition: () =>
-        state.history.length >= 5
-    },
-
-    {
-      id: "survivor",
-      title: "الناجي",
-      description: "أكمل فصلاً دون فقدان كامل للصحة.",
-      icon: "icon-heart",
-      condition: () =>
-        state.game.health > 0 &&
-        state.completedChapters.length >= 1
-    },
-
-    {
-      id: "collector",
-      title: "جامع الأسرار",
-      description: "اجمع 5 عناصر.",
-      icon: "icon-bag",
-      condition: () =>
-        state.inventory.length >= 5
-    },
-
-    {
-      id: "rich",
-      title: "ثروة الظلال",
-      description: "اجمع 1000 عملة.",
-      icon: "icon-coin",
-      condition: () =>
-        state.player.coins >= 1000
-    },
-
-    {
-      id: "chapter_two",
-      title: "ما وراء الجبل",
-      description: "افتح الفصل الثاني.",
-      icon: "icon-chapter",
-      condition: () =>
-        state.unlockedChapters.includes(2)
-    },
-
-    {
-      id: "master",
-      title: "سيد المجهول",
-      description: "أكمل عدة فصول.",
-      icon: "icon-trophy",
-      condition: () =>
-        state.completedChapters.length >= 3
-    }
-  ];
-
-
-  function unlockAchievement(id) {
-    if (state.achievements.includes(id)) {
-      return false;
-    }
-
-    const achievement =
-      ACHIEVEMENTS.find(a => a.id === id);
-
-    if (!achievement) {
-      return false;
-    }
-
-    state.achievements.push(id);
-
-    state.statistics.achievementsUnlocked++;
-
-    addXP(35);
-
-    const toast = $("achievementToast");
-
-    if (toast) {
-      const icon =
-        $("achievementToastIcon");
-
-      const title =
-        $("achievementToastTitle");
-
-      if (icon) {
-        icon.className =
-          `achievement-toast-icon ${achievement.icon}`;
-      }
-
-      if (title) {
-        title.textContent =
-          achievement.title;
-      }
-
-      toast.classList.remove("show");
-
-      requestAnimationFrame(() => {
-        toast.classList.add("show");
-      });
-
-      clearTimeout(unlockAchievement.timer);
-
-      unlockAchievement.timer =
-        setTimeout(() => {
-          toast.classList.remove("show");
-        }, 3200);
-    }
-
-    AudioEngine.success();
-
-    emit("achievement", {
-      achievement
-    });
-
-    saveState();
-
-    return true;
-  }
-
-
-  function checkAchievements() {
-    ACHIEVEMENTS.forEach(achievement => {
-      try {
-        if (achievement.condition()) {
-          unlockAchievement(
-            achievement.id
-          );
-        }
-      } catch {}
-    });
-  }
-
-
-  /* =======================================================
-     JOURNAL
-     ======================================================= */
-
-  function addJournal(entry) {
-    if (!entry) return;
-
-    const id =
-      typeof entry === "string"
-        ? entry
-        : entry.id || entry.title;
-
-    if (
-      id &&
-      state.journal.some(item =>
-        typeof item === "string"
-          ? item === id
-          : item?.id === id
-      )
-    ) {
-      return;
-    }
-
-    state.journal.push(
-      typeof entry === "string"
-        ? {
-            id,
-            title: entry,
-            text: "",
-            time: Date.now()
-          }
-        : {
-            ...clone(entry),
-            time: Date.now()
-          }
-    );
-
-    saveState();
-
-    emit("journalAdded", {
-      entry
-    });
-  }
-
-
-  /* =======================================================
-     HISTORY
-     ======================================================= */
-
-  function addHistory(scene, chapter) {
-    if (!scene) return;
-
-    state.history.push({
-      chapter:
-        chapter?.id ??
-        state.game.chapter,
-
-      scene:
-        scene.id ??
-        state.game.sceneIndex,
-
-      title:
-        scene.title ||
-        scene.name ||
-        "مشهد",
-
-      location:
-        scene.location ||
-        "",
-
-      time: Date.now()
-    });
-
-    if (state.history.length > 100) {
-      state.history =
-        state.history.slice(-100);
-    }
-  }
-
-
-  /* =======================================================
-     SCENE NORMALIZATION
-     ======================================================= */
-
-  function normalizeScene(scene) {
-    if (!scene) return null;
-
-    return {
-      id:
-        scene.id ??
-        state.game.sceneIndex,
-
-      title:
-        scene.title ||
-        scene.name ||
-        "المجهول",
-
-      text:
-        scene.text ||
-        scene.story ||
-        scene.description ||
-        "",
-
-      location:
-        scene.location ||
-        scene.place ||
-        "",
-
-      weather:
-        scene.weather ||
-        "",
-
-      time:
-        scene.time ||
-        "",
-
-      image:
-        scene.image ||
-        scene.background ||
-        "",
-
-      chapterTag:
-        scene.chapterTag ||
-        "",
-
-      choices:
-        Array.isArray(scene.choices)
-          ? scene.choices
-          : Array.isArray(scene.options)
-            ? scene.options
-            : [],
-
-      effects:
-        scene.effects ||
-        scene.effect ||
-        [],
-
-      item:
-        scene.item ||
-        scene.reward ||
-        null,
-
-      journal:
-        scene.journal ||
-        null,
-
-      damage:
-        safeNumber(
-          scene.damage ||
-          scene.healthLoss ||
-          0
-        ),
-
-      coins:
-        safeNumber(
-          scene.coins ||
-          scene.rewardCoins ||
-          0
-        ),
-
-      xp:
-        safeNumber(
-          scene.xp ||
-          scene.rewardXP ||
-          0
-        ),
-
-      cinematic:
-        scene.cinematic ||
-        null,
-
-      ending:
-        !!scene.ending
-    };
-  }
-
-
-  /* =======================================================
-     CHOICE NORMALIZATION
-     ======================================================= */
-
-  function normalizeChoice(choice, index) {
-    if (typeof choice === "string") {
-      return {
-        id: `choice_${index}`,
-        text: choice,
-        next: index + 1
-      };
-    }
-
-    if (!choice || typeof choice !== "object") {
-      return {
-        id: `choice_${index}`,
-        text: "متابعة",
-        next: index + 1
-      };
-    }
-
-    return {
-      ...choice,
-
-      id:
-        choice.id ||
-        `choice_${index}`,
-
-      text:
-        choice.text ||
-        choice.label ||
-        choice.title ||
-        "اختيار",
-
-      next:
-        choice.next ??
-        choice.nextScene ??
-        choice.scene ??
-        choice.target,
-
-      effects:
-        choice.effects ||
-        choice.effect ||
-        [],
-
-      condition:
-        choice.condition ||
-        null,
-
-      requires:
-        choice.requires ||
-        choice.requiredItem ||
-        null,
-
-      reward:
-        choice.reward ||
-        null,
-
-      damage:
-        safeNumber(
-          choice.damage ||
-          choice.healthLoss ||
-          0
-        ),
-
-      coins:
-        safeNumber(
-          choice.coins ||
-          choice.rewardCoins ||
-          0
-        ),
-
-      xp:
-        safeNumber(
-          choice.xp ||
-          choice.rewardXP ||
-          0
-        )
-    };
-  }
-
-
-  /* =======================================================
-     CONDITIONS
-     ======================================================= */
-
-  function conditionMet(condition) {
-    if (!condition) return true;
-
-    if (typeof condition === "function") {
-      try {
-        return !!condition(state);
-      } catch {
-        return false;
-      }
-    }
-
-    if (typeof condition === "string") {
-      return !!getFlag(condition);
-    }
-
-    if (Array.isArray(condition)) {
-      return condition.every(
-        conditionMet
-      );
-    }
-
-    if (typeof condition === "object") {
-      if (condition.flag) {
-        return (
-          getFlag(condition.flag) ===
-          condition.value
-        );
-      }
-
-      if (condition.item) {
-        return hasItem(condition.item);
-      }
-
-      if (condition.chapter) {
-        return (
-          state.game.chapter >=
-          safeNumber(condition.chapter)
-        );
-      }
-
-      if (condition.level) {
-        return (
-          state.player.level >=
-          safeNumber(condition.level)
-        );
-      }
-
-      if (condition.coins) {
-        return (
-          state.player.coins >=
-          safeNumber(condition.coins)
-        );
-      }
-    }
-
-    return true;
-  }
-
-
-  /* =======================================================
-     EFFECTS BRIDGE
-     ======================================================= */
-
-  function playEffect(type, options = {}) {
-    try {
-      if (
-        window.Effects &&
-        typeof window.Effects.play === "function"
-      ) {
-        return window.Effects.play(
-          type,
-          options
-        );
-      }
-    } catch {}
-
-    return null;
-  }
-
-
-  function playStoryEffects(scene, extra = {}) {
-    if (!scene) return;
-
-    const effects = [];
-
-    if (Array.isArray(scene.effects)) {
-      effects.push(...scene.effects);
-    } else if (scene.effects) {
-      effects.push(scene.effects);
-    }
-
-    if (extra.effects) {
-      if (Array.isArray(extra.effects)) {
-        effects.push(...extra.effects);
-      } else {
-        effects.push(extra.effects);
-      }
-    }
-
-    effects.forEach(effect => {
-      if (typeof effect === "string") {
-        playEffect(effect);
-        return;
-      }
-
-      if (effect && typeof effect === "object") {
-        playEffect(
-          effect.type ||
-          effect.name ||
-          "fade",
-          effect
-        );
-      }
-    });
-
-    try {
-      if (
-        window.Effects &&
-        typeof window.Effects.storyEvent === "function"
-      ) {
-        window.Effects.storyEvent(
-          scene.effect ||
-          scene.storyEvent ||
-          scene.event ||
-          "",
-          extra
-        );
-      }
-    } catch {}
-  }
-
-
-  /* =======================================================
-     GAME ENGINE
-     ======================================================= */
-
-  const Game = {
-
-    start(chapter = 1, scene = 0) {
-      chapter = safeNumber(chapter, 1);
-      scene = safeNumber(scene, 0);
-
-      if (
-        !state.unlockedChapters.includes(chapter)
-      ) {
-        notify(
-          "هذا الفصل لم يُفتح بعد",
-          "icon-chapter"
-        );
-        return false;
-      }
-
-      state.game.active = true;
-      state.game.paused = false;
-
-      state.game.chapter = chapter;
-      state.game.sceneIndex = scene;
-
-      state.game.health =
-        state.game.maxHealth;
-
-      state.game.choicesMade = 0;
-      state.game.correctChoices = 0;
-      state.game.startedAt = Date.now();
-      state.game.elapsed = 0;
-
-      state.statistics.gamesPlayed++;
-
-      state.firstLaunch = false;
-
-      saveState();
-
-      showScreen("gameScreen");
-
-      renderScene();
-
-      emit("gameStarted", {
-        chapter,
-        scene
-      });
-
-      return true;
-    },
-
-
-    continueGame() {
-      if (!state.game.active) {
-        return this.start(
-          state.game.chapter || 1,
-          state.game.sceneIndex || 0
-        );
-      }
-
-      showScreen("gameScreen");
-
-      renderScene();
-
-      return true;
-    },
-
-
-    newGame() {
-      state.game.active = false;
-      state.game.paused = false;
-
-      state.game.chapter = 1;
-      state.game.sceneIndex = 0;
-
-      state.game.health =
-        state.game.maxHealth;
-
-      state.game.choicesMade = 0;
-      state.game.correctChoices = 0;
-
-      saveState();
-
-      return this.start(1, 0);
-    },
-
-
-    current() {
-      return normalizeScene(
-        getCurrentScene()
-      );
-    },
-
-
-    choose(choice) {
-      if (!state.game.active) {
-        return false;
-      }
-
-      if (state.game.paused) {
-        return false;
-      }
-
-      const scene = this.current();
-
-      if (!scene) {
-        return false;
-      }
-
-      const normalized =
-        normalizeChoice(
-          choice,
-          0
-        );
-
-      if (
-        normalized.requires &&
-        !hasItem(normalized.requires)
-      ) {
-        notify(
-          "تحتاج إلى عنصر معيّن أولاً",
-          "icon-bag"
-        );
-
-        AudioEngine.danger();
-
-        playEffect("shake", {
-          duration: 350
-        });
-
-        return false;
-      }
-
-      if (
-        normalized.condition &&
-        !conditionMet(
-          normalized.condition
-        )
-      ) {
-        notify(
-          "هذا القرار غير متاح الآن",
-          "icon-settings"
-        );
-
-        return false;
-      }
-
-      state.game.choicesMade++;
-      state.statistics.choices++;
-
-      if (normalized.damage > 0) {
-        damage(
-          normalized.damage
-        );
-      }
-
-      if (normalized.coins > 0) {
-        addCoins(
-          normalized.coins
-        );
-      }
-
-      if (normalized.xp > 0) {
-        addXP(
-          normalized.xp
-        );
-      }
-
-      if (normalized.reward) {
-        applyReward(
-          normalized.reward
-        );
-      }
-
-      applyChoiceEffects(
-        normalized
-      );
-
-      addHistory(
-        scene,
-        getChapter(
-          state.game.chapter
-        )
-      );
-
-      saveState();
-
-      AudioEngine.choice();
-
-      emit("choiceMade", {
-        choice: normalized,
-        scene
-      });
-
-      let next =
-        normalized.next;
-
-      if (
-        next === undefined ||
-        next === null ||
-        next === ""
-      ) {
-        next =
-          state.game.sceneIndex + 1;
-      }
-
-      if (
-        typeof next === "string" &&
-        next.startsWith("chapter:")
-      ) {
-        const parts =
-          next.split(":");
-
-        const chapter =
-          safeNumber(parts[1], 1);
-
-        const index =
-          safeNumber(parts[2], 0);
-
-        return this.goTo(
-          chapter,
-          index
-        );
-      }
-
-      if (
-        typeof next === "object" &&
-        next
-      ) {
-        return this.goTo(
-          safeNumber(
-            next.chapter,
-            state.game.chapter
-          ),
-          safeNumber(
-            next.scene,
-            0
-          )
-        );
-      }
-
-      return this.goTo(
-        state.game.chapter,
-        safeNumber(
-          next,
-          state.game.sceneIndex + 1
-        )
-      );
-    },
-
-
-    goTo(chapter, sceneIndex) {
-      chapter =
-        safeNumber(
-          chapter,
-          state.game.chapter
-        );
-
-      sceneIndex =
-        safeNumber(
-          sceneIndex,
-          0
-        );
-
-      const target =
-        getScene(
-          chapter,
-          sceneIndex
-        );
-
-      if (!target) {
-        return this.finishChapter();
-      }
-
-      const oldScene =
-        this.current();
-
-      state.game.chapter = chapter;
-      state.game.sceneIndex = sceneIndex;
-
-      saveState();
-
-      transitionToScene(
-        () => renderScene(),
-        chapter !==
-          safeNumber(
-            oldScene?.chapter,
-            chapter
-          )
-      );
-
-      return true;
-    },
-
-
-    next() {
-      return this.goTo(
-        state.game.chapter,
-        state.game.sceneIndex + 1
-      );
-    },
-
-
-    pause() {
-      if (!state.game.active) return;
-
-      state.game.paused = true;
-
-      saveState();
-
-      emit("paused");
-    },
-
-
-    resume() {
-      if (!state.game.active) return;
-
-      state.game.paused = false;
-
-      emit("resumed");
-
-      renderScene();
-    },
-
-
-    finishChapter() {
-      const chapter =
-        state.game.chapter;
-
-      if (
-        !state.completedChapters.includes(
-          chapter
-        )
-      ) {
-        state.completedChapters.push(
-          chapter
-        );
-      }
-
-      const reward =
-        100 + chapter * 50;
-
-      addCoins(reward);
-      addXP(100 + chapter * 25);
-
-      state.statistics.endings++;
-
-      const nextChapter =
-        chapter + 1;
-
-      const exists =
-        !!getChapter(nextChapter);
-
-      if (
-        exists &&
-        !state.unlockedChapters.includes(
-          nextChapter
-        )
-      ) {
-        state.unlockedChapters.push(
-          nextChapter
-        );
-      }
-
-      state.game.active = false;
-      state.game.paused = false;
-
-      saveState();
-
-      checkAchievements();
-
-      renderEndScreen(
-        chapter,
-        reward,
-        exists
-      );
-
-      emit("chapterFinished", {
-        chapter,
-        nextChapter:
-          exists
-            ? nextChapter
-            : null
-      });
-    }
-  };
-
-
-  /* =======================================================
-     DAMAGE / HEALTH
-     ======================================================= */
-
-  function damage(amount) {
-    amount =
-      Math.max(
-        0,
-        safeNumber(amount)
-      );
-
-    if (!amount) return;
-
-    state.game.health =
-      clamp(
-        state.game.health - amount,
-        0,
-        state.game.maxHealth
-      );
-
-    playEffect(
-      "danger",
-      {
-        duration: 700
-      }
-    );
-
-    AudioEngine.danger();
-
-    if (
-      state.game.health <= 0
-    ) {
-      state.game.totalDeaths++;
-
-      notify(
-        "الظلام يقترب...",
-        "icon-heart"
-      );
-
-      state.game.health =
-        Math.max(
-          1,
-          Math.floor(
-            state.game.maxHealth * 0.25
-          )
-        );
-    }
-
-    saveState();
-  }
-
-
-  /* =======================================================
-     REWARDS
-     ======================================================= */
-
-  function applyReward(reward) {
-    if (!reward) return;
-
-    if (typeof reward === "string") {
-      addItem(reward);
-      return;
-    }
-
-    if (reward.item) {
-      addItem(
-        typeof reward.item === "object"
-          ? reward.item
-          : {
-              id: reward.item,
-              name:
-                reward.itemName ||
-                reward.item,
-              icon:
-                reward.icon ||
-                "icon-item"
-            }
-      );
-    }
-
-    if (reward.coins) {
-      addCoins(
-        safeNumber(reward.coins)
-      );
-    }
-
-    if (reward.xp) {
-      addXP(
-        safeNumber(reward.xp)
-      );
-    }
-
-    if (reward.flag) {
-      setFlag(
-        reward.flag,
-        reward.value ?? true
-      );
-    }
-
-    if (reward.journal) {
-      addJournal(
-        reward.journal
-      );
-    }
-  }
-
-
-  function applyChoiceEffects(choice) {
-    if (!choice) return;
-
-    playStoryEffects(
-      null,
-      {
-        effects:
-          choice.effects
-      }
-    );
-
-    if (choice.flag) {
-      setFlag(
-        choice.flag,
-        choice.value ?? true
-      );
-    }
-
-    if (choice.setFlag) {
-      if (
-        typeof choice.setFlag === "object"
-      ) {
-        Object.keys(
-          choice.setFlag
-        ).forEach(key => {
-          setFlag(
-            key,
-            choice.setFlag[key]
-          );
-        });
-      }
-    }
-
-    if (choice.item) {
-      addItem(
-        choice.item
-      );
-    }
-
-    if (choice.journal) {
-      addJournal(
-        choice.journal
-      );
-    }
-  }
-
-
-  /* =======================================================
-     UI HELPERS
-     ======================================================= */
-
-  function showScreen(id) {
-    document
-      .querySelectorAll(
-        ".screen"
-      )
-      .forEach(screen => {
-        screen.classList.remove(
-          "active"
-        );
-      });
-
-    const screen =
-      $(id);
-
-    if (screen) {
-      screen.classList.add(
-        "active"
-      );
-    }
-  }
-
-
-  function setText(id, value) {
-    const el = $(id);
-
-    if (el) {
-      el.textContent =
-        value ?? "";
-    }
-  }
-
-
-  function setHTML(id, value) {
-    const el = $(id);
-
-    if (el) {
-      el.innerHTML =
-        value ?? "";
-    }
-  }
-
-
-  /* =======================================================
-     SCENE RENDER
-     ======================================================= */
-
-  function renderScene() {
-    const scene =
-      Game.current();
-
-    if (!scene) {
-      Game.finishChapter();
-      return;
-    }
-
-    const chapter =
-      getChapter(
-        state.game.chapter
-      );
-
-    renderHUD(chapter, scene);
-
-    renderSceneVisual(scene);
-
-    renderStory(scene);
-
-    renderChoices(scene);
-
-    updateBottomUI();
-
-    playStoryEffects(scene);
-
-    checkAchievements();
-
-    saveState();
-  }
-
-
-  function renderHUD(chapter, scene) {
-    setText(
-      "chapterLabel",
-      chapter?.label ||
-      `الفصل ${state.game.chapter}`
-    );
-
-    setText(
-      "chapterTitleTop",
-      chapter?.title ||
-      `الفصل ${state.game.chapter}`
-    );
-
-    const total =
-      Math.max(
-        1,
-        getScenes(chapter).length
-      );
-
-    const progress =
-      clamp(
-        ((state.game.sceneIndex + 1) /
-          total) * 100,
-        0,
-        100
-      );
-
-    const bar =
-      $("progressBar");
-
-    if (bar) {
-      bar.style.width =
-        `${progress}%`;
-    }
-
-    setText(
-      "progressText",
-      `${Math.round(progress)}%`
-    );
-
-    setText(
-      "health",
-      formatNumber(
-        state.game.health
-      )
-    );
-
-    setText(
-      "coins",
-      formatNumber(
-        state.player.coins
-      )
-    );
-
-    setText(
-      "chapter",
-      formatNumber(
-        state.game.chapter
-      )
-    );
-  }
-
-
-  function renderSceneVisual(scene) {
-    const image =
-      $("sceneImage");
-
-    if (image) {
-      if (scene.image) {
-        image.src =
-          scene.image;
-
-        image.style.display =
-          "block";
-      } else {
-        image.removeAttribute(
-          "src"
-        );
-
-        image.style.display =
-          "none";
-      }
-    }
-
-    setText(
-      "sceneWeather",
-      scene.weather
-    );
-
-    setText(
-      "sceneTime",
-      scene.time
-    );
-
-    const location =
-      $("sceneLocation");
-
-    if (location) {
-      location.textContent =
-        scene.location;
-    }
-  }
-
-
-  function renderStory(scene) {
-    setText(
-      "sceneChapterTag",
-      scene.chapterTag ||
-      `الفصل ${state.game.chapter}`
-    );
-
-    setText(
-      "sceneTitle",
-      scene.title
-    );
-
-    const story =
-      $("storyText");
-
-    if (!story) return;
-
-    story.innerHTML = "";
-
-    typeText(
-      story,
-      scene.text
-    );
-  }
-
-
-  let typingToken = 0;
-
-  async function typeText(
-    element,
-    text
-  ) {
-    const token =
-      ++typingToken;
-
-    text =
-      String(text || "");
-
-    element.textContent = "";
-
-    for (
-      let i = 0;
-      i < text.length;
-      i++
-    ) {
-      if (token !== typingToken) {
-        return;
-      }
-
-      element.textContent +=
-        text[i];
-
-      if (
-        text[i] !== " " &&
-        i % 3 === 0
-      ) {
-        await wait(10);
-      }
-    }
-  }
-
-
-  /* =======================================================
-     CHOICE RENDER
-     ======================================================= */
-
-  function renderChoices(scene) {
-    const area =
-      $("choices");
-
-    if (!area) return;
-
-    area.innerHTML = "";
-
-    const choices =
-      scene.choices.length
-        ? scene.choices
-        : [
-            {
-              id: "continue",
-              text: "متابعة",
-              next:
-                state.game.sceneIndex + 1
-            }
-          ];
-
-    choices
-      .map(normalizeChoice)
-      .forEach((choice, index) => {
-        const button =
-          document.createElement(
-            "button"
-          );
-
-        button.type = "button";
-
-        button.className =
-          "choice-button";
-
-        button.dataset.choice =
-          choice.id;
-
-        button.dataset.index =
-          index;
-
-        const locked =
-          !conditionMet(
-            choice.condition
-          ) ||
-          (
-            choice.requires &&
-            !hasItem(
-              choice.requires
+    const escapeHTML = value =>
+        String(value ?? "")
+            .replace(
+                /&/g,
+                "&amp;"
             )
-          );
+            .replace(
+                /</g,
+                "&lt;"
+            )
+            .replace(
+                />/g,
+                "&gt;"
+            )
+            .replace(
+                /"/g,
+                "&quot;"
+            )
+            .replace(
+                /'/g,
+                "&#039;"
+            );
 
-        if (locked) {
-          button.classList.add(
-            "locked"
-          );
+    const formatNumber = value =>
+        safeNumber(
+            value
+        ).toLocaleString(
+            "ar-DZ"
+        );
+
+    /* =====================================================
+       02 — STORAGE
+       ===================================================== */
+
+    const STORAGE_KEY =
+        "shadows_of_unknown_ultra_v8";
+
+    const defaultState = {
+
+        player: {
+            name: "وليد",
+            level: 1,
+            xp: 0,
+            coins: 100
+        },
+
+        health: 100,
+
+        chapter: 1,
+
+        scene: null,
+
+        started: false,
+
+        paused: false,
+
+        sound: true,
+
+        music: true,
+
+        motion: true,
+
+        inventory: [],
+
+        achievements: [],
+
+        journal: [],
+
+        history: [],
+
+        unlockedChapters: [1],
+
+        completedChapters: [],
+
+        flags: {},
+
+        daily: {
+            date: "",
+            completed: false,
+            reward: 0
+        },
+
+        statistics: {
+            choices: 0,
+            correctChoices: 0,
+            wrongChoices: 0,
+            scenes: 0,
+            chapters: 0,
+            items: 0,
+            achievements: 0,
+            deaths: 0,
+            endings: 0
+        }
+    };
+
+    function clone(value) {
+
+        return JSON.parse(
+            JSON.stringify(value)
+        );
+
+    }
+
+    function loadState() {
+
+        try {
+
+            const raw =
+                localStorage.getItem(
+                    STORAGE_KEY
+                );
+
+            if (!raw) {
+
+                return clone(
+                    defaultState
+                );
+
+            }
+
+            const saved =
+                JSON.parse(raw);
+
+            return mergeState(
+                clone(defaultState),
+                saved
+            );
+
+        } catch (error) {
+
+            console.warn(
+                "[SHADOWS] Save load failed:",
+                error
+            );
+
+            return clone(
+                defaultState
+            );
+
         }
 
-        const number =
-          document.createElement(
-            "span"
-          );
+    }
 
-        number.className =
-          "choice-number";
-
-        number.textContent =
-          String(index + 1);
-
-        const text =
-          document.createElement(
-            "span"
-          );
-
-        text.className =
-          "choice-text";
-
-        text.textContent =
-          choice.text;
-
-        button.append(
-          number,
-          text
-        );
+    function mergeState(
+        base,
+        saved
+    ) {
 
         if (
-          choice.requires &&
-          !hasItem(
-            choice.requires
-          )
+            !saved ||
+            typeof saved !==
+            "object"
         ) {
-          const lock =
-            document.createElement(
-              "span"
-            );
-
-          lock.className =
-            "choice-lock";
-
-          lock.textContent =
-            "مغلق";
-
-          button.append(lock);
+            return base;
         }
 
-        area.appendChild(
-          button
-        );
-      });
-  }
+        Object.keys(saved)
+            .forEach(key => {
 
+                if (
+                    saved[key] &&
+                    typeof saved[key] ===
+                    "object" &&
+                    !Array.isArray(
+                        saved[key]
+                    ) &&
+                    base[key] &&
+                    typeof base[key] ===
+                    "object"
+                ) {
 
-  /* =======================================================
-     SCENE TRANSITION
-     ======================================================= */
+                    base[key] =
+                        mergeState(
+                            base[key],
+                            saved[key]
+                        );
 
-  function transitionToScene(
-    callback,
-    chapterChange = false
-  ) {
-    const transition =
-      $("sceneTransition");
+                } else {
 
-    if (!transition) {
-      callback();
-      return;
+                    base[key] =
+                        saved[key];
+
+                }
+
+            });
+
+        return base;
     }
 
-    transition.classList.add(
-      "active"
-    );
+    let state =
+        loadState();
 
-    if (chapterChange) {
-      const chapter =
-        getChapter(
-          state.game.chapter
-        );
+    function saveState() {
 
-      setText(
-        "transitionChapter",
-        chapter?.label ||
-        `الفصل ${state.game.chapter}`
-      );
+        try {
 
-      setText(
-        "transitionTitle",
-        chapter?.title ||
-        "ظلال المجهول"
-      );
-    }
-
-    setTimeout(() => {
-      callback();
-
-      setTimeout(() => {
-        transition.classList.remove(
-          "active"
-        );
-      }, 450);
-    }, 450);
-  }
-
-
-  /* =======================================================
-     END SCREEN
-     ======================================================= */
-
-  function renderEndScreen(
-    chapter,
-    reward,
-    hasNext
-  ) {
-    showScreen(
-      "endScreen"
-    );
-
-    setText(
-      "finalChapter",
-      formatNumber(chapter)
-    );
-
-    setText(
-      "finalCoins",
-      formatNumber(reward)
-    );
-
-    setText(
-      "finalAchievements",
-      formatNumber(
-        state.achievements.length
-      )
-    );
-
-    setText(
-      "endTitle",
-      hasNext
-        ? "انتهى الفصل..."
-        : "نهاية الرحلة"
-    );
-
-    setText(
-      "endText",
-      hasNext
-        ? "لكن الحقيقة لم تظهر كاملة بعد."
-        : "لقد وصلت إلى نهاية هذا الجزء من القصة."
-    );
-
-    const icon =
-      $("endIcon");
-
-    if (icon) {
-      icon.className =
-        hasNext
-          ? "end-icon icon-spark"
-          : "end-icon icon-trophy";
-    }
-
-    playEffect(
-      hasNext
-        ? "light"
-        : "supernatural",
-      {
-        duration: 1200
-      }
-    );
-  }
-
-
-  /* =======================================================
-     INVENTORY UI
-     ======================================================= */
-
-  function renderInventory() {
-    const content =
-      $("inventoryContent");
-
-    if (!content) return;
-
-    if (!state.inventory.length) {
-      content.innerHTML = `
-        <div class="empty-state">
-          <span class="icon-bag"></span>
-          <p>الحقيبة فارغة</p>
-        </div>
-      `;
-
-      return;
-    }
-
-    content.innerHTML =
-      state.inventory
-        .map(item => {
-          const id =
-            typeof item === "string"
-              ? item
-              : item.id;
-
-          const name =
-            typeof item === "string"
-              ? item
-              : item.name || id;
-
-          const icon =
-            typeof item === "string"
-              ? "icon-item"
-              : item.icon || "icon-item";
-
-          const description =
-            typeof item === "string"
-              ? ""
-              : item.description || "";
-
-          return `
-            <div class="inventory-item">
-              <span class="inventory-item-icon ${escapeHTML(icon)}"></span>
-              <div class="inventory-item-info">
-                <strong>${escapeHTML(name)}</strong>
-                <small>${escapeHTML(description)}</small>
-              </div>
-            </div>
-          `;
-        })
-        .join("");
-  }
-
-
-  /* =======================================================
-     ACHIEVEMENTS UI
-     ======================================================= */
-
-  function renderAchievements() {
-    setText(
-      "achievementUnlocked",
-      state.achievements.length
-    );
-
-    setText(
-      "achievementTotal",
-      ACHIEVEMENTS.length
-    );
-
-    const content =
-      $("achievementsContent");
-
-    if (!content) return;
-
-    content.innerHTML =
-      ACHIEVEMENTS
-        .map(achievement => {
-          const unlocked =
-            state.achievements.includes(
-              achievement.id
+            localStorage.setItem(
+                STORAGE_KEY,
+                JSON.stringify(state)
             );
 
-          return `
-            <div class="achievement-item ${unlocked ? "unlocked" : "locked"}">
-              <span class="achievement-icon ${escapeHTML(achievement.icon)}"></span>
+        } catch (error) {
 
-              <div class="achievement-info">
-                <strong>
-                  ${escapeHTML(achievement.title)}
-                </strong>
+            console.warn(
+                "[SHADOWS] Save failed:",
+                error
+            );
 
-                <small>
-                  ${escapeHTML(achievement.description)}
-                </small>
-              </div>
-            </div>
-          `;
-        })
-        .join("");
-  }
+        }
 
-
-  /* =======================================================
-     JOURNAL UI
-     ======================================================= */
-
-  function renderJournal() {
-    const content =
-      $("journalContent");
-
-    if (!content) return;
-
-    if (!state.journal.length) {
-      content.innerHTML = `
-        <div class="empty-state">
-          <span class="icon-journal"></span>
-          <p>دفترك مازال فارغاً.</p>
-        </div>
-      `;
-
-      return;
     }
 
-    content.innerHTML =
-      [...state.journal]
-        .reverse()
-        .map(entry => `
-          <article class="journal-entry">
-            <h3>
-              ${escapeHTML(
-                entry.title ||
-                "ملاحظة"
-              )}
-            </h3>
+    function resetState() {
 
-            <p>
-              ${escapeHTML(
-                entry.text ||
-                ""
-              )}
-            </p>
-          </article>
-        `)
-        .join("");
-  }
+        state =
+            clone(defaultState);
 
+        saveState();
 
-  /* =======================================================
-     UI STATE
-     ======================================================= */
+        return state;
 
-  function updateBottomUI() {
-    setText(
-      "inventoryCount",
-      state.inventory.length
-    );
-
-    setText(
-      "achievementCount",
-      state.achievements.length
-    );
-
-    setText(
-      "inventoryCount",
-      state.inventory.length
-    );
-  }
-
-
-  function updateSettingsUI() {
-    const sound =
-      $("sfxToggle");
-
-    const music =
-      $("musicToggle");
-
-    const motion =
-      $("motionToggle");
-
-    if (sound) {
-      sound.checked =
-        !!state.settings.sound;
     }
 
-    if (music) {
-      music.checked =
-        !!state.settings.music;
+    /* =====================================================
+       03 — DATA BRIDGE
+       ===================================================== */
+
+    function getGameData() {
+
+        if (
+            typeof window.GAME_DATA !==
+            "undefined"
+        ) {
+
+            return window.GAME_DATA;
+
+        }
+
+        return {};
+
     }
 
-    if (motion) {
-      motion.checked =
-        !!state.settings.motion;
+    function getChapters() {
+
+        const data =
+            getGameData();
+
+        if (
+            Array.isArray(
+                data.chapters
+            )
+        ) {
+
+            return data.chapters;
+
+        }
+
+        if (
+            Array.isArray(
+                data.CHAPTERS
+            )
+        ) {
+
+            return data.CHAPTERS;
+
+        }
+
+        return [];
+
     }
-  }
 
-
-  /* =======================================================
-     CONTINUE BUTTON
-     ======================================================= */
-
-  function updateContinueButton() {
-    const btn =
-      $("continueBtn");
-
-    if (!btn) return;
-
-    if (
-      state.game.active
+    function getChapter(
+        chapterNumber
     ) {
-      btn.style.display =
-        "flex";
-    } else {
-      btn.style.display =
-        "none";
+
+        const chapters =
+            getChapters();
+
+        const number =
+            safeNumber(
+                chapterNumber,
+                1
+            );
+
+        return chapters.find(
+            chapter =>
+                safeNumber(
+                    chapter.id ??
+                    chapter.chapter ??
+                    chapter.number,
+                    0
+                ) === number
+        ) || null;
+
     }
-  }
 
+    function getScenes(
+        chapter
+    ) {
 
-  /* =======================================================
-     MODALS
-     ======================================================= */
+        if (!chapter) {
+            return [];
+        }
 
-  function openOverlay(id) {
-    const overlay =
-      $(id);
+        if (
+            Array.isArray(
+                chapter.scenes
+            )
+        ) {
 
-    if (!overlay) return;
+            return chapter.scenes;
 
-    overlay.classList.add(
-      "active"
-    );
-  }
+        }
 
+        if (
+            Array.isArray(
+                chapter.scene
+            )
+        ) {
 
-  function closeOverlay(id) {
-    const overlay =
-      $(id);
+            return chapter.scene;
 
-    if (!overlay) return;
+        }
 
-    overlay.classList.remove(
-      "active"
-    );
-  }
+        return [];
 
+    }
 
-  function closeAllOverlays() {
-    document
-      .querySelectorAll(
-        ".overlay.active"
-      )
-      .forEach(el =>
-        el.classList.remove(
-          "active"
-        )
-      );
-  }
+    function getScene(
+        chapterNumber,
+        sceneId
+    ) {
 
+        const chapter =
+            getChapter(
+                chapterNumber
+            );
 
-  /* =======================================================
-     CINEMATIC EVENTS
-     ======================================================= */
+        if (!chapter) {
+            return null;
+        }
 
-  function cinematic(
-    title,
-    text,
-    label = "ظلال المجهول"
-  ) {
-    const overlay =
-      $("cinematicOverlay");
+        const scenes =
+            getScenes(chapter);
 
-    if (!overlay) return;
+        return scenes.find(
+            scene =>
+                String(
+                    scene.id ??
+                    scene.scene ??
+                    scene.key
+                ) ===
+                String(sceneId)
+        ) || null;
 
-    setText(
-      "cinematicLabel",
-      label
-    );
+    }
 
-    setText(
-      "cinematicTitle",
-      title
-    );
+    function firstScene(
+        chapterNumber
+    ) {
 
-    setText(
-      "cinematicText",
-      text
-    );
+        const chapter =
+            getChapter(
+                chapterNumber
+            );
 
-    overlay.classList.add(
-      "active"
-    );
+        const scenes =
+            getScenes(chapter);
 
-    playEffect(
-      "fade",
-      {
-        duration: 700
-      }
-    );
-  }
+        return scenes[0] || null;
+    }
 
+    /* =====================================================
+       04 — EVENTS
+       ===================================================== */
 
-  /* =======================================================
-     INPUT HELPERS
-     ======================================================= */
+    const listeners = {};
 
-  function findChoiceFromButton(button) {
-    const scene =
-      Game.current();
+    function on(
+        event,
+        callback
+    ) {
 
-    if (!scene) return null;
+        if (
+            typeof callback !==
+            "function"
+        ) {
+            return () => {};
+        }
 
-    const choices =
-      scene.choices.length
-        ? scene.choices
-        : [
-            {
-              id: "continue",
-              text: "متابعة",
-              next:
-                state.game.sceneIndex + 1
+        if (
+            !listeners[event]
+        ) {
+
+            listeners[event] =
+                [];
+
+        }
+
+        listeners[event]
+            .push(callback);
+
+        return () => {
+
+            listeners[event] =
+                listeners[event]
+                    .filter(
+                        fn =>
+                            fn !==
+                            callback
+                    );
+
+        };
+
+    }
+
+    function emit(
+        event,
+        data
+    ) {
+
+        (
+            listeners[event] ||
+            []
+        ).forEach(
+            callback => {
+
+                try {
+
+                    callback(data);
+
+                } catch (error) {
+
+                    console.warn(
+                        "[SHADOWS EVENT]",
+                        error
+                    );
+
+                }
+
             }
-          ];
+        );
 
-    const index =
-      safeNumber(
-        button.dataset.index,
-        0
-      );
-
-    return normalizeChoice(
-      choices[index],
-      index
-    );
-  }
-
-
-  /* =======================================================
-     INITIAL UI REFRESH
-     ======================================================= */
-
-  function refreshUI() {
-    updateContinueButton();
-    updateSettingsUI();
-    updateBottomUI();
-
-    if (
-      state.game.active
-    ) {
-      renderScene();
     }
-  }
 
+    /* =====================================================
+       05 — AUDIO
+       ===================================================== */
 
-  /* =======================================================
-     PUBLIC API
-     ======================================================= */
+    const AudioEngine = {
 
-  window.SHADOWS = {
-    state,
+        context: null,
 
-    getState() {
-      return state;
-    },
+        ensure() {
 
-    save: saveState,
+            if (
+                this.context
+            ) {
+                return this.context;
+            }
 
-    reset: resetState,
+            try {
 
-    on,
+                const AudioContext =
+                    window.AudioContext ||
+                    window.webkitAudioContext;
 
-    emit,
+                if (
+                    !AudioContext
+                ) {
+                    return null;
+                }
 
-    Game,
+                this.context =
+                    new AudioContext();
 
-    Audio: AudioEngine,
+            } catch {
 
-    Effects: window.Effects || null,
+                return null;
 
-    addXP,
+            }
 
-    addCoins,
+            return this.context;
+        },
 
-    spendCoins,
+        tone(
+            frequency = 440,
+            duration = .08,
+            type = "sine",
+            volume = .035
+        ) {
 
-    addItem,
+            if (
+                !state.sound
+            ) {
+                return;
+            }
 
-    removeItem,
+            const ctx =
+                this.ensure();
 
-    hasItem,
+            if (!ctx) {
+                return;
+            }
 
-    addJournal,
+            try {
 
-    setFlag,
+                if (
+                    ctx.state ===
+                    "suspended"
+                ) {
 
-    getFlag,
+                    ctx.resume();
 
-    notify,
+                }
 
-    cinematic,
+                const oscillator =
+                    ctx.createOscillator();
 
-    checkAchievements,
+                const gain =
+                    ctx.createGain();
 
-    renderScene,
+                oscillator.type =
+                    type;
 
-    renderInventory,
+                oscillator.frequency.value =
+                    frequency;
 
-    renderAchievements,
+                gain.gain.setValueAtTime(
+                    0,
+                    ctx.currentTime
+                );
 
-    renderJournal
-  };
+                gain.gain.linearRampToValueAtTime(
+                    volume,
+                    ctx.currentTime +
+                    .01
+                );
 
+                gain.gain.exponentialRampToValueAtTime(
+                    .001,
+                    ctx.currentTime +
+                    duration
+                );
 
-  /* =======================================================
-     DOM EVENTS
-     ======================================================= */
+                oscillator.connect(
+                    gain
+                );
 
-  function bindEvents() {
+                gain.connect(
+                    ctx.destination
+                );
 
-    $("continueBtn")?.addEventListener(
-      "click",
-      () => {
-        AudioEngine.click();
-        Game.continueGame();
-      }
-    );
+                oscillator.start();
 
+                oscillator.stop(
+                    ctx.currentTime +
+                    duration
+                );
 
-    $("newGameBtn")?.addEventListener(
-      "click",
-      () => {
-        AudioEngine.click();
-        Game.newGame();
-      }
-    );
+            } catch {}
 
+        },
 
-    $("howToPlayBtn")?.addEventListener(
-      "click",
-      () => {
-        AudioEngine.click();
-        openOverlay(
-          "howToPlayOverlay"
-        );
-      }
-    );
+        click() {
 
+            this.tone(
+                440,
+                .055,
+                "sine",
+                .025
+            );
 
-    $("closeHowToPlayBtn")?.addEventListener(
-      "click",
-      () => {
-        closeOverlay(
-          "howToPlayOverlay"
-        );
-      }
-    );
-
-
-    $("tutorialOkBtn")?.addEventListener(
-      "click",
-      () => {
-        closeOverlay(
-          "howToPlayOverlay"
-        );
-      }
-    );
-
-
-    $("menuBtn")?.addEventListener(
-      "click",
-      () => {
-        AudioEngine.click();
-
-        Game.pause();
-
-        openOverlay(
-          "menuOverlay"
-        );
-      }
-    );
-
-
-    $("closeMenuBtn")?.addEventListener(
-      "click",
-      () => {
-        closeOverlay(
-          "menuOverlay"
-        );
-
-        Game.resume();
-      }
-    );
-
-
-    $("inventoryBtn")?.addEventListener(
-      "click",
-      () => {
-        AudioEngine.click();
-        renderInventory();
-        openOverlay(
-          "inventoryOverlay"
-        );
-      }
-    );
-
-
-    $("closeInventoryBtn")?.addEventListener(
-      "click",
-      () => {
-        closeOverlay(
-          "inventoryOverlay"
-        );
-      }
-    );
-
-
-    $("achievementsBtn")?.addEventListener(
-      "click",
-      () => {
-        AudioEngine.click();
-        renderAchievements();
-        openOverlay(
-          "achievementsOverlay"
-        );
-      }
-    );
-
-
-    $("closeAchievementsBtn")?.addEventListener(
-      "click",
-      () => {
-        closeOverlay(
-          "achievementsOverlay"
-        );
-      }
-    );
-
-
-    $("journalBtn")?.addEventListener(
-      "click",
-      () => {
-        AudioEngine.click();
-        renderJournal();
-        openOverlay(
-          "journalOverlay"
-        );
-      }
-    );
-
-
-    $("closeJournalBtn")?.addEventListener(
-      "click",
-      () => {
-        closeOverlay(
-          "journalOverlay"
-        );
-      }
-    );
-
-
-    $("menuInventoryBtn")?.addEventListener(
-      "click",
-      () => {
-        closeOverlay(
-          "menuOverlay"
-        );
-
-        renderInventory();
-
-        openOverlay(
-          "inventoryOverlay"
-        );
-      }
-    );
-
-
-    $("menuAchievementsBtn")?.addEventListener(
-      "click",
-      () => {
-        closeOverlay(
-          "menuOverlay"
-        );
-
-        renderAchievements();
-
-        openOverlay(
-          "achievementsOverlay"
-        );
-      }
-    );
-
-
-    $("menuJournalBtn")?.addEventListener(
-      "click",
-      () => {
-        closeOverlay(
-          "menuOverlay"
-        );
-
-        renderJournal();
-
-        openOverlay(
-          "journalOverlay"
-        );
-      }
-    );
-
-
-    $("menuSettingsBtn")?.addEventListener(
-      "click",
-      () => {
-        closeOverlay(
-          "menuOverlay"
-        );
-
-        updateSettingsUI();
-
-        openOverlay(
-          "settingsOverlay"
-        );
-      }
-    );
-
-
-    $("closeSettingsBtn")?.addEventListener(
-      "click",
-      () => {
-        closeOverlay(
-          "settingsOverlay"
-        );
-      }
-    );
-
-
-    $("settingsDoneBtn")?.addEventListener(
-      "click",
-      () => {
-        closeOverlay(
-          "settingsOverlay"
-        );
-
-        saveState();
-      }
-    );
-
-
-    $("saveGameBtn")?.addEventListener(
-      "click",
-      () => {
-        saveState();
-
-        notify(
-          "تم حفظ تقدمك",
-          "icon-spark"
-        );
-
-        closeOverlay(
-          "menuOverlay"
-        );
-
-        Game.resume();
-      }
-    );
-
-
-    $("exitToTitleBtn")?.addEventListener(
-      "click",
-      () => {
-        saveState();
-
-        closeAllOverlays();
-
-        state.game.paused = false;
-
-        showScreen(
-          "startScreen"
-        );
-
-        updateContinueButton();
-      }
-    );
-
-
-    $("restartFromEnd")?.addEventListener(
-      "click",
-      () => {
-        AudioEngine.click();
-
-        Game.newGame();
-      }
-    );
-
-
-    $("endToTitleBtn")?.addEventListener(
-      "click",
-      () => {
-        showScreen(
-          "startScreen"
-        );
-
-        updateContinueButton();
-      }
-    );
-
-
-    $("soundBtn")?.addEventListener(
-      "click",
-      () => {
-        state.settings.sound =
-          !state.settings.sound;
-
-        saveState();
-
-        updateSettingsUI();
-
-        const icon =
-          $("soundIcon");
-
-        if (icon) {
-          icon.className =
-            state.settings.sound
-              ? "icon-volume"
-              : "icon-volume-off";
+        },
+
+        choice() {
+
+            this.tone(
+                520,
+                .08,
+                "triangle",
+                .035
+            );
+
+        },
+
+        correct() {
+
+            this.tone(
+                740,
+                .12,
+                "sine",
+                .04
+            );
+
+        },
+
+        danger() {
+
+            this.tone(
+                100,
+                .18,
+                "sawtooth",
+                .035
+            );
+
+        },
+
+        success() {
+
+            this.tone(
+                880,
+                .18,
+                "sine",
+                .045
+            );
+
         }
 
-        if (state.settings.sound) {
-          AudioEngine.click();
+    };
+
+    function unlockAudio() {
+
+        AudioEngine.ensure();
+
+    }
+
+    /* =====================================================
+       06 — EFFECTS BRIDGE
+       ===================================================== */
+
+    function playEffect(
+        type,
+        options = {}
+    ) {
+
+        try {
+
+            if (
+                window.Effects &&
+                typeof window.Effects.play ===
+                "function"
+            ) {
+
+                return window.Effects.play(
+                    type,
+                    options
+                );
+
+            }
+
+        } catch (error) {
+
+            console.warn(
+                "[SHADOWS EFFECT]",
+                error
+            );
+
         }
-      }
-    );
 
+        return null;
+    }
 
-    $("sfxToggle")?.addEventListener(
-      "change",
-      event => {
-        state.settings.sound =
-          !!event.target.checked;
+    function storyEffects(
+        scene,
+        extra = {}
+    ) {
 
-        saveState();
-      }
-    );
+        if (!scene) {
+            return;
+        }
 
+        const effects =
+            scene.effects ??
+            scene.effect ??
+            scene.visualEffects;
 
-    $("musicToggle")?.addEventListener(
-      "change",
-      event => {
-        state.settings.music =
-          !!event.target.checked;
+        if (
+            Array.isArray(
+                effects
+            )
+        ) {
+
+            effects.forEach(
+                effect => {
+
+                    if (
+                        typeof effect ===
+                        "string"
+                    ) {
+
+                        playEffect(
+                            effect,
+                            extra
+                        );
+
+                    } else if (
+                        effect &&
+                        typeof effect ===
+                        "object"
+                    ) {
+
+                        playEffect(
+                            effect.type ||
+                            effect.name ||
+                            "fade",
+
+                            {
+                                ...extra,
+                                ...effect
+                            }
+                        );
+
+                    }
+
+                }
+            );
+
+        } else if (
+            typeof effects ===
+            "string"
+        ) {
+
+            playEffect(
+                effects,
+                extra
+            );
+
+        }
+
+        if (
+            window.Effects &&
+            typeof window.Effects.storyEvent ===
+            "function"
+        ) {
+
+            try {
+
+                window.Effects.storyEvent(
+                    scene.event ||
+                    scene.specialEvent,
+                    extra
+                );
+
+            } catch {}
+
+        }
+
+    }
+
+    /* =====================================================
+       07 — NOTIFICATIONS
+       ===================================================== */
+
+    function notify(
+        message,
+        icon = "✦"
+    ) {
+
+        const element =
+            $("notification");
+
+        if (!element) {
+            return;
+        }
+
+        const iconElement =
+            $("notificationIcon");
+
+        const textElement =
+            $("notificationText");
+
+        if (iconElement) {
+
+            iconElement.textContent =
+                icon;
+
+        }
+
+        if (textElement) {
+
+            textElement.textContent =
+                message;
+
+        }
+
+        element.classList.remove(
+            "show",
+            "active"
+        );
+
+        void element.offsetWidth;
+
+        element.classList.add(
+            "show",
+            "active"
+        );
+
+        setTimeout(() => {
+
+            element.classList.remove(
+                "show",
+                "active"
+            );
+
+        }, 2600);
+
+    }
+
+    function toastItem(
+        name,
+        icon = "✦"
+    ) {
+
+        const toast =
+            $("itemToast");
+
+        if (!toast) {
+            return;
+        }
+
+        const iconElement =
+            $("itemToastIcon");
+
+        const nameElement =
+            $("itemToastName");
+
+        if (iconElement) {
+
+            iconElement.textContent =
+                icon;
+
+        }
+
+        if (nameElement) {
+
+            nameElement.textContent =
+                name;
+
+        }
+
+        toast.classList.remove(
+            "show",
+            "active"
+        );
+
+        void toast.offsetWidth;
+
+        toast.classList.add(
+            "show",
+            "active"
+        );
+
+        setTimeout(() => {
+
+            toast.classList.remove(
+                "show",
+                "active"
+            );
+
+        }, 2600);
+
+    }
+
+    /* =====================================================
+       08 — XP / LEVEL
+       ===================================================== */
+
+    function xpRequired(
+        level = state.player.level
+    ) {
+
+        const current =
+            Math.max(
+                1,
+                safeNumber(
+                    level,
+                    1
+                )
+            );
+
+        return Math.floor(
+            100 +
+            (current - 1) *
+            65 +
+            Math.pow(
+                current,
+                1.35
+            ) *
+            12
+        );
+
+    }
+
+    function addXP(
+        amount
+    ) {
+
+        amount =
+            Math.max(
+                0,
+                safeNumber(
+                    amount,
+                    0
+                )
+            );
+
+        if (!amount) {
+            return;
+        }
+
+        state.player.xp +=
+            amount;
+
+        let leveledUp =
+            false;
+
+        while (
+            state.player.xp >=
+            xpRequired(
+                state.player.level
+            )
+        ) {
+
+            state.player.xp -=
+                xpRequired(
+                    state.player.level
+                );
+
+            state.player.level++;
+
+            leveledUp =
+                true;
+
+            notify(
+                `وصلت للمستوى ${state.player.level}`,
+                "⬆"
+            );
+
+            AudioEngine.success();
+
+        }
 
         saveState();
 
         emit(
-          "musicChanged",
-          {
-            enabled:
-              state.settings.music
-          }
+            "xp",
+            amount
         );
-      }
-    );
 
+        if (leveledUp) {
 
-    $("motionToggle")?.addEventListener(
-      "change",
-      event => {
-        state.settings.motion =
-          !!event.target.checked;
+            checkAchievements();
+
+        }
+
+    }
+
+    /* =====================================================
+       09 — COINS
+       ===================================================== */
+
+    function addCoins(
+        amount
+    ) {
+
+        amount =
+            safeNumber(
+                amount,
+                0
+            );
+
+        state.player.coins =
+            Math.max(
+                0,
+                state.player.coins +
+                amount
+            );
+
+        if (
+            amount > 0
+        ) {
+
+            notify(
+                `+${formatNumber(amount)} عملة`,
+                "🪙"
+            );
+
+        }
 
         saveState();
 
-        try {
-          window.Effects?.setMotion?.(
-            state.settings.motion
-          );
-        } catch {}
-      }
-    );
+    }
 
+    function spendCoins(
+        amount
+    ) {
 
-    $("cinematicContinueBtn")?.addEventListener(
-      "click",
-      () => {
-        closeOverlay(
-          "cinematicOverlay"
+        amount =
+            Math.max(
+                0,
+                safeNumber(
+                    amount,
+                    0
+                )
+            );
+
+        if (
+            state.player.coins <
+            amount
+        ) {
+
+            notify(
+                "ما عندكش عملات كافية",
+                "🪙"
+            );
+
+            return false;
+        }
+
+        state.player.coins -=
+            amount;
+
+        saveState();
+
+        return true;
+
+    }
+
+    /* =====================================================
+       10 — FLAGS
+       ===================================================== */
+
+    function setFlag(
+        key,
+        value = true
+    ) {
+
+        state.flags[
+            String(key)
+        ] = value;
+
+        saveState();
+
+        emit(
+            "flag",
+            {
+                key,
+                value
+            }
         );
-      }
-    );
 
+    }
 
-    $("skipTextBtn")?.addEventListener(
-      "click",
-      () => {
-        typingToken++;
+    function getFlag(
+        key,
+        fallback = false
+    ) {
+
+        return Object.prototype.hasOwnProperty
+            .call(
+                state.flags,
+                String(key)
+            )
+            ? state.flags[
+                String(key)
+            ]
+            : fallback;
+
+    }
+
+    /* =====================================================
+       11 — INVENTORY
+       ===================================================== */
+
+    function itemId(
+        item
+    ) {
+
+        if (
+            typeof item ===
+            "string"
+        ) {
+            return item;
+        }
+
+        return String(
+            item?.id ??
+            item?.key ??
+            item?.name ??
+            ""
+        );
+
+    }
+
+    function hasItem(
+        id
+    ) {
+
+        const target =
+            String(id);
+
+        return state.inventory
+            .some(
+                item =>
+                    itemId(item) ===
+                    target
+            );
+
+    }
+
+    function addItem(
+        item
+    ) {
+
+        if (!item) {
+            return false;
+        }
+
+        const id =
+            itemId(item);
+
+        if (!id) {
+            return false;
+        }
+
+        if (
+            hasItem(id)
+        ) {
+            return false;
+        }
+
+        state.inventory.push(
+            typeof item ===
+            "string"
+                ? {
+                    id: item,
+                    name: item,
+                    icon: "✦"
+                }
+                : clone(item)
+        );
+
+        state.statistics.items++;
+
+        saveState();
+
+        toastItem(
+            item.name ||
+            item,
+            item.icon ||
+            "✦"
+        );
+
+        checkAchievements();
+
+        return true;
+
+    }
+
+    function removeItem(
+        id
+    ) {
+
+        const target =
+            String(id);
+
+        const index =
+            state.inventory.findIndex(
+                item =>
+                    itemId(item) ===
+                    target
+            );
+
+        if (
+            index < 0
+        ) {
+
+            return false;
+
+        }
+
+        state.inventory.splice(
+            index,
+            1
+        );
+
+        saveState();
+
+        return true;
+
+    }
+
+    /* =====================================================
+       12 — JOURNAL
+       ===================================================== */
+
+    function addJournal(
+        entry
+    ) {
+
+        if (!entry) {
+            return;
+        }
+
+        const id =
+            typeof entry ===
+            "object"
+                ? entry.id ||
+                  entry.title ||
+                  entry.text
+                : entry;
+
+        if (
+            state.journal.some(
+                item =>
+                    String(
+                        item.id ||
+                        item.title ||
+                        item.text
+                    ) ===
+                    String(id)
+            )
+        ) {
+
+            return;
+
+        }
+
+        state.journal.push(
+            typeof entry ===
+            "string"
+                ? {
+                    id,
+                    title:
+                        "ملاحظة",
+                    text:
+                        entry
+                }
+                : clone(entry)
+        );
+
+        saveState();
+
+    }
+
+    /* =====================================================
+       13 — HISTORY
+       ===================================================== */
+
+    function addHistory(
+        scene,
+        choice
+    ) {
+
+        state.history.push({
+
+            chapter:
+                state.chapter,
+
+            scene:
+                scene?.id ??
+                state.scene,
+
+            choice:
+                choice?.id ??
+                choice?.text ??
+                null,
+
+            time:
+                Date.now()
+
+        });
+
+        if (
+            state.history.length >
+            100
+        ) {
+
+            state.history.shift();
+
+        }
+
+        saveState();
+
+    }
+
+    /* =====================================================
+       14 — ACHIEVEMENTS
+       ===================================================== */
+
+    const DEFAULT_ACHIEVEMENTS = [
+
+        {
+            id: "first_step",
+            title: "البداية",
+            description:
+                "ابدأ رحلتك الأولى",
+            icon: "🚪"
+        },
+
+        {
+            id: "first_choice",
+            title: "أول قرار",
+            description:
+                "اتخذ أول اختيار",
+            icon: "⚔"
+        },
+
+        {
+            id: "explorer",
+            title: "المستكشف",
+            description:
+                "شاهد 10 مشاهد",
+            icon: "🧭"
+        },
+
+        {
+            id: "survivor",
+            title: "الناجي",
+            description:
+                "واصل القصة رغم الخطر",
+            icon: "🛡"
+        },
+
+        {
+            id: "collector",
+            title: "جامع الأسرار",
+            description:
+                "اجمع 5 عناصر",
+            icon: "🎒"
+        },
+
+        {
+            id: "rich",
+            title: "الثري",
+            description:
+                "امتلك 500 عملة",
+            icon: "🪙"
+        },
+
+        {
+            id: "chapter_two",
+            title: "العبور",
+            description:
+                "افتح الفصل الثاني",
+            icon: "📖"
+        },
+
+        {
+            id: "master",
+            title: "سيد الظلال",
+            description:
+                "أكمل عدة فصول",
+            icon: "👑"
+        }
+
+    ];
+
+    function getAchievements() {
+
+        const data =
+            getGameData();
+
+        return (
+            Array.isArray(
+                data.achievements
+            )
+                ? data.achievements
+                : DEFAULT_ACHIEVEMENTS
+        );
+
+    }
+
+    function unlockAchievement(
+        id
+    ) {
+
+        id =
+            String(id);
+
+        if (
+            state.achievements.includes(
+                id
+            )
+        ) {
+
+            return false;
+
+        }
+
+        const achievement =
+            getAchievements().find(
+                item =>
+                    String(
+                        item.id
+                    ) === id
+            );
+
+        if (!achievement) {
+            return false;
+        }
+
+        state.achievements.push(
+            id
+        );
+
+        state.statistics.achievements =
+            state.achievements.length;
+
+        saveState();
+
+        const toast =
+            $("achievementToast");
+
+        if (toast) {
+
+            const icon =
+                $("achievementToastIcon");
+
+            const title =
+                $("achievementToastTitle");
+
+            if (icon) {
+
+                icon.textContent =
+                    achievement.icon ||
+                    "🏆";
+
+            }
+
+            if (title) {
+
+                title.textContent =
+                    achievement.title ||
+                    "إنجاز جديد";
+
+            }
+
+            toast.classList.remove(
+                "show",
+                "active"
+            );
+
+            void toast.offsetWidth;
+
+            toast.classList.add(
+                "show",
+                "active"
+            );
+
+            setTimeout(() => {
+
+                toast.classList.remove(
+                    "show",
+                    "active"
+                );
+
+            }, 3000);
+
+        }
+
+        AudioEngine.success();
+
+        return true;
+
+    }
+
+    function checkAchievements() {
+
+        if (
+            !state.started
+        ) {
+            return;
+        }
+
+        if (
+            state.statistics.scenes >=
+            1
+        ) {
+
+            unlockAchievement(
+                "first_step"
+            );
+
+        }
+
+        if (
+            state.statistics.choices >=
+            1
+        ) {
+
+            unlockAchievement(
+                "first_choice"
+            );
+
+        }
+
+        if (
+            state.statistics.scenes >=
+            10
+        ) {
+
+            unlockAchievement(
+                "explorer"
+            );
+
+        }
+
+        if (
+            state.statistics.deaths ===
+            0 &&
+            state.statistics.scenes >=
+            5
+        ) {
+
+            unlockAchievement(
+                "survivor"
+            );
+
+        }
+
+        if (
+            state.inventory.length >=
+            5
+        ) {
+
+            unlockAchievement(
+                "collector"
+            );
+
+        }
+
+        if (
+            state.player.coins >=
+            500
+        ) {
+
+            unlockAchievement(
+                "rich"
+            );
+
+        }
+
+        if (
+            state.unlockedChapters
+                .includes(2)
+        ) {
+
+            unlockAchievement(
+                "chapter_two"
+            );
+
+        }
+
+        if (
+            state.completedChapters
+                .length >= 5
+        ) {
+
+            unlockAchievement(
+                "master"
+            );
+
+        }
+
+    }
+
+    /* =====================================================
+       15 — NORMALIZATION
+       ===================================================== */
+
+    function normalizeScene(
+        scene
+    ) {
+
+        if (!scene) {
+            return null;
+        }
+
+        return {
+
+            ...scene,
+
+            id:
+                scene.id ??
+                scene.scene ??
+                scene.key,
+
+            title:
+                scene.title ??
+                scene.name ??
+                "مجهول",
+
+            location:
+                scene.location ??
+                scene.place ??
+                "",
+
+            text:
+                scene.text ??
+                scene.story ??
+                scene.description ??
+                "",
+
+            image:
+                scene.image ??
+                scene.background ??
+                scene.visual ??
+                "",
+
+            weather:
+                scene.weather ??
+                "",
+
+            time:
+                scene.time ??
+                "",
+
+            choices:
+                Array.isArray(
+                    scene.choices
+                )
+                    ? scene.choices
+                    : [],
+
+            effects:
+                scene.effects ??
+                scene.effect ??
+                []
+
+        };
+
+    }
+
+    function normalizeChoice(
+        choice
+    ) {
+
+        if (!choice) {
+            return null;
+        }
+
+        return {
+
+            ...choice,
+
+            id:
+                choice.id ??
+                choice.key ??
+                choice.text,
+
+            text:
+                choice.text ??
+                choice.label ??
+                choice.title ??
+                "اختيار",
+
+            next:
+                choice.next ??
+                choice.scene ??
+                choice.target ??
+                null,
+
+            reward:
+                choice.reward ??
+                null,
+
+            effects:
+                choice.effects ??
+                choice.effect ??
+                [],
+
+            condition:
+                choice.condition ??
+                null
+
+        };
+
+    }
+
+    /* =====================================================
+       16 — CONDITIONS
+       ===================================================== */
+
+    function conditionMet(
+        condition
+    ) {
+
+        if (
+            condition == null
+        ) {
+
+            return true;
+
+        }
+
+        if (
+            typeof condition ===
+            "boolean"
+        ) {
+
+            return condition;
+
+        }
+
+        if (
+            typeof condition ===
+            "string"
+        ) {
+
+            return !!getFlag(
+                condition
+            );
+
+        }
+
+        if (
+            Array.isArray(
+                condition
+            )
+        ) {
+
+            return condition.every(
+                conditionMet
+            );
+
+        }
+
+        if (
+            typeof condition !==
+            "object"
+        ) {
+
+            return true;
+
+        }
+
+        if (
+            condition.flag
+        ) {
+
+            const actual =
+                getFlag(
+                    condition.flag
+                );
+
+            if (
+                "equals" in
+                condition
+            ) {
+
+                if (
+                    actual !==
+                    condition.equals
+                ) {
+
+                    return false;
+
+                }
+
+            } else if (
+                condition.flag &&
+                !actual
+            ) {
+
+                return false;
+
+            }
+
+        }
+
+        if (
+            condition.item &&
+            !hasItem(
+                condition.item
+            )
+        ) {
+
+            return false;
+
+        }
+
+        if (
+            condition.level
+        ) {
+
+            if (
+                state.player.level <
+                safeNumber(
+                    condition.level
+                )
+            ) {
+
+                return false;
+
+            }
+
+        }
+
+        if (
+            condition.coins
+        ) {
+
+            if (
+                state.player.coins <
+                safeNumber(
+                    condition.coins
+                )
+            ) {
+
+                return false;
+
+            }
+
+        }
+
+        if (
+            condition.health
+        ) {
+
+            if (
+                state.health <
+                safeNumber(
+                    condition.health
+                )
+            ) {
+
+                return false;
+
+            }
+
+        }
+
+        return true;
+
+    }
+
+    /* =====================================================
+       17 — REWARDS
+       ===================================================== */
+
+    function applyReward(
+        reward
+    ) {
+
+        if (!reward) {
+            return;
+        }
+
+        if (
+            typeof reward ===
+            "number"
+        ) {
+
+            addCoins(
+                reward
+            );
+
+            return;
+
+        }
+
+        if (
+            reward.coins
+        ) {
+
+            addCoins(
+                reward.coins
+            );
+
+        }
+
+        if (
+            reward.xp
+        ) {
+
+            addXP(
+                reward.xp
+            );
+
+        }
+
+        if (
+            reward.item
+        ) {
+
+            addItem(
+                reward.item
+            );
+
+        }
+
+        if (
+            Array.isArray(
+                reward.items
+            )
+        ) {
+
+            reward.items.forEach(
+                addItem
+            );
+
+        }
+
+        if (
+            reward.flag
+        ) {
+
+            if (
+                typeof reward.flag ===
+                "object"
+            ) {
+
+                Object.entries(
+                    reward.flag
+                ).forEach(
+                    ([key, value]) =>
+                        setFlag(
+                            key,
+                            value
+                        )
+                );
+
+            } else {
+
+                setFlag(
+                    reward.flag,
+                    true
+                );
+
+            }
+
+        }
+
+        if (
+            reward.journal
+        ) {
+
+            addJournal(
+                reward.journal
+            );
+
+        }
+
+    }
+
+    /* =====================================================
+       18 — SCENE EFFECTS
+       ===================================================== */
+
+    function processSceneData(
+        scene
+    ) {
+
+        if (!scene) {
+            return;
+        }
+
+        if (
+            scene.setFlags
+        ) {
+
+            Object.entries(
+                scene.setFlags
+            ).forEach(
+                ([key, value]) =>
+                    setFlag(
+                        key,
+                        value
+                    )
+            );
+
+        }
+
+        if (
+            scene.flags
+        ) {
+
+            Object.entries(
+                scene.flags
+            ).forEach(
+                ([key, value]) =>
+                    setFlag(
+                        key,
+                        value
+                    )
+            );
+
+        }
+
+        if (
+            scene.reward
+        ) {
+
+            applyReward(
+                scene.reward
+            );
+
+        }
+
+        if (
+            scene.rewards
+        ) {
+
+            applyReward(
+                scene.rewards
+            );
+
+        }
+
+        if (
+            scene.item
+        ) {
+
+            addItem(
+                scene.item
+            );
+
+        }
+
+        if (
+            Array.isArray(
+                scene.items
+            )
+        ) {
+
+            scene.items.forEach(
+                addItem
+            );
+
+        }
+
+        if (
+            scene.journal
+        ) {
+
+            addJournal(
+                scene.journal
+            );
+
+        }
+
+    }
+
+    /* =====================================================
+       19 — GAME OBJECT
+       ===================================================== */
+
+    const Game = {
+
+        start(
+            chapter = 1,
+            sceneId = null
+        ) {
+
+            unlockAudio();
+
+            state.started =
+                true;
+
+            state.paused =
+                false;
+
+            state.health =
+                clamp(
+                    state.health ||
+                    100,
+                    0,
+                    100
+                );
+
+            state.chapter =
+                safeNumber(
+                    chapter,
+                    1
+                );
+
+            let scene =
+                sceneId
+                    ? getScene(
+                        state.chapter,
+                        sceneId
+                    )
+                    : firstScene(
+                        state.chapter
+                    );
+
+            if (!scene) {
+
+                notify(
+                    "لم يتم العثور على بداية الفصل",
+                    "⚠"
+                );
+
+                return false;
+
+            }
+
+            state.scene =
+                scene.id ??
+                scene.scene ??
+                scene.key;
+
+            saveState();
+
+            showScreen(
+                "gameScreen"
+            );
+
+            renderScene(
+                scene
+            );
+
+            checkAchievements();
+
+            return true;
+
+        },
+
+        continueGame() {
+
+            unlockAudio();
+
+            if (
+                !state.started ||
+                !state.scene
+            ) {
+
+                return this.start(
+                    state.chapter ||
+                    1
+                );
+
+            }
+
+            const scene =
+                getScene(
+                    state.chapter,
+                    state.scene
+                );
+
+            if (!scene) {
+
+                return this.start(
+                    state.chapter ||
+                    1
+                );
+
+            }
+
+            showScreen(
+                "gameScreen"
+            );
+
+            renderScene(
+                scene
+            );
+
+            return true;
+
+        },
+
+        newGame() {
+
+            resetState();
+
+            state.started =
+                true;
+
+            saveState();
+
+            return this.start(
+                1
+            );
+
+        },
+
+        current() {
+
+            return normalizeScene(
+                getScene(
+                    state.chapter,
+                    state.scene
+                )
+            );
+
+        },
+
+        choose(
+            choice
+        ) {
+
+            if (
+                !state.started
+            ) {
+                return;
+            }
+
+            const current =
+                this.current();
+
+            if (!current) {
+                return;
+            }
+
+            const normalized =
+                normalizeChoice(
+                    choice
+                );
+
+            if (!normalized) {
+                return;
+            }
+
+            if (
+                !conditionMet(
+                    normalized.condition
+                )
+            ) {
+
+                notify(
+                    normalized.lockedText ||
+                    "هذا الاختيار غير متاح الآن",
+                    "🔒"
+                );
+
+                AudioEngine.danger();
+
+                return;
+
+            }
+
+            state.statistics.choices++;
+
+            addHistory(
+                current,
+                normalized
+            );
+
+            processChoice(
+                normalized
+            );
+
+            checkAchievements();
+
+            saveState();
+
+        },
+
+        goTo(
+            sceneId
+        ) {
+
+            const scene =
+                getScene(
+                    state.chapter,
+                    sceneId
+                );
+
+            if (!scene) {
+
+                notify(
+                    "المشهد غير موجود",
+                    "⚠"
+                );
+
+                return false;
+
+            }
+
+            transitionToScene(
+                scene
+            );
+
+            return true;
+
+        },
+
+        next() {
+
+            const current =
+                this.current();
+
+            if (!current) {
+                return false;
+            }
+
+            const scenes =
+                getScenes(
+                    getChapter(
+                        state.chapter
+                    )
+                );
+
+            const index =
+                scenes.findIndex(
+                    scene =>
+                        String(
+                            scene.id ??
+                            scene.scene ??
+                            scene.key
+                        ) ===
+                        String(
+                            current.id
+                        )
+                );
+
+            if (
+                index >= 0 &&
+                index <
+                scenes.length - 1
+            ) {
+
+                return this.goTo(
+                    scenes[index + 1]
+                        .id ??
+                    scenes[index + 1]
+                        .scene ??
+                    scenes[index + 1]
+                        .key
+                );
+
+            }
+
+            return this.finishChapter();
+
+        },
+
+        pause() {
+
+            state.paused =
+                true;
+
+            saveState();
+
+        },
+
+        resume() {
+
+            state.paused =
+                false;
+
+            saveState();
+
+        },
+
+        finishChapter() {
+
+            const chapter =
+                state.chapter;
+
+            if (
+                !state.completedChapters
+                    .includes(chapter)
+            ) {
+
+                state.completedChapters
+                    .push(chapter);
+
+                state.statistics.chapters++;
+
+            }
+
+            const nextChapter =
+                chapter + 1;
+
+            if (
+                getChapter(
+                    nextChapter
+                )
+            ) {
+
+                if (
+                    !state.unlockedChapters
+                        .includes(
+                            nextChapter
+                        )
+                ) {
+
+                    state.unlockedChapters
+                        .push(
+                            nextChapter
+                        );
+
+                }
+
+                state.chapter =
+                    nextChapter;
+
+                state.scene =
+                    null;
+
+                addXP(100);
+
+                addCoins(50);
+
+                saveState();
+
+                cinematic(
+                    "فصل جديد",
+                    `الفصل ${nextChapter}`,
+                    "رحلتك تستمر..."
+                );
+
+                setTimeout(() => {
+
+                    this.start(
+                        nextChapter
+                    );
+
+                }, 1000);
+
+                return true;
+
+            }
+
+            state.statistics.endings++;
+
+            saveState();
+
+            renderEndScreen();
+
+            return true;
+
+        }
+
+    };
+
+    /* =====================================================
+       20 — PROCESS CHOICE
+       ===================================================== */
+
+    function processChoice(
+        choice
+    ) {
+
+        AudioEngine.choice();
+
+        if (
+            choice.flags
+        ) {
+
+            Object.entries(
+                choice.flags
+            ).forEach(
+                ([key, value]) =>
+                    setFlag(
+                        key,
+                        value
+                    )
+            );
+
+        }
+
+        if (
+            choice.setFlags
+        ) {
+
+            Object.entries(
+                choice.setFlags
+            ).forEach(
+                ([key, value]) =>
+                    setFlag(
+                        key,
+                        value
+                    )
+            );
+
+        }
+
+        if (
+            choice.reward
+        ) {
+
+            applyReward(
+                choice.reward
+            );
+
+        }
+
+        if (
+            choice.rewards
+        ) {
+
+            applyReward(
+                choice.rewards
+            );
+
+        }
+
+        if (
+            choice.damage
+        ) {
+
+            const damage =
+                Math.max(
+                    0,
+                    safeNumber(
+                        choice.damage,
+                        0
+                    )
+                );
+
+            state.health =
+                clamp(
+                    state.health -
+                    damage,
+                    0,
+                    100
+                );
+
+            playEffect(
+                "danger",
+                {
+                    duration:
+                        550
+                }
+            );
+
+            AudioEngine.danger();
+
+            if (
+                state.health <= 0
+            ) {
+
+                state.statistics.deaths++;
+
+                state.health =
+                    35;
+
+                notify(
+                    "نجوت بصعوبة...",
+                    "🩸"
+                );
+
+            }
+
+        }
+
+        if (
+            choice.heal
+        ) {
+
+            state.health =
+                clamp(
+                    state.health +
+                    safeNumber(
+                        choice.heal,
+                        0
+                    ),
+                    0,
+                    100
+                );
+
+        }
+
+        if (
+            choice.xp
+        ) {
+
+            addXP(
+                choice.xp
+            );
+
+        }
+
+        if (
+            choice.coins
+        ) {
+
+            addCoins(
+                choice.coins
+            );
+
+        }
+
+        if (
+            choice.item
+        ) {
+
+            addItem(
+                choice.item
+            );
+
+        }
+
+        if (
+            choice.journal
+        ) {
+
+            addJournal(
+                choice.journal
+            );
+
+        }
+
+        if (
+            choice.effect
+        ) {
+
+            playEffect(
+                typeof choice.effect ===
+                "string"
+                    ? choice.effect
+                    : choice.effect.type,
+                typeof choice.effect ===
+                "object"
+                    ? choice.effect
+                    : {}
+            );
+
+        }
+
+        if (
+            choice.effects
+        ) {
+
+            storyEffects(
+                {
+                    effects:
+                        choice.effects
+                }
+            );
+
+        }
+
+        saveState();
+
+        const next =
+            choice.next ??
+            choice.target ??
+            choice.scene;
+
+        if (
+            next ===
+            "end"
+        ) {
+
+            renderEndScreen();
+
+            return;
+
+        }
+
+        if (
+            next ===
+            "next"
+        ) {
+
+            setTimeout(
+                () => Game.next(),
+                350
+            );
+
+            return;
+
+        }
+
+        if (
+            next
+        ) {
+
+            setTimeout(
+                () =>
+                    Game.goTo(
+                        next
+                    ),
+                300
+            );
+
+            return;
+
+        }
+
+        setTimeout(
+            () => Game.next(),
+            350
+        );
+
+    }
+
+    /* =====================================================
+       21 — SCENE RENDER
+       ===================================================== */
+
+    function renderScene(
+        rawScene
+    ) {
 
         const scene =
-          Game.current();
+            normalizeScene(
+                rawScene
+            );
 
-        if (scene) {
-          setText(
-            "storyText",
-            scene.text
-          );
+        if (!scene) {
+            return;
         }
-      }
-    );
 
+        state.scene =
+            scene.id;
 
-    $("choices")?.addEventListener(
-      "click",
-      event => {
-        const button =
-          event.target.closest(
-            ".choice-button"
-          );
+        state.statistics.scenes++;
 
-        if (!button) return;
+        processSceneData(
+            scene
+        );
 
-        if (
-          button.classList.contains(
-            "locked"
-          )
-        ) {
-          AudioEngine.danger();
+        saveState();
 
-          playEffect(
-            "shake",
-            {
-              duration: 350
+        renderHUD();
+
+        renderSceneVisual(
+            scene
+        );
+
+        renderStory(
+            scene
+        );
+
+        renderChoices(
+            scene
+        );
+
+        storyEffects(
+            scene
+        );
+
+        checkAchievements();
+
+        emit(
+            "scene",
+            scene
+        );
+
+    }
+
+    /* =====================================================
+       22 — HUD
+       ===================================================== */
+
+    function renderHUD() {
+
+        const health =
+            $("health");
+
+        if (health) {
+
+            health.textContent =
+                `${state.health}%`;
+
+        }
+
+        const coins =
+            $("coins");
+
+        if (coins) {
+
+            coins.textContent =
+                formatNumber(
+                    state.player.coins
+                );
+
+        }
+
+        const chapter =
+            $("chapter");
+
+        if (chapter) {
+
+            chapter.textContent =
+                String(
+                    state.chapter
+                );
+
+        }
+
+        const progress =
+            $("progressBar");
+
+        const progressText =
+            $("progressText");
+
+        const chapters =
+            getChapters();
+
+        const total =
+            Math.max(
+                1,
+                chapters.length
+            );
+
+        const percent =
+            clamp(
+                state.chapter /
+                total *
+                100,
+                0,
+                100
+            );
+
+        if (progress) {
+
+            progress.style.width =
+                `${percent}%`;
+
+        }
+
+        if (progressText) {
+
+            progressText.textContent =
+                `${Math.round(
+                    percent
+                )}%`;
+
+        }
+
+        const inventoryCount =
+            $("inventoryCount");
+
+        if (inventoryCount) {
+
+            inventoryCount.textContent =
+                state.inventory.length;
+
+        }
+
+        const achievementCount =
+            $("achievementCount");
+
+        if (achievementCount) {
+
+            achievementCount.textContent =
+                state.achievements.length;
+
+        }
+
+    }
+
+    /* =====================================================
+       23 — VISUAL SCENE
+       ===================================================== */
+
+    function renderSceneVisual(
+        scene
+    ) {
+
+        const visual =
+            $("sceneVisual");
+
+        const image =
+            $("sceneImage");
+
+        const weather =
+            $("sceneWeather");
+
+        const time =
+            $("sceneTime");
+
+        if (visual) {
+
+            visual.dataset.scene =
+                String(
+                    scene.id ||
+                    ""
+                );
+
+            visual.className =
+                "scene-visual";
+
+            if (
+                scene.visualClass
+            ) {
+
+                visual.classList.add(
+                    scene.visualClass
+                );
+
             }
-          );
 
-          notify(
-            "هذا الاختيار مغلق",
-            "icon-settings"
-          );
-
-          return;
         }
 
-        const choice =
-          findChoiceFromButton(
-            button
-          );
+        if (image) {
 
-        if (!choice) return;
+            if (
+                scene.image
+            ) {
 
-        button.classList.add(
-          "selected"
-        );
+                image.src =
+                    scene.image;
 
-        Game.choose(choice);
-      });
-  }
+                image.style.display =
+                    "block";
 
+            } else {
 
-  /* =======================================================
-     KEYBOARD
-     ======================================================= */
+                image.removeAttribute(
+                    "src"
+                );
 
-  function bindKeyboard() {
-    document.addEventListener(
-      "keydown",
-      event => {
-        if (
-          !state.game.active ||
-          state.game.paused
-        ) {
-          return;
+                image.style.display =
+                    "none";
+
+            }
+
         }
 
-        if (
-          ["1", "2", "3", "4"].includes(
-            event.key
-          )
-        ) {
-          const index =
-            Number(event.key) - 1;
+        if (weather) {
 
-          const button =
-            document.querySelector(
-              `.choice-button[data-index="${index}"]`
-            );
+            weather.textContent =
+                scene.weather ||
+                "";
 
-          if (button) {
-            button.click();
-          }
         }
 
-        if (
-          event.key === "Escape"
-        ) {
-          openOverlay(
-            "menuOverlay"
-          );
+        if (time) {
 
-          Game.pause();
+            time.textContent =
+                scene.time ||
+                "";
+
         }
-      }
-    );
-  }
 
+    }
 
-  /* =======================================================
-     VISIBILITY
-     ======================================================= */
+    /* =====================================================
+       24 — STORY
+       ===================================================== */
 
-  function bindVisibility() {
-    document.addEventListener(
-      "visibilitychange",
-      () => {
-        if (
-          document.hidden &&
-          state.game.active
-        ) {
-          Game.pause();
-          saveState();
-        }
-      }
-    );
-  }
-
-
-  /* =======================================================
-     BOOT
-     ======================================================= */
-
-  function boot() {
-    bindEvents();
-    bindKeyboard();
-    bindVisibility();
-
-    try {
-      window.Effects?.init?.();
-      window.Effects?.setMotion?.(
-        state.settings.motion
-      );
-    } catch {}
-
-    updateSettingsUI();
-    updateContinueButton();
-
-    if (
-      state.game.active
+    function renderStory(
+        scene
     ) {
-      showScreen(
-        "startScreen"
-      );
-    } else {
-      showScreen(
-        "startScreen"
-      );
-    }
 
-    checkAchievements();
+        const chapterTag =
+            $("sceneChapterTag");
 
-    emit("ready");
-  }
+        const location =
+            $("sceneLocation");
 
+        const title =
+            $("sceneTitle");
 
-  if (
-    document.readyState ===
-    "loading"
-  ) {
-    document.addEventListener(
-      "DOMContentLoaded",
-      boot,
-      {
-        once: true
-      }
-    );
-  } else {
-    boot();
-  }
+        const text =
+            $("storyText");
 
-})();
+        const topChapter =
+            $("chapterLabel");
 
-/* =========================================================
-   ظلال المجهول — SHADOWS OF THE UNKNOWN
-   script.js — ULTRA V6
-   PART 2 / 2
-   تكملة مباشرة للجزء الأول
-   ========================================================= */
+        const topTitle =
+            $("chapterTitleTop");
 
+        if (chapterTag) {
 
-/* =======================================================
-   PLAYER PROFILE
-   ======================================================= */
+            chapterTag.textContent =
+                `الفصل ${state.chapter}`;
 
-function renderPlayerProfile() {
-  const player = state.player;
-
-  const name =
-    player.name ||
-    "المحقق";
-
-  const level =
-    safeNumber(player.level, 1);
-
-  const xp =
-    safeNumber(player.xp, 0);
-
-  const required =
-    xpRequired(level);
-
-  const percent =
-    clamp(
-      (xp / required) * 100,
-      0,
-      100
-    );
-
-  document
-    .querySelectorAll(
-      "[data-player-name]"
-    )
-    .forEach(el => {
-      el.textContent = name;
-    });
-
-  document
-    .querySelectorAll(
-      "[data-player-level]"
-    )
-    .forEach(el => {
-      el.textContent =
-        formatNumber(level);
-    });
-
-  document
-    .querySelectorAll(
-      "[data-player-xp]"
-    )
-    .forEach(el => {
-      el.textContent =
-        `${formatNumber(xp)} / ${formatNumber(required)}`;
-    });
-
-  document
-    .querySelectorAll(
-      "[data-xp-progress]"
-    )
-    .forEach(el => {
-      el.style.width =
-        `${percent}%`;
-    });
-}
-
-
-/* =======================================================
-   SAVE / LOAD UI
-   ======================================================= */
-
-function hasSaveGame() {
-  return !!(
-    state.game.active ||
-    state.history.length ||
-    state.completedChapters.length
-  );
-}
-
-
-function prepareContinue() {
-  const btn =
-    $("continueBtn");
-
-  if (!btn) return;
-
-  btn.style.display =
-    hasSaveGame()
-      ? "flex"
-      : "none";
-}
-
-
-/* =======================================================
-   DAILY SYSTEM
-   ======================================================= */
-
-function getTodayKey() {
-  const date =
-    new Date();
-
-  return [
-    date.getFullYear(),
-    String(
-      date.getMonth() + 1
-    ).padStart(2, "0"),
-    String(
-      date.getDate()
-    ).padStart(2, "0")
-  ].join("-");
-}
-
-
-function updateDaily() {
-  const today =
-    getTodayKey();
-
-  if (
-    state.daily.date !== today
-  ) {
-    state.daily = {
-      date: today,
-      completed: false,
-      rewardClaimed: false
-    };
-
-    saveState();
-  }
-}
-
-
-function completeDaily() {
-  updateDaily();
-
-  if (
-    state.daily.completed
-  ) {
-    return false;
-  }
-
-  state.daily.completed =
-    true;
-
-  if (
-    !state.daily.rewardClaimed
-  ) {
-    state.daily.rewardClaimed =
-      true;
-
-    addCoins(75);
-    addXP(50);
-
-    notify(
-      "أكملت تحدي اليوم",
-      "icon-trophy"
-    );
-  }
-
-  saveState();
-
-  return true;
-}
-
-
-/* =======================================================
-   CHAPTER UNLOCKING
-   ======================================================= */
-
-function unlockChapter(chapter) {
-  chapter =
-    safeNumber(
-      chapter,
-      1
-    );
-
-  if (
-    state.unlockedChapters.includes(
-      chapter
-    )
-  ) {
-    return false;
-  }
-
-  state.unlockedChapters.push(
-    chapter
-  );
-
-  state.unlockedChapters =
-    [...new Set(
-      state.unlockedChapters
-    )].sort(
-      (a, b) => a - b
-    );
-
-  saveState();
-
-  notify(
-    `تم فتح الفصل ${chapter}`,
-    "icon-chapter",
-    3000
-  );
-
-  emit(
-    "chapterUnlocked",
-    {
-      chapter
-    }
-  );
-
-  checkAchievements();
-
-  return true;
-}
-
-
-/* =======================================================
-   CHAPTER PROGRESS
-   ======================================================= */
-
-function getChapterProgress(
-  chapterId = state.game.chapter
-) {
-  const chapter =
-    getChapter(chapterId);
-
-  if (!chapter) {
-    return {
-      current: 0,
-      total: 0,
-      percent: 0
-    };
-  }
-
-  const total =
-    getScenes(chapter).length;
-
-  const current =
-    clamp(
-      state.game.chapter === chapterId
-        ? state.game.sceneIndex + 1
-        : 0,
-      0,
-      total
-    );
-
-  return {
-    current,
-    total,
-    percent:
-      total
-        ? Math.round(
-            (current / total) * 100
-          )
-        : 0
-  };
-}
-
-
-/* =======================================================
-   SCENE EVENTS
-   ======================================================= */
-
-function processSceneData(scene) {
-  if (!scene) return;
-
-  if (scene.flag) {
-    setFlag(
-      scene.flag,
-      scene.flagValue ?? true
-    );
-  }
-
-  if (
-    scene.flags &&
-    typeof scene.flags === "object"
-  ) {
-    Object.keys(
-      scene.flags
-    ).forEach(key => {
-      setFlag(
-        key,
-        scene.flags[key]
-      );
-    });
-  }
-
-  if (scene.item) {
-    addItem(
-      scene.item
-    );
-  }
-
-  if (scene.journal) {
-    addJournal(
-      scene.journal
-    );
-  }
-
-  if (scene.reward) {
-    applyReward(
-      scene.reward
-    );
-  }
-
-  if (scene.coins) {
-    addCoins(
-      safeNumber(scene.coins)
-    );
-  }
-
-  if (scene.xp) {
-    addXP(
-      safeNumber(scene.xp)
-    );
-  }
-}
-
-
-/* =======================================================
-   ENHANCED SCENE RENDER
-   ======================================================= */
-
-const originalRenderScene =
-  renderScene;
-
-renderScene = function () {
-  const scene =
-    Game.current();
-
-  if (!scene) {
-    Game.finishChapter();
-    return;
-  }
-
-  processSceneData(
-    scene
-  );
-
-  originalRenderScene();
-
-  renderPlayerProfile();
-  prepareContinue();
-};
-
-
-/* =======================================================
-   SCENE VISUAL STATE
-   ======================================================= */
-
-function applySceneClasses(scene) {
-  const area =
-    $("sceneArea");
-
-  if (!area) return;
-
-  [
-    "danger-mode",
-    "dark-mode",
-    "light-event",
-    "fog-event",
-    "wind-event",
-    "rain-event",
-    "shadow-event"
-  ].forEach(cls => {
-    area.classList.remove(
-      cls
-    );
-  });
-
-  const effects =
-    Array.isArray(scene.effects)
-      ? scene.effects
-      : [scene.effects];
-
-  effects
-    .filter(Boolean)
-    .forEach(effect => {
-      const type =
-        typeof effect === "string"
-          ? effect
-          : effect.type;
-
-      if (!type) return;
-
-      const cls =
-        `${type}-event`;
-
-      if (
-        [
-          "light",
-          "fog",
-          "wind",
-          "rain",
-          "shadow"
-        ].includes(type)
-      ) {
-        area.classList.add(
-          cls
-        );
-      }
-
-      if (
-        [
-          "danger",
-          "darkness"
-        ].includes(type)
-      ) {
-        area.classList.add(
-          type === "danger"
-            ? "danger-mode"
-            : "dark-mode"
-        );
-      }
-    });
-}
-
-
-/* =======================================================
-   EFFECT-AWARE RENDER PATCH
-   ======================================================= */
-
-const baseRenderVisual =
-  renderSceneVisual;
-
-renderSceneVisual =
-  function (scene) {
-    baseRenderVisual(scene);
-    applySceneClasses(scene);
-  };
-
-
-/* =======================================================
-   CINEMATIC STORY SUPPORT
-   ======================================================= */
-
-function runCinematic(scene) {
-  if (!scene) return;
-
-  const cinematicData =
-    scene.cinematic;
-
-  if (!cinematicData) {
-    return;
-  }
-
-  if (
-    typeof cinematicData === "string"
-  ) {
-    cinematic(
-      "لحظة...",
-      cinematicData
-    );
-
-    return;
-  }
-
-  cinematic(
-    cinematicData.title ||
-      "لحظة غامضة",
-
-    cinematicData.text ||
-      "",
-
-    cinematicData.label ||
-      "ظلال المجهول"
-  );
-}
-
-
-/* =======================================================
-   EFFECT EVENT SUPPORT
-   ======================================================= */
-
-function processSpecialEvent(scene) {
-  if (!scene) return;
-
-  const event =
-    scene.event ||
-    scene.storyEvent ||
-    scene.specialEvent;
-
-  if (!event) return;
-
-  if (
-    typeof event === "string"
-  ) {
-    playEffect(
-      event
-    );
-
-    return;
-  }
-
-  if (
-    typeof event === "object"
-  ) {
-    playEffect(
-      event.type ||
-        event.name ||
-        "fade",
-      event
-    );
-  }
-}
-
-
-/* =======================================================
-   GAME START PATCH
-   ======================================================= */
-
-const originalStart =
-  Game.start.bind(Game);
-
-Game.start =
-  function (
-    chapter = 1,
-    scene = 0
-  ) {
-    const result =
-      originalStart(
-        chapter,
-        scene
-      );
-
-    if (result) {
-      updateDaily();
-      renderPlayerProfile();
-
-      setTimeout(() => {
-        const current =
-          Game.current();
-
-        if (current) {
-          runCinematic(
-            current
-          );
-
-          processSpecialEvent(
-            current
-          );
         }
-      }, 300);
+
+        if (location) {
+
+            location.textContent =
+                scene.location ||
+                "";
+
+        }
+
+        if (title) {
+
+            title.textContent =
+                scene.title ||
+                "";
+
+        }
+
+        if (topChapter) {
+
+            topChapter.textContent =
+                `الفصل ${state.chapter}`;
+
+        }
+
+        if (topTitle) {
+
+            topTitle.textContent =
+                scene.title ||
+                "";
+
+        }
+
+        if (text) {
+
+            typeText(
+                text,
+                scene.text ||
+                ""
+            );
+
+        }
+
     }
 
-    return result;
-  };
+    let typingTimer = null;
 
-
-/* =======================================================
-   CHOICE FEEDBACK
-   ======================================================= */
-
-on(
-  "choiceMade",
-  ({ choice }) => {
-    state.game.correctChoices++;
-
-    if (choice.xp) {
-      addXP(
-        safeNumber(choice.xp)
-      );
-    }
-
-    if (choice.coins) {
-      addCoins(
-        safeNumber(choice.coins)
-      );
-    }
-
-    if (
-      choice.effects?.length
+    function typeText(
+        element,
+        content
     ) {
-      choice.effects.forEach(
-        effect => {
-          if (
-            typeof effect === "string"
-          ) {
-            playEffect(
-              effect
-            );
-          } else if (
-            effect &&
-            typeof effect === "object"
-          ) {
-            playEffect(
-              effect.type ||
-                effect.name,
-              effect
-            );
-          }
+
+        if (!element) {
+            return;
         }
-      );
+
+        if (typingTimer) {
+
+            clearInterval(
+                typingTimer
+            );
+
+            typingTimer =
+                null;
+
+        }
+
+        const text =
+            String(
+                content ??
+                ""
+            );
+
+        element.textContent =
+            "";
+
+        const skipButton =
+            $("skipTextBtn");
+
+        let index = 0;
+
+        const speed =
+            state.motion
+                ? 12
+                : 0;
+
+        if (
+            speed <= 0
+        ) {
+
+            element.textContent =
+                text;
+
+            return;
+
+        }
+
+        typingTimer =
+            setInterval(
+                () => {
+
+                    element.textContent =
+                        text.slice(
+                            0,
+                            index
+                        );
+
+                    index++;
+
+                    if (
+                        index >
+                        text.length
+                    ) {
+
+                        clearInterval(
+                            typingTimer
+                        );
+
+                        typingTimer =
+                            null;
+
+                        if (
+                            skipButton
+                        ) {
+
+                            skipButton.style
+                                .display =
+                                "none";
+
+                        }
+
+                    }
+
+                },
+                speed
+            );
+
+        if (
+            skipButton
+        ) {
+
+            skipButton.style.display =
+                "inline-flex";
+
+            skipButton.onclick =
+                () => {
+
+                    if (
+                        typingTimer
+                    ) {
+
+                        clearInterval(
+                            typingTimer
+                        );
+
+                        typingTimer =
+                            null;
+
+                    }
+
+                    element.textContent =
+                        text;
+
+                    skipButton.style
+                        .display =
+                        "none";
+
+                };
+
+        }
+
     }
 
-    checkAchievements();
-    saveState();
-  }
-);
+    /* =====================================================
+       25 — CHOICES
+       ===================================================== */
 
-
-/* =======================================================
-   GAME START EVENT
-   ======================================================= */
-
-on(
-  "gameStarted",
-  () => {
-    const scene =
-      Game.current();
-
-    if (!scene) return;
-
-    updateBottomUI();
-    renderPlayerProfile();
-
-    setTimeout(() => {
-      runCinematic(
+    function renderChoices(
         scene
-      );
+    ) {
 
-      processSpecialEvent(
-        scene
-      );
-    }, 250);
-  }
-);
+        const container =
+            $("choices");
 
+        if (!container) {
+            return;
+        }
 
-/* =======================================================
-   CHAPTER EVENTS
-   ======================================================= */
+        container.innerHTML =
+            "";
 
-on(
-  "chapterUnlocked",
-  ({ chapter }) => {
-    playEffect(
-      "light",
-      {
-        duration: 1100
-      }
-    );
-
-    notify(
-      `الفصل ${chapter} أصبح متاحاً`,
-      "icon-chapter",
-      3200
-    );
-  }
-);
-
-
-on(
-  "chapterFinished",
-  ({ nextChapter }) => {
-    if (nextChapter) {
-      unlockChapter(
-        nextChapter
-      );
-    }
-
-    renderPlayerProfile();
-  }
-);
-
-
-/* =======================================================
-   LEVEL UP
-   ======================================================= */
-
-on(
-  "levelUp",
-  ({ level }) => {
-    playEffect(
-      "supernatural",
-      {
-        duration: 1200
-      }
-    );
-
-    cinematic(
-      `المستوى ${level}`,
-      "أنت تقترب أكثر من الحقيقة...",
-      "تطور المحقق"
-    );
-  }
-);
-
-
-/* =======================================================
-   INVENTORY EVENTS
-   ======================================================= */
-
-on(
-  "itemAdded",
-  () => {
-    renderInventory();
-    updateBottomUI();
-    checkAchievements();
-  }
-);
-
-
-on(
-  "itemRemoved",
-  () => {
-    renderInventory();
-    updateBottomUI();
-  }
-);
-
-
-/* =======================================================
-   ACHIEVEMENT EVENTS
-   ======================================================= */
-
-on(
-  "achievement",
-  () => {
-    renderAchievements();
-    updateBottomUI();
-
-    playEffect(
-      "light",
-      {
-        duration: 800
-      }
-    );
-  }
-);
-
-
-/* =======================================================
-   SETTINGS
-   ======================================================= */
-
-function syncSettings() {
-  updateSettingsUI();
-
-  try {
-    window.Effects?.setMotion?.(
-      !!state.settings.motion
-    );
-  } catch {}
-
-  const soundIcon =
-    $("soundIcon");
-
-  if (soundIcon) {
-    soundIcon.className =
-      state.settings.sound
-        ? "icon-volume"
-        : "icon-volume-off";
-  }
-}
-
-
-/* =======================================================
-   MUSIC
-   ======================================================= */
-
-function setupMusic() {
-  const music =
-    $("bgMusic");
-
-  if (!music) return;
-
-  music.loop = true;
-
-  music.volume = 0.22;
-
-  const updateMusic =
-    () => {
-      if (
-        state.settings.music
-      ) {
-        music.play().catch(
-          () => {}
-        );
-      } else {
-        music.pause();
-      }
-    };
-
-  document.addEventListener(
-    "click",
-    updateMusic,
-    {
-      once: true
-    }
-  );
-
-  on(
-    "musicChanged",
-    updateMusic
-  );
-}
-
-
-/* =======================================================
-   AUDIO UNLOCK
-   ======================================================= */
-
-function unlockAudio() {
-  try {
-    AudioEngine.ensure();
-  } catch {}
-
-  const music =
-    $("bgMusic");
-
-  if (
-    music &&
-    state.settings.music
-  ) {
-    music.play().catch(
-      () => {}
-    );
-  }
-}
-
-
-document.addEventListener(
-  "pointerdown",
-  unlockAudio,
-  {
-    once: true
-  }
-);
-
-
-/* =======================================================
-   LOADING SCREEN
-   ======================================================= */
-
-function finishLoading() {
-  const loading =
-    $("loadingScreen");
-
-  if (!loading) return;
-
-  const progress =
-    $("loadingProgress");
-
-  const status =
-    $("loadingStatus");
-
-  if (progress) {
-    progress.style.width =
-      "100%";
-  }
-
-  if (status) {
-    status.textContent =
-      "اكتمل التحميل";
-  }
-
-  setTimeout(() => {
-    loading.classList.add(
-      "hidden"
-    );
-  }, 450);
-}
-
-
-function animateLoading() {
-  const progress =
-    $("loadingProgress");
-
-  const status =
-    $("loadingStatus");
-
-  if (!progress) {
-    finishLoading();
-    return;
-  }
-
-  const messages = [
-    "إيقاظ الذاكرة...",
-    "فتح بوابة المجهول...",
-    "تجهيز الظلال...",
-    "استدعاء القصة...",
-    "تهيئة العالم...",
-    "الاستعداد..."
-  ];
-
-  let value = 0;
-  let index = 0;
-
-  const timer =
-    setInterval(() => {
-      value += random(8, 17);
-
-      value =
-        Math.min(
-          value,
-          100
-        );
-
-      progress.style.width =
-        `${value}%`;
-
-      if (
-        status &&
-        value % 2 === 0
-      ) {
-        status.textContent =
-          messages[
-            Math.min(
-              index++,
-              messages.length - 1
+        const choices =
+            Array.isArray(
+                scene.choices
             )
-          ];
-      }
+                ? scene.choices
+                : [];
 
-      if (value >= 100) {
-        clearInterval(timer);
+        choices.forEach(
+            (rawChoice, index) => {
 
-        finishLoading();
-      }
-    }, 120);
-}
+                const choice =
+                    normalizeChoice(
+                        rawChoice
+                    );
 
+                if (!choice) {
+                    return;
+                }
 
-/* =======================================================
-   AUTO SAVE
-   ======================================================= */
+                const button =
+                    document.createElement(
+                        "button"
+                    );
 
-setInterval(
-  () => {
-    if (
-      state.game.active
-    ) {
-      state.game.elapsed =
-        Math.max(
-          0,
-          Math.floor(
-            (
-              Date.now() -
-              state.game.startedAt
-            ) / 1000
-          )
+                button.type =
+                    "button";
+
+                button.className =
+                    "choice-button";
+
+                button.dataset.choice =
+                    String(
+                        choice.id ??
+                        index
+                    );
+
+                const available =
+                    conditionMet(
+                        choice.condition
+                    );
+
+                if (!available) {
+
+                    button.classList.add(
+                        "locked"
+                    );
+
+                }
+
+                const number =
+                    document.createElement(
+                        "span"
+                    );
+
+                number.className =
+                    "choice-number";
+
+                number.textContent =
+                    String(
+                        index + 1
+                    );
+
+                const label =
+                    document.createElement(
+                        "span"
+                    );
+
+                label.className =
+                    "choice-text";
+
+                label.textContent =
+                    choice.text;
+
+                button.appendChild(
+                    number
+                );
+
+                button.appendChild(
+                    label
+                );
+
+                if (
+                    choice.icon
+                ) {
+
+                    const icon =
+                        document.createElement(
+                            "span"
+                        );
+
+                    icon.className =
+                        "choice-icon";
+
+                    icon.textContent =
+                        choice.icon;
+
+                    button.appendChild(
+                        icon
+                    );
+
+                }
+
+                button.addEventListener(
+                    "click",
+                    () => {
+
+                        Game.choose(
+                            choice
+                        );
+
+                    }
+                );
+
+                container.appendChild(
+                    button
+                );
+
+            }
         );
+
     }
 
-    saveState();
-  },
-  15000
-);
+    /* =====================================================
+       26 — TRANSITION
+       ===================================================== */
 
+    async function transitionToScene(
+        scene
+    ) {
 
-/* =======================================================
-   BEFORE EXIT
-   ======================================================= */
+        const transition =
+            $("sceneTransition");
 
-window.addEventListener(
-  "beforeunload",
-  () => {
-    saveState();
-  }
-);
+        if (transition) {
 
+            transition.classList.add(
+                "active"
+            );
 
-/* =======================================================
-   STARTUP
-   ======================================================= */
+        }
 
-function finalBoot() {
-  updateDaily();
-  syncSettings();
-  setupMusic();
+        playEffect(
+            "fade",
+            {
+                duration:
+                    500
+            }
+        );
 
-  renderPlayerProfile();
+        await wait(
+            220
+        );
 
-  prepareContinue();
+        renderScene(
+            scene
+        );
 
-  animateLoading();
+        await wait(
+            280
+        );
 
-  if (
-    !state.game.active
-  ) {
-    showScreen(
-      "startScreen"
-    );
-  }
+        if (transition) {
 
-  emit(
-    "engineReady",
-    {
-      version: 6
+            transition.classList.remove(
+                "active"
+            );
+
+        }
+
     }
-  );
-}
 
+    /* =====================================================
+       27 — SCREENS
+       ===================================================== */
 
-if (
-  document.readyState ===
-  "loading"
-) {
-  document.addEventListener(
-    "DOMContentLoaded",
-    finalBoot,
-    {
-      once: true
+    function showScreen(
+        id
+    ) {
+
+        const screens = [
+            "loadingScreen",
+            "startScreen",
+            "gameScreen",
+            "endScreen"
+        ];
+
+        screens.forEach(
+            screenId => {
+
+                const element =
+                    $(screenId);
+
+                if (!element) {
+                    return;
+                }
+
+                element.classList.toggle(
+                    "hidden",
+                    screenId !== id
+                );
+
+            }
+        );
+
     }
-  );
-} else {
-  finalBoot();
-}
 
+    /* =====================================================
+       28 — CINEMATIC
+       ===================================================== */
 
-/* =======================================================
-   FINAL GLOBAL API
-   ======================================================= */
+    function cinematic(
+        label = "",
+        title = "",
+        text = ""
+    ) {
 
-window.SHADOWS_ULTRA = {
-  version: "ULTRA V6",
+        const overlay =
+            $("cinematicOverlay");
 
-  state,
+        if (!overlay) {
+            return;
+        }
 
-  Game,
+        const labelElement =
+            $("cinematicLabel");
 
-  Audio: AudioEngine,
+        const titleElement =
+            $("cinematicTitle");
 
-  Effects:
-    window.Effects || null,
+        const textElement =
+            $("cinematicText");
 
-  achievements:
-    ACHIEVEMENTS,
+        const continueButton =
+            $("cinematicContinueBtn");
 
-  save:
-    saveState,
+        if (labelElement) {
 
-  reset:
-    resetState,
+            labelElement.textContent =
+                label;
 
-  notify,
+        }
 
-  cinematic,
+        if (titleElement) {
 
-  addXP,
+            titleElement.textContent =
+                title;
 
-  addCoins,
+        }
 
-  spendCoins,
+        if (textElement) {
 
-  addItem,
+            textElement.textContent =
+                text;
 
-  removeItem,
+        }
 
-  hasItem,
+        overlay.classList.remove(
+            "hidden"
+        );
 
-  addJournal,
+        overlay.classList.add(
+            "active"
+        );
 
-  setFlag,
+        playEffect(
+            "darkness",
+            {
+                duration:
+                    1000
+            }
+        );
 
-  getFlag,
+        const close =
+            () => {
 
-  unlockChapter,
+                overlay.classList.remove(
+                    "active"
+                );
 
-  getChapterProgress,
+                setTimeout(
+                    () =>
+                        overlay.classList.add(
+                            "hidden"
+                        ),
+                    350
+                );
 
-  completeDaily,
+            };
 
-  renderScene,
+        if (continueButton) {
 
-  renderInventory,
+            continueButton.onclick =
+                close;
 
-  renderAchievements,
+        }
 
-  renderJournal,
+        setTimeout(
+            close,
+            3500
+        );
 
-  renderPlayerProfile
-};
+    }
+
+    /* =====================================================
+       29 — END SCREEN
+       ===================================================== */
+
+    function renderEndScreen() {
+
+        showScreen(
+            "endScreen"
+        );
+
+        const title =
+            $("endTitle");
+
+        const text =
+            $("endText");
+
+        const finalChapter =
+            $("finalChapter");
+
+        const finalCoins =
+            $("finalCoins");
+
+        const finalAchievements =
+            $("finalAchievements");
+
+        if (title) {
+
+            title.textContent =
+                "نهاية الرحلة";
+
+        }
+
+        if (text) {
+
+            text.textContent =
+                "لقد وصلت إلى نهاية الفصول المتاحة.";
+
+        }
+
+        if (finalChapter) {
+
+            finalChapter.textContent =
+                state.chapter;
+
+        }
+
+        if (finalCoins) {
+
+            finalCoins.textContent =
+                formatNumber(
+                    state.player.coins
+                );
+
+        }
+
+        if (finalAchievements) {
+
+            finalAchievements.textContent =
+                state.achievements.length;
+
+        }
+
+        playEffect(
+            "reveal",
+            {
+                duration:
+                    1300
+            }
+        );
+
+    }
+
+    /* =====================================================
+       30 — INVENTORY
+       ===================================================== */
+
+    function renderInventory() {
+
+        const container =
+            $("inventoryContent");
+
+        if (!container) {
+            return;
+        }
+
+        container.innerHTML =
+            "";
+
+        if (
+            !state.inventory.length
+        ) {
+
+            container.innerHTML =
+                `
+                <div class="empty-state">
+                    🎒
+                    <strong>الحقيبة فارغة</strong>
+                    <span>لم تجمع أي عنصر بعد.</span>
+                </div>
+                `;
+
+            return;
+
+        }
+
+        state.inventory.forEach(
+            item => {
+
+                const element =
+                    document.createElement(
+                        "div"
+                    );
+
+                element.className =
+                    "inventory-item";
+
+                element.innerHTML =
+                    `
+                    <div class="inventory-item-icon">
+                        ${escapeHTML(
+                            item.icon ||
+                            "✦"
+                        )}
+                    </div>
+
+                    <div class="inventory-item-info">
+
+                        <strong>
+                            ${escapeHTML(
+                                item.name ||
+                                item.id ||
+                                "عنصر"
+                            )}
+                        </strong>
+
+                        <span>
+                            ${escapeHTML(
+                                item.description ||
+                                ""
+                            )}
+                        </span>
+
+                    </div>
+                    `;
+
+                container.appendChild(
+                    element
+                );
+
+            }
+        );
+
+    }
+
+    /* =====================================================
+       31 — ACHIEVEMENTS UI
+       ===================================================== */
+
+    function renderAchievements() {
+
+        const container =
+            $("achievementsContent");
+
+        if (!container) {
+            return;
+        }
+
+        container.innerHTML =
+            "";
+
+        const achievements =
+            getAchievements();
+
+        achievements.forEach(
+            achievement => {
+
+                const unlocked =
+                    state.achievements
+                        .includes(
+                            String(
+                                achievement.id
+                            )
+                        );
+
+                const element =
+                    document.createElement(
+                        "div"
+                    );
+
+                element.className =
+                    "achievement-item";
+
+                if (unlocked) {
+
+                    element.classList.add(
+                        "unlocked"
+                    );
+
+                }
+
+                element.innerHTML =
+                    `
+                    <div class="achievement-icon">
+                        ${escapeHTML(
+                            achievement.icon ||
+                            "🏆"
+                        )}
+                    </div>
+
+                    <div class="achievement-info">
+
+                        <strong>
+                            ${escapeHTML(
+                                achievement.title ||
+                                achievement.name ||
+                                "إنجاز"
+                            )}
+                        </strong>
+
+                        <span>
+                            ${escapeHTML(
+                                achievement.description ||
+                                ""
+                            )}
+                        </span>
+
+                    </div>
+                    `;
+
+                container.appendChild(
+                    element
+                );
+
+            }
+        );
+
+        const total =
+            $("achievementTotal");
+
+        if (total) {
+
+            total.textContent =
+                `${state.achievements.length}/${achievements.length}`;
+
+        }
+
+    }
+
+    /* =====================================================
+       32 — JOURNAL UI
+       ===================================================== */
+
+    function renderJournal() {
+
+        const container =
+            $("journalContent");
+
+        if (!container) {
+            return;
+        }
+
+        container.innerHTML =
+            "";
+
+        if (
+            !state.journal.length
+        ) {
+
+            container.innerHTML =
+                `
+                <div class="empty-state">
+                    📖
+                    <strong>لا توجد ملاحظات</strong>
+                    <span>الأسرار التي تكتشفها ستظهر هنا.</span>
+                </div>
+                `;
+
+            return;
+
+        }
+
+        state.journal
+            .slice()
+            .reverse()
+            .forEach(
+                entry => {
+
+                    const element =
+                        document.createElement(
+                            "article"
+                        );
+
+                    element.className =
+                        "journal-entry";
+
+                    element.innerHTML =
+                        `
+                        <h3>
+                            ${escapeHTML(
+                                entry.title ||
+                                "ملاحظة"
+                            )}
+                        </h3>
+
+                        <p>
+                            ${escapeHTML(
+                                entry.text ||
+                                entry.description ||
+                                ""
+                            )}
+                        </p>
+                        `;
+
+                    container.appendChild(
+                        element
+                    );
+
+                }
+            );
+
+    }
+
+    /* =====================================================
+       33 — PROFILE
+       ===================================================== */
+
+    function renderPlayerProfile() {
+
+        const level =
+            $("playerLevel");
+
+        const xp =
+            $("playerXP");
+
+        const name =
+            $("playerName");
+
+        if (name) {
+
+            name.textContent =
+                state.player.name;
+
+        }
+
+        if (level) {
+
+            level.textContent =
+                state.player.level;
+
+        }
+
+        if (xp) {
+
+            const required =
+                xpRequired(
+                    state.player.level
+                );
+
+            xp.textContent =
+                `${state.player.xp}/${required}`;
+
+        }
+
+    }
+
+    /* =====================================================
+       34 — SETTINGS
+       ===================================================== */
+
+    function syncSettings() {
+
+        const sound =
+            $("sfxToggle");
+
+        const music =
+            $("musicToggle");
+
+        const motion =
+            $("motionToggle");
+
+        if (sound) {
+
+            sound.checked =
+                !!state.sound;
+
+        }
+
+        if (music) {
+
+            music.checked =
+                !!state.music;
+
+        }
+
+        if (motion) {
+
+            motion.checked =
+                !!state.motion;
+
+        }
+
+        if (
+            window.Effects &&
+            typeof window.Effects.setMotion ===
+            "function"
+        ) {
+
+            window.Effects.setMotion(
+                state.motion
+            );
+
+        }
+
+    }
+
+    /* =====================================================
+       35 — OVERLAYS
+       ===================================================== */
+
+    function openOverlay(
+        id
+    ) {
+
+        const element =
+            $(id);
+
+        if (!element) {
+            return;
+        }
+
+        element.classList.remove(
+            "hidden"
+        );
+
+        element.classList.add(
+            "active"
+        );
+
+    }
+
+    function closeOverlay(
+        id
+    ) {
+
+        const element =
+            $(id);
+
+        if (!element) {
+            return;
+        }
+
+        element.classList.remove(
+            "active"
+        );
+
+        setTimeout(
+            () =>
+                element.classList.add(
+                    "hidden"
+                ),
+            200
+        );
+
+    }
+
+    /* =====================================================
+       36 — BUTTON BINDING
+       ===================================================== */
+
+    function bindClick(
+        id,
+        callback
+    ) {
+
+        const element =
+            $(id);
+
+        if (!element) {
+            return;
+        }
+
+        element.addEventListener(
+            "click",
+            event => {
+
+                unlockAudio();
+
+                AudioEngine.click();
+
+                callback(
+                    event
+                );
+
+            }
+        );
+
+    }
+
+    function bindUI() {
+
+        bindClick(
+            "continueBtn",
+            () =>
+                Game.continueGame()
+        );
+
+        bindClick(
+            "newGameBtn",
+            () =>
+                Game.newGame()
+        );
+
+        bindClick(
+            "howToPlayBtn",
+            () =>
+                openOverlay(
+                    "howToPlayOverlay"
+                )
+        );
+
+        bindClick(
+            "closeHowToPlayBtn",
+            () =>
+                closeOverlay(
+                    "howToPlayOverlay"
+                )
+        );
+
+        bindClick(
+            "tutorialOkBtn",
+            () =>
+                closeOverlay(
+                    "howToPlayOverlay"
+                )
+        );
+
+        bindClick(
+            "menuBtn",
+            () =>
+                openOverlay(
+                    "menuOverlay"
+                )
+        );
+
+        bindClick(
+            "closeMenuBtn",
+            () =>
+                closeOverlay(
+                    "menuOverlay"
+                )
+        );
+
+        bindClick(
+            "inventoryBtn",
+            () => {
+
+                renderInventory();
+
+                openOverlay(
+                    "inventoryOverlay"
+                );
+
+            }
+        );
+
+        bindClick(
+            "menuInventoryBtn",
+            () => {
+
+                closeOverlay(
+                    "menuOverlay"
+                );
+
+                renderInventory();
+
+                openOverlay(
+                    "inventoryOverlay"
+                );
+
+            }
+        );
+
+        bindClick(
+            "closeInventoryBtn",
+            () =>
+                closeOverlay(
+                    "inventoryOverlay"
+                )
+        );
+
+        bindClick(
+            "achievementsBtn",
+            () => {
+
+                renderAchievements();
+
+                openOverlay(
+                    "achievementsOverlay"
+                );
+
+            }
+        );
+
+        bindClick(
+            "menuAchievementsBtn",
+            () => {
+
+                closeOverlay(
+                    "menuOverlay"
+                );
+
+                renderAchievements();
+
+                openOverlay(
+                    "achievementsOverlay"
+                );
+
+            }
+        );
+
+        bindClick(
+            "closeAchievementsBtn",
+            () =>
+                closeOverlay(
+                    "achievementsOverlay"
+                )
+        );
+
+        bindClick(
+            "journalBtn",
+            () => {
+
+                renderJournal();
+
+                openOverlay(
+                    "journalOverlay"
+                );
+
+            }
+        );
+
+        bindClick(
+            "menuJournalBtn",
+            () => {
+
+                closeOverlay(
+                    "menuOverlay"
+                );
+
+                renderJournal();
+
+                openOverlay(
+                    "journalOverlay"
+                );
+
+            }
+        );
+
+        bindClick(
+            "closeJournalBtn",
+            () =>
+                closeOverlay(
+                    "journalOverlay"
+                )
+        );
+
+        bindClick(
+            "menuSettingsBtn",
+            () => {
+
+                closeOverlay(
+                    "menuOverlay"
+                );
+
+                syncSettings();
+
+                openOverlay(
+                    "settingsOverlay"
+                );
+
+            }
+        );
+
+        bindClick(
+            "closeSettingsBtn",
+            () =>
+                closeOverlay(
+                    "settingsOverlay"
+                )
+        );
+
+        bindClick(
+            "settingsDoneBtn",
+            () =>
+                closeOverlay(
+                    "settingsOverlay"
+                )
+        );
+
+        bindClick(
+            "soundBtn",
+            () => {
+
+                state.sound =
+                    !state.sound;
+
+                syncSettings();
+
+                saveState();
+
+                notify(
+                    state.sound
+                        ? "الصوت مفعل"
+                        : "الصوت متوقف",
+                    "🔊"
+                );
+
+            }
+        );
+
+        bindClick(
+            "saveGameBtn",
+            () => {
+
+                saveState();
+
+                notify(
+                    "تم حفظ اللعبة",
+                    "💾"
+                );
+
+            }
+        );
+
+        bindClick(
+            "exitToTitleBtn",
+            () => {
+
+                saveState();
+
+                showScreen(
+                    "startScreen"
+                );
+
+            }
+        );
+
+        bindClick(
+            "restartFromEnd",
+            () =>
+                Game.newGame()
+        );
+
+        bindClick(
+            "endToTitleBtn",
+            () =>
+                showScreen(
+                    "startScreen"
+                )
+        );
+
+        const soundToggle =
+            $("sfxToggle");
+
+        if (soundToggle) {
+
+            soundToggle.addEventListener(
+                "change",
+                () => {
+
+                    state.sound =
+                        soundToggle.checked;
+
+                    saveState();
+
+                }
+            );
+
+        }
+
+        const musicToggle =
+            $("musicToggle");
+
+        if (musicToggle) {
+
+            musicToggle.addEventListener(
+                "change",
+                () => {
+
+                    state.music =
+                        musicToggle.checked;
+
+                    updateMusic();
+
+                    saveState();
+
+                }
+            );
+
+        }
+
+        const motionToggle =
+            $("motionToggle");
+
+        if (motionToggle) {
+
+            motionToggle.addEventListener(
+                "change",
+                () => {
+
+                    state.motion =
+                        motionToggle.checked;
+
+                    if (
+                        window.Effects &&
+                        typeof window.Effects.setMotion ===
+                        "function"
+                    ) {
+
+                        window.Effects.setMotion(
+                            state.motion
+                        );
+
+                    }
+
+                    saveState();
+
+                }
+            );
+
+        }
+
+    }
+
+    /* =====================================================
+       37 — MUSIC
+       ===================================================== */
+
+    function updateMusic() {
+
+        const music =
+            $("bgMusic");
+
+        if (!music) {
+            return;
+        }
+
+        music.loop =
+            true;
+
+        music.volume =
+            .18;
+
+        if (
+            state.music
+        ) {
+
+            music.play()
+                .catch(
+                    () => {}
+                );
+
+        } else {
+
+            music.pause();
+
+        }
+
+    }
+
+    function setupMusic() {
+
+        const music =
+            $("bgMusic");
+
+        if (!music) {
+            return;
+        }
+
+        music.loop =
+            true;
+
+        music.volume =
+            .18;
+
+        document.addEventListener(
+            "pointerdown",
+            () => {
+
+                if (
+                    state.music
+                ) {
+
+                    music.play()
+                        .catch(
+                            () => {}
+                        );
+
+                }
+
+            },
+            {
+                once: true
+            }
+        );
+
+    }
+
+    /* =====================================================
+       38 — CONTINUE BUTTON
+       ===================================================== */
+
+    function updateContinueButton() {
+
+        const button =
+            $("continueBtn");
+
+        if (!button) {
+            return;
+        }
+
+        const hasSave =
+            !!(
+                state.started &&
+                state.scene
+            );
+
+        button.classList.toggle(
+            "hidden",
+            !hasSave
+        );
+
+    }
+
+    /* =====================================================
+       39 — LOADING
+       ===================================================== */
+
+    async function loadingSequence() {
+
+        const progress =
+            $("loadingProgress");
+
+        const status =
+            $("loadingStatus");
+
+        const messages = [
+
+            "جاري استدعاء الظلال...",
+            "تحميل عالم القصة...",
+            "فتح الذكريات...",
+            "تجهيز الأسرار...",
+            "تهيئة المؤثرات...",
+            "اكتمل الاستدعاء..."
+
+        ];
+
+        for (
+            let i = 0;
+            i < messages.length;
+            i++
+        ) {
+
+            if (status) {
+
+                status.textContent =
+                    messages[i];
+
+            }
+
+            if (progress) {
+
+                progress.style.width =
+                    `${Math.round(
+                        ((i + 1) /
+                        messages.length) *
+                        100
+                    )}%`;
+
+            }
+
+            await wait(
+                180
+            );
+
+        }
+
+        await wait(
+            250
+        );
+
+        showScreen(
+            "startScreen"
+        );
+
+        updateContinueButton();
+
+    }
+
+    /* =====================================================
+       40 — REFRESH
+       ===================================================== */
+
+    function refreshUI() {
+
+        renderHUD();
+
+        renderPlayerProfile();
+
+        syncSettings();
+
+        updateContinueButton();
+
+    }
+
+    /* =====================================================
+       41 — KEYBOARD
+       ===================================================== */
+
+    function keyboardControls(
+        event
+    ) {
+
+        if (
+            event.key ===
+            "Escape"
+        ) {
+
+            [
+                "menuOverlay",
+                "inventoryOverlay",
+                "achievementsOverlay",
+                "journalOverlay",
+                "settingsOverlay",
+                "howToPlayOverlay",
+                "cinematicOverlay"
+            ].forEach(
+                id => {
+
+                    const element =
+                        $(id);
+
+                    if (
+                        element &&
+                        !element.classList
+                            .contains(
+                                "hidden"
+                            )
+                    ) {
+
+                        closeOverlay(
+                            id
+                        );
+
+                    }
+
+                }
+            );
+
+        }
+
+        const number =
+            Number(
+                event.key
+            );
+
+        if (
+            number >= 1 &&
+            number <= 9
+        ) {
+
+            const buttons =
+                $$("#choices button");
+
+            const button =
+                buttons[
+                    number - 1
+                ];
+
+            if (button) {
+
+                button.click();
+
+            }
+
+        }
+
+    }
+
+    /* =====================================================
+       42 — VISIBILITY
+       ===================================================== */
+
+    function visibilityHandler() {
+
+        if (
+            document.hidden
+        ) {
+
+            Game.pause();
+
+        } else {
+
+            Game.resume();
+
+        }
+
+    }
+
+    /* =====================================================
+       43 — PUBLIC API
+       ===================================================== */
+
+    window.SHADOWS = {
+
+        state,
+
+        Game,
+
+        saveState,
+
+        resetState,
+
+        addXP,
+
+        addCoins,
+
+        spendCoins,
+
+        setFlag,
+
+        getFlag,
+
+        hasItem,
+
+        addItem,
+
+        removeItem,
+
+        addJournal,
+
+        unlockAchievement,
+
+        checkAchievements,
+
+        playEffect,
+
+        notify,
+
+        cinematic,
+
+        renderScene,
+
+        refreshUI
+
+    };
+
+    /* =====================================================
+       44 — BOOT
+       ===================================================== */
+
+    function boot() {
+
+        try {
+
+            if (
+                window.Effects &&
+                typeof window.Effects.init ===
+                "function"
+            ) {
+
+                window.Effects.init();
+
+            }
+
+        } catch (error) {
+
+            console.warn(
+                "[SHADOWS] Effects init failed:",
+                error
+            );
+
+        }
+
+        bindUI();
+
+        setupMusic();
+
+        document.addEventListener(
+            "keydown",
+            keyboardControls
+        );
+
+        document.addEventListener(
+            "visibilitychange",
+            visibilityHandler
+        );
+
+        window.addEventListener(
+            "beforeunload",
+            saveState
+        );
+
+        refreshUI();
+
+        loadingSequence();
+
+        console.log(
+            "🌑 SHADOWS OF THE UNKNOWN — ULTRA V8 READY"
+        );
+
+    }
+
+    /* =====================================================
+       45 — START
+       ===================================================== */
+
+    if (
+        document.readyState ===
+        "loading"
+    ) {
+
+        document.addEventListener(
+            "DOMContentLoaded",
+            boot,
+            {
+                once: true
+            }
+        );
+
+    } else {
+
+        boot();
+
+    }
 
 })();
