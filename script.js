@@ -1,2948 +1,38 @@
 /* =========================================================
    ظلال المجهول — SHADOWS OF THE UNKNOWN
-   script.js — GAME ENGINE
-   ULTRA V5 — PART 1/2
+   script.js — ULTRA V6
+   PART 1 / 2
    ========================================================= */
 
 (() => {
   "use strict";
 
-  /* =========================================================
-     1. GLOBAL HELPERS
-     ========================================================= */
+  /* =======================================================
+     CORE
+     ======================================================= */
 
-  const $ = (selector, root = document) =>
-    root.querySelector(selector);
+  const $ = (id) => document.getElementById(id);
 
-  const $$ = (selector, root = document) =>
-    [...root.querySelectorAll(selector)];
-
-  const byId = id =>
-    document.getElementById(id);
-
-  const safeNumber = (value, fallback = 0) => {
-    const n = Number(value);
-    return Number.isFinite(n) ? n : fallback;
-  };
-
-  const clamp = (value, min, max) =>
-    Math.min(Math.max(value, min), max);
+  const clamp = (n, min, max) =>
+    Math.max(min, Math.min(max, n));
 
   const random = (min, max) =>
     Math.floor(Math.random() * (max - min + 1)) + min;
 
-  const randomItem = array =>
-    Array.isArray(array) && array.length
-      ? array[Math.floor(Math.random() * array.length)]
+  const pick = (arr) =>
+    Array.isArray(arr) && arr.length
+      ? arr[Math.floor(Math.random() * arr.length)]
       : null;
 
-  const shuffle = array => {
-    if (!Array.isArray(array)) return [];
-
-    const result = [...array];
-
-    for (let i = result.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [result[i], result[j]] = [result[j], result[i]];
-    }
-
-    return result;
-  };
-
-  const escapeHTML = value => {
-    return String(value ?? "")
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#039;");
-  };
-
-  const now = () => Date.now();
-
-  const formatNumber = number =>
-    safeNumber(number).toLocaleString("ar-DZ");
-
-  const delay = ms =>
-    new Promise(resolve => setTimeout(resolve, ms));
-
-  /* =========================================================
-     2. STORAGE ENGINE
-     ========================================================= */
-
-  const STORAGE_KEY = "shadows_of_unknown_ultra_v5";
-
-  const storage = {
-
-    read() {
-      try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-
-        if (!raw) return null;
-
-        const parsed = JSON.parse(raw);
-
-        return parsed && typeof parsed === "object"
-          ? parsed
-          : null;
-
-      } catch (error) {
-        console.warn("Storage read error:", error);
-        return null;
-      }
-    },
-
-    write(data) {
-      try {
-        localStorage.setItem(
-          STORAGE_KEY,
-          JSON.stringify(data)
-        );
-
-        return true;
-
-      } catch (error) {
-        console.warn("Storage write error:", error);
-        return false;
-      }
-    },
-
-    remove() {
-      try {
-        localStorage.removeItem(STORAGE_KEY);
-      } catch (error) {
-        console.warn("Storage remove error:", error);
-      }
-    }
-  };
-
-  /* =========================================================
-     3. DEFAULT PLAYER STATE
-     ========================================================= */
-
-  const DEFAULT_STATE = {
-
-    version: 5,
-
-    firstLaunch: true,
-
-    player: {
-      name: "المحقق",
-      avatar: "🕵️",
-      level: 1,
-      xp: 0,
-      coins: 250,
-      gems: 5,
-      score: 0,
-      bestScore: 0,
-      streak: 0,
-      maxStreak: 0
-    },
-
-    settings: {
-      sound: true,
-      music: true,
-      vibration: true,
-      darkMode: true,
-      language: "ar",
-      difficulty: "normal"
-    },
-
-    game: {
-      mode: "classic",
-      round: 1,
-      totalRounds: 10,
-      currentQuestion: 0,
-      correctAnswers: 0,
-      wrongAnswers: 0,
-      hintsUsed: 0,
-      timeLeft: 0,
-      totalTime: 0,
-      active: false,
-      paused: false
-    },
-
-    statistics: {
-      gamesPlayed: 0,
-      gamesWon: 0,
-      gamesLost: 0,
-      questionsAnswered: 0,
-      correctAnswers: 0,
-      wrongAnswers: 0,
-      perfectGames: 0,
-      fastestAnswer: null,
-      totalCoinsEarned: 0,
-      totalXpEarned: 0
-    },
-
-    achievements: [],
-
-    unlockedModes: [
-      "classic"
-    ],
-
-    unlockedCases: [
-      1
-    ],
-
-    inventory: {
-      hints: 3,
-      freezes: 1,
-      reveals: 1,
-      shields: 1
-    },
-
-    daily: {
-      date: "",
-      completed: false,
-      rewardClaimed: false,
-      score: 0
-    },
-
-    missions: {
-      completed: [],
-      progress: {}
-    },
-
-    history: [],
-
-    premium: {
-      active: false,
-      purchases: []
-    },
-
-    tutorial: {
-      completed: false,
-      step: 0
-    }
-  };
-
-  /* =========================================================
-     4. DEEP CLONE
-     ========================================================= */
-
-  function deepClone(object) {
-
-    try {
-      return JSON.parse(
-        JSON.stringify(object)
-      );
-
-    } catch (error) {
-      return {};
-    }
-  }
-
-  /* =========================================================
-     5. MERGE STATE
-     ========================================================= */
-
-  function mergeObjects(base, saved) {
-
-    if (
-      !saved ||
-      typeof saved !== "object"
-    ) {
-      return base;
-    }
-
-    Object.keys(saved).forEach(key => {
-
-      if (
-        saved[key] &&
-        typeof saved[key] === "object" &&
-        !Array.isArray(saved[key]) &&
-        base[key] &&
-        typeof base[key] === "object" &&
-        !Array.isArray(base[key])
-      ) {
-
-        base[key] = mergeObjects(
-          base[key],
-          saved[key]
-        );
-
-      } else {
-
-        base[key] = saved[key];
-
-      }
-
-    });
-
-    return base;
-  }
-
-  /* =========================================================
-     6. LOAD STATE
-     ========================================================= */
-
-  let state = (() => {
-
-    const saved = storage.read();
-
-    if (!saved) {
-      return deepClone(DEFAULT_STATE);
-    }
-
-    return mergeObjects(
-      deepClone(DEFAULT_STATE),
-      saved
-    );
-
-  })();
-
-  /* =========================================================
-     7. SAVE GAME
-     ========================================================= */
-
-  function saveGame() {
-
-    state.version = 5;
-
-    storage.write(state);
-
-    emitEvent(
-      "stateSaved",
-      state
-    );
-  }
-
-  /* =========================================================
-     8. RESET GAME
-     ========================================================= */
-
-  function resetGame() {
-
-    state = deepClone(DEFAULT_STATE);
-
-    saveGame();
-
-    location.reload();
-  }
-
-  /* =========================================================
-     9. EVENT SYSTEM
-     ========================================================= */
-
-  const events = {};
-
-  function onEvent(name, callback) {
-
-    if (!events[name]) {
-      events[name] = [];
-    }
-
-    events[name].push(callback);
-  }
-
-  function emitEvent(name, data) {
-
-    if (!events[name]) return;
-
-    events[name].forEach(callback => {
-
-      try {
-        callback(data);
-      } catch (error) {
-        console.error(
-          `Event error [${name}]`,
-          error
-        );
-      }
-
-    });
-  }
-
-  /* =========================================================
-     10. AUDIO ENGINE
-     ========================================================= */
-
-  const AudioEngine = {
-
-    context: null,
-
-    init() {
-
-      if (this.context) return;
-
-      try {
-
-        const AudioContext =
-          window.AudioContext ||
-          window.webkitAudioContext;
-
-        if (AudioContext) {
-          this.context =
-            new AudioContext();
-        }
-
-      } catch (error) {
-        console.warn(
-          "Audio unavailable",
-          error
-        );
-      }
-    },
-
-    beep(
-      frequency = 440,
-      duration = 100,
-      type = "sine",
-      volume = 0.04
-    ) {
-
-      if (!state.settings.sound) return;
-
-      this.init();
-
-      if (!this.context) return;
-
-      try {
-
-        if (
-          this.context.state === "suspended"
-        ) {
-          this.context.resume();
-        }
-
-        const oscillator =
-          this.context.createOscillator();
-
-        const gain =
-          this.context.createGain();
-
-        oscillator.type = type;
-
-        oscillator.frequency.value =
-          frequency;
-
-        gain.gain.value = volume;
-
-        oscillator.connect(gain);
-        gain.connect(
-          this.context.destination
-        );
-
-        oscillator.start();
-
-        gain.gain.exponentialRampToValueAtTime(
-          0.001,
-          this.context.currentTime +
-          duration / 1000
-        );
-
-        oscillator.stop(
-          this.context.currentTime +
-          duration / 1000
-        );
-
-      } catch (error) {
-        console.warn(
-          "Audio error:",
-          error
-        );
-      }
-    },
-
-    correct() {
-      this.beep(
-        720,
-        100,
-        "sine",
-        0.035
-      );
-
-      setTimeout(
-        () =>
-          this.beep(
-            980,
-            140,
-            "sine",
-            0.035
-          ),
-        90
-      );
-    },
-
-    wrong() {
-      this.beep(
-        180,
-        180,
-        "sawtooth",
-        0.025
-      );
-    },
-
-    click() {
-      this.beep(
-        520,
-        45,
-        "square",
-        0.018
-      );
-    },
-
-    win() {
-
-      [520, 660, 820, 1040]
-        .forEach(
-          (frequency, index) => {
-
-            setTimeout(
-              () =>
-                this.beep(
-                  frequency,
-                  130,
-                  "sine",
-                  0.03
-                ),
-              index * 100
-            );
-
-          }
-        );
-    }
-  };
-
-  /* =========================================================
-     11. VIBRATION ENGINE
-     ========================================================= */
-
-  const Vibration = {
-
-    pulse(pattern = 30) {
-
-      if (!state.settings.vibration) {
-        return;
-      }
-
-      if (
-        typeof navigator.vibrate !==
-        "function"
-      ) {
-        return;
-      }
-
-      try {
-        navigator.vibrate(pattern);
-      } catch (error) {
-        console.warn(
-          "Vibration unavailable"
-        );
-      }
-    },
-
-    correct() {
-      this.pulse([25, 35, 25]);
-    },
-
-    wrong() {
-      this.pulse(100);
-    },
-
-    click() {
-      this.pulse(15);
-    },
-
-    win() {
-      this.pulse([
-        30,
-        50,
-        30,
-        50,
-        70
-      ]);
-    }
-  };
-
-  /* =========================================================
-     12. FX HELPERS
-     ========================================================= */
-
-  function notify(
-    message,
-    type = "info",
-    duration = 2200
-  ) {
-
-    let container =
-      byId("toast-container");
-
-    if (!container) {
-
-      container =
-        document.createElement("div");
-
-      container.id =
-        "toast-container";
-
-      container.style.position =
-        "fixed";
-
-      container.style.left = "50%";
-      container.style.bottom = "25px";
-
-      container.style.transform =
-        "translateX(-50%)";
-
-      container.style.zIndex =
-        "99999";
-
-      container.style.display =
-        "flex";
-
-      container.style.flexDirection =
-        "column";
-
-      container.style.gap =
-        "10px";
-
-      container.style.pointerEvents =
-        "none";
-
-      document.body.appendChild(
-        container
-      );
-    }
-
-    const toast =
-      document.createElement("div");
-
-    toast.textContent = message;
-
-    toast.dataset.type = type;
-
-    toast.style.padding =
-      "12px 18px";
-
-    toast.style.borderRadius =
-      "14px";
-
-    toast.style.background =
-      "rgba(15,15,20,.94)";
-
-    toast.style.color =
-      "#fff";
-
-    toast.style.fontSize =
-      "14px";
-
-    toast.style.fontWeight =
-      "700";
-
-    toast.style.boxShadow =
-      "0 10px 30px rgba(0,0,0,.3)";
-
-    toast.style.opacity = "0";
-
-    toast.style.transform =
-      "translateY(15px)";
-
-    toast.style.transition =
-      "all .25s ease";
-
-    container.appendChild(
-      toast
-    );
-
-    requestAnimationFrame(() => {
-
-      toast.style.opacity = "1";
-
-      toast.style.transform =
-        "translateY(0)";
-    });
-
-    setTimeout(() => {
-
-      toast.style.opacity = "0";
-
-      toast.style.transform =
-        "translateY(15px)";
-
-      setTimeout(
-        () => toast.remove(),
-        300
-      );
-
-    }, duration);
-  }
-
-  function createConfetti(count = 30) {
-
-    const fragment =
-      document.createDocumentFragment();
-
-    for (
-      let i = 0;
-      i < count;
-      i++
-    ) {
-
-      const piece =
-        document.createElement("div");
-
-      piece.className =
-        "confetti-piece";
-
-      piece.textContent =
-        randomItem([
-          "✦",
-          "◆",
-          "★",
-          "●",
-          "✧"
-        ]);
-
-      piece.style.position =
-        "fixed";
-
-      piece.style.left =
-        `${random(5, 95)}vw`;
-
-      piece.style.top = "-20px";
-
-      piece.style.fontSize =
-        `${random(10, 22)}px`;
-
-      piece.style.zIndex =
-        "100000";
-
-      piece.style.pointerEvents =
-        "none";
-
-      piece.style.animation =
-        `confettiFall ${random(
-          1600,
-          3200
-        )}ms linear forwards`;
-
-      piece.style.setProperty(
-        "--rotation",
-        `${random(-720, 720)}deg`
-      );
-
-      fragment.appendChild(
-        piece
-      );
-    }
-
-    document.body.appendChild(
-      fragment
-    );
-
-    setTimeout(() => {
-
-      $$(".confetti-piece")
-        .forEach(
-          element =>
-            element.remove()
-        );
-
-    }, 3500);
-  }
-
-  /* =========================================================
-     13. XP / LEVEL SYSTEM
-     ========================================================= */
-
-  function xpRequired(level) {
-
-    level = Math.max(
-      1,
-      safeNumber(level, 1)
-    );
-
-    return Math.floor(
-      100 +
-      (level - 1) * 75 +
-      Math.pow(level - 1, 1.45) * 20
-    );
-  }
-
-  function getLevelProgress() {
-
-    const level =
-      safeNumber(
-        state.player.level,
-        1
-      );
-
-    const required =
-      xpRequired(level);
-
-    const xp =
-      safeNumber(
-        state.player.xp,
-        0
-      );
-
-    return {
-      level,
-      xp,
-      required,
-      percent: clamp(
-        (xp / required) * 100,
-        0,
-        100
-      )
-    };
-  }
-
-  function addXP(amount) {
-
-    amount = Math.max(
-      0,
-      safeNumber(amount)
-    );
-
-    if (!amount) return;
-
-    state.player.xp += amount;
-
-    state.statistics.totalXpEarned +=
-      amount;
-
-    let levelUps = 0;
-
-    while (
-      state.player.xp >=
-      xpRequired(
-        state.player.level
-      )
-    ) {
-
-      state.player.xp -=
-        xpRequired(
-          state.player.level
-        );
-
-      state.player.level++;
-
-      levelUps++;
-
-      const rewardCoins =
-        50 +
-        state.player.level * 10;
-
-      state.player.coins +=
-        rewardCoins;
-
-      notify(
-        `🎉 وصلت للمستوى ${state.player.level}! +${rewardCoins} عملة`,
-        "success",
-        3200
-      );
-
-      AudioEngine.win();
-      Vibration.win();
-
-      emitEvent(
-        "levelUp",
-        {
-          level:
-            state.player.level,
-          reward:
-            rewardCoins
-        }
-      );
-    }
-
-    saveGame();
-
-    emitEvent(
-      "xpChanged",
-      getLevelProgress()
-    );
-
-    return levelUps;
-  }
-
-  /* =========================================================
-     14. COIN SYSTEM
-     ========================================================= */
-
-  function addCoins(amount, reason = "") {
-
-    amount = safeNumber(
-      amount,
-      0
-    );
-
-    if (amount === 0) return;
-
-    state.player.coins =
-      Math.max(
-        0,
-        state.player.coins +
-        amount
-      );
-
-    if (amount > 0) {
-
-      state.statistics.totalCoinsEarned +=
-        amount;
-    }
-
-    saveGame();
-
-    emitEvent(
-      "coinsChanged",
-      {
-        amount,
-        reason,
-        total:
-          state.player.coins
-      }
-    );
-  }
-
-  function spendCoins(amount) {
-
-    amount = Math.max(
-      0,
-      safeNumber(amount)
-    );
-
-    if (
-      state.player.coins <
-      amount
-    ) {
-
-      notify(
-        "🪙 العملات غير كافية",
-        "warning"
-      );
-
-      return false;
-    }
-
-    state.player.coins -=
-      amount;
-
-    saveGame();
-
-    emitEvent(
-      "coinsChanged",
-      {
-        amount: -amount,
-        total:
-          state.player.coins
-      }
-    );
-
-    return true;
-  }
-
-  /* =========================================================
-     15. DAILY SYSTEM
-     ========================================================= */
-
-  function getDateKey() {
-
-    const date =
-      new Date();
-
-    return [
-      date.getFullYear(),
-      String(
-        date.getMonth() + 1
-      ).padStart(2, "0"),
-      String(
-        date.getDate()
-      ).padStart(2, "0")
-    ].join("-");
-  }
-
-  function updateDailyChallenge() {
-
-    const today =
-      getDateKey();
-
-    if (
-      state.daily.date !==
-      today
-    ) {
-
-      state.daily = {
-        date: today,
-        completed: false,
-        rewardClaimed: false,
-        score: 0
-      };
-
-      saveGame();
-    }
-
-    return state.daily;
-  }
-
-  function completeDailyChallenge(score = 0) {
-
-    updateDailyChallenge();
-
-    if (
-      state.daily.completed
-    ) {
-      return false;
-    }
-
-    state.daily.completed =
-      true;
-
-    state.daily.score =
-      Math.max(
-        0,
-        safeNumber(score)
-      );
-
-    addCoins(100, "daily");
-
-    addXP(75);
-
-    notify(
-      "🏆 أكملت التحدي اليومي! +100 🪙",
-      "success",
-      3500
-    );
-
-    createConfetti(20);
-
-    emitEvent(
-      "dailyCompleted",
-      state.daily
-    );
-
-    saveGame();
-
-    return true;
-  }
-
-  /* =========================================================
-     16. STREAK SYSTEM
-     ========================================================= */
-
-  function increaseStreak() {
-
-    state.player.streak++;
-
-    if (
-      state.player.streak >
-      state.player.maxStreak
-    ) {
-
-      state.player.maxStreak =
-        state.player.streak;
-    }
-
-    const bonus =
-      Math.min(
-        100,
-        state.player.streak * 5
-      );
-
-    addCoins(
-      bonus,
-      "streak"
-    );
-
-    emitEvent(
-      "streakChanged",
-      state.player.streak
-    );
-
-    saveGame();
-  }
-
-  function resetStreak() {
-
-    state.player.streak = 0;
-
-    saveGame();
-
-    emitEvent(
-      "streakChanged",
-      0
-    );
-  }
-
-  /* =========================================================
-     17. MODE DEFINITIONS
-     ========================================================= */
-
-  const GAME_MODES = {
-
-    classic: {
-      id: "classic",
-      name: "القصة الكلاسيكية",
-      icon: "🕵️",
-      description:
-        "حل القضية خطوة بخطوة واكتشف الحقيقة.",
-      baseTime: 60,
-      multiplier: 1
-    },
-
-    speed: {
-      id: "speed",
-      name: "سباق الزمن",
-      icon: "⚡",
-      description:
-        "الوقت ضدك. اكتشف الحقيقة بأسرع ما يمكن.",
-      baseTime: 30,
-      multiplier: 1.35
-    },
-
-    detective: {
-      id: "detective",
-      name: "المحقق",
-      icon: "🔎",
-      description:
-        "استعمل الأدلة والمنطق للوصول إلى الحل.",
-      baseTime: 75,
-      multiplier: 1.5
-    },
-
-    mystery: {
-      id: "mystery",
-      name: "الغموض",
-      icon: "🌑",
-      description:
-        "معلومات أقل، غموض أكبر.",
-      baseTime: 55,
-      multiplier: 1.75
-    },
-
-    hardcore: {
-      id: "hardcore",
-      name: "الوضع القاسي",
-      icon: "💀",
-      description:
-        "أخطاء أقل ووقت أقل ومكافآت أكبر.",
-      baseTime: 40,
-      multiplier: 2
-    },
-
-    boss: {
-      id: "boss",
-      name: "قضية الزعيم",
-      icon: "👑",
-      description:
-        "قضية خاصة بمستوى صعوبة مرتفع.",
-      baseTime: 90,
-      multiplier: 2.5
-    },
-
-    daily: {
-      id: "daily",
-      name: "التحدي اليومي",
-      icon: "📅",
-      description:
-        "قضية جديدة كل يوم.",
-      baseTime: 60,
-      multiplier: 2
-    },
-
-    premium: {
-      id: "premium",
-      name: "ملفات سرية",
-      icon: "🔐",
-      description:
-        "قضايا خاصة ومحتوى متقدم.",
-      baseTime: 90,
-      multiplier: 3
-    }
-  };
-
-  /* =========================================================
-     18. MODE ACCESS
-     ========================================================= */
-
-  function isModeUnlocked(modeId) {
-
-    if (
-      state.premium.active &&
-      modeId === "premium"
-    ) {
-      return true;
-    }
-
-    if (
-      state.unlockedModes.includes(
-        modeId
-      )
-    ) {
-      return true;
-    }
-
-    if (
-      modeId === "daily"
-    ) {
-      return true;
-    }
-
-    return false;
-  }
-
-  function unlockMode(
-    modeId,
-    price = 0
-  ) {
-
-    if (!GAME_MODES[modeId]) {
-      return false;
-    }
-
-    if (
-      isModeUnlocked(modeId)
-    ) {
-      return true;
-    }
-
-    if (
-      price > 0 &&
-      !spendCoins(price)
-    ) {
-      return false;
-    }
-
-    if (
-      !state.unlockedModes.includes(
-        modeId
-      )
-    ) {
-
-      state.unlockedModes.push(
-        modeId
-      );
-    }
-
-    saveGame();
-
-    notify(
-      `🔓 تم فتح ${GAME_MODES[modeId].name}`,
-      "success"
-    );
-
-    return true;
-  }
-
-  /* =========================================================
-     19. DIFFICULTY ENGINE
-     ========================================================= */
-
-  const DIFFICULTIES = {
-
-    easy: {
-      id: "easy",
-      name: "سهل",
-      icon: "🟢",
-      multiplier: 0.8,
-      timeMultiplier: 1.3,
-      mistakes: 5
-    },
-
-    normal: {
-      id: "normal",
-      name: "متوسط",
-      icon: "🟡",
-      multiplier: 1,
-      timeMultiplier: 1,
-      mistakes: 3
-    },
-
-    hard: {
-      id: "hard",
-      name: "صعب",
-      icon: "🟠",
-      multiplier: 1.5,
-      timeMultiplier: 0.8,
-      mistakes: 2
-    },
-
-    expert: {
-      id: "expert",
-      name: "خبير",
-      icon: "🔴",
-      multiplier: 2,
-      timeMultiplier: 0.65,
-      mistakes: 1
-    },
-
-    nightmare: {
-      id: "nightmare",
-      name: "كابوس",
-      icon: "☠️",
-      multiplier: 3,
-      timeMultiplier: 0.5,
-      mistakes: 1
-    }
-  };
-
-  function getDifficulty() {
-
-    return (
-      DIFFICULTIES[
-        state.settings.difficulty
-      ] ||
-      DIFFICULTIES.normal
-    );
-  }
-
-  /* =========================================================
-     20. QUESTION ENGINE
-     ========================================================= */
-
-  let currentQuestion = null;
-
-  let questionPool = [];
-
-  let usedQuestions = [];
-
-  function buildQuestionPool() {
-
-    const source =
-      window.GAME_DATA ||
-      window.DATA ||
-      window.QUESTIONS ||
-      [];
-
-    if (Array.isArray(source)) {
-
-      questionPool = [
-        ...source
-      ];
-
-    } else if (
-      source &&
-      Array.isArray(
-        source.questions
-      )
-    ) {
-
-      questionPool = [
-        ...source.questions
-      ];
-
-    } else if (
-      source &&
-      Array.isArray(
-        source.cases
-      )
-    ) {
-
-      questionPool = [
-        ...source.cases
-      ];
-
-    } else {
-
-      questionPool = [];
-    }
-
-    return questionPool;
-  }
-
-  function getQuestionPool() {
-
-    if (
-      !questionPool.length
-    ) {
-      buildQuestionPool();
-    }
-
-    return questionPool;
-  }
-
-  function getUnusedQuestions() {
-
-    const pool =
-      getQuestionPool();
-
-    if (!pool.length) {
-      return [];
-    }
-
-    let available =
-      pool.filter(
-        question =>
-          !usedQuestions.includes(
-            question.id
-          )
-      );
-
-    if (!available.length) {
-
-      usedQuestions = [];
-
-      available = [
-        ...pool
-      ];
-    }
-
-    return available;
-  }
-
-  function getNextQuestion() {
-
-    const available =
-      getUnusedQuestions();
-
-    if (!available.length) {
-      return null;
-    }
-
-    const selected =
-      randomItem(
-        available
-      );
-
-    if (
-      selected &&
-      selected.id !== undefined
-    ) {
-
-      usedQuestions.push(
-        selected.id
-      );
-    }
-
-    currentQuestion =
-      selected;
-
-    return selected;
-  }
-
-  /* =========================================================
-     21. ANSWER VALIDATION
-     ========================================================= */
-
-  function normalizeAnswer(value) {
-
-    return String(
-      value ?? ""
-    )
-      .trim()
-      .toLowerCase();
-  }
-
-  function isCorrectAnswer(
-    question,
-    answer
-  ) {
-
-    if (!question) {
-      return false;
-    }
-
-    const given =
-      normalizeAnswer(answer);
-
-    const correctValues = [];
-
-    if (
-      question.answer !==
-      undefined
-    ) {
-      correctValues.push(
-        question.answer
-      );
-    }
-
-    if (
-      question.correct !==
-      undefined
-    ) {
-      correctValues.push(
-        question.correct
-      );
-    }
-
-    if (
-      Array.isArray(
-        question.answers
-      )
-    ) {
-
-      correctValues.push(
-        ...question.answers
-          .filter(
-            item =>
-              item &&
-              (
-                item.correct === true ||
-                item.isCorrect === true
-              )
-          )
-          .map(
-            item =>
-              item.id ??
-              item.value ??
-              item.text ??
-              item.answer
-          )
-      );
-    }
-
-    return correctValues.some(
-      correct =>
-        normalizeAnswer(
-          correct
-        ) === given
-    );
-  }
-
-  /* =========================================================
-     22. SCORE ENGINE
-     ========================================================= */
-
-  function calculateScore({
-    correct = true,
-    timeLeft = 0,
-    difficultyMultiplier = 1,
-    modeMultiplier = 1,
-    streak = 0
-  } = {}) {
-
-    if (!correct) {
-      return 0;
-    }
-
-    const base = 100;
-
-    const timeBonus =
-      Math.max(
-        0,
-        safeNumber(timeLeft)
-      ) * 2;
-
-    const streakBonus =
-      Math.min(
-        100,
-        safeNumber(streak) * 10
-      );
-
-    return Math.floor(
-      (
-        base +
-        timeBonus +
-        streakBonus
-      ) *
-      difficultyMultiplier *
-      modeMultiplier
-    );
-  }
-
-  /* =========================================================
-     23. REWARD ENGINE
-     ========================================================= */
-
-  function calculateReward(score) {
-
-    score =
-      Math.max(
-        0,
-        safeNumber(score)
-      );
-
-    const coins =
-      Math.max(
-        5,
-        Math.floor(score / 10)
-      );
-
-    const xp =
-      Math.max(
-        10,
-        Math.floor(score / 6)
-      );
-
-    return {
-      coins,
-      xp
-    };
-  }
-
-  function giveReward(
-    score,
-    reason = "game"
-  ) {
-
-    const reward =
-      calculateReward(score);
-
-    addCoins(
-      reward.coins,
-      reason
-    );
-
-    addXP(
-      reward.xp
-    );
-
-    return reward;
-  }
-
-  /* =========================================================
-     24. GAME SESSION
-     ========================================================= */
-
-  const GameSession = {
-
-    questions: [],
-
-    index: 0,
-
-    score: 0,
-
-    startedAt: 0,
-
-    ended: false,
-
-    timer: null,
-
-    init(mode = "classic") {
-
-      if (
-        !GAME_MODES[mode]
-      ) {
-        mode = "classic";
-      }
-
-      if (
-        !isModeUnlocked(mode)
-      ) {
-
-        notify(
-          "🔒 هذا الوضع غير مفتوح بعد",
-          "warning"
-        );
-
-        return false;
-      }
-
-      state.game = {
-        ...state.game,
-
-        mode,
-
-        round: 1,
-
-        currentQuestion: 0,
-
-        correctAnswers: 0,
-
-        wrongAnswers: 0,
-
-        hintsUsed: 0,
-
-        timeLeft:
-          this.getInitialTime(mode),
-
-        totalTime:
-          this.getInitialTime(mode),
-
-        active: true,
-
-        paused: false
-      };
-
-      this.questions = [];
-
-      this.index = 0;
-
-      this.score = 0;
-
-      this.startedAt =
-        now();
-
-      this.ended = false;
-
-      usedQuestions = [];
-
-      this.prepareQuestions();
-
-      saveGame();
-
-      emitEvent(
-        "gameStarted",
-        state.game
-      );
-
-      return true;
-    },
-
-    getInitialTime(mode) {
-
-      const modeData =
-        GAME_MODES[mode] ||
-        GAME_MODES.classic;
-
-      const difficulty =
-        getDifficulty();
-
-      return Math.floor(
-        modeData.baseTime *
-        difficulty.timeMultiplier
-      );
-    },
-
-    prepareQuestions() {
-
-      const total =
-        state.game.totalRounds ||
-        10;
-
-      const result = [];
-
-      for (
-        let i = 0;
-        i < total;
-        i++
-      ) {
-
-        const question =
-          getNextQuestion();
-
-        if (question) {
-          result.push(
-            question
-          );
-        }
-      }
-
-      this.questions =
-        result;
-
-      return result;
-    },
-
-    current() {
-
-      return (
-        this.questions[
-          this.index
-        ] || null
-      );
-    },
-
-    next() {
-
-      if (this.ended) {
-        return null;
-      }
-
-      this.index++;
-
-      state.game.currentQuestion =
-        this.index;
-
-      if (
-        this.index >=
-        this.questions.length
-      ) {
-
-        this.finish(
-          true
-        );
-
-        return null;
-      }
-
-      const question =
-        this.current();
-
-      currentQuestion =
-        question;
-
-      emitEvent(
-        "questionChanged",
-        {
-          question,
-          index:
-            this.index,
-          total:
-            this.questions.length
-        }
-      );
-
-      return question;
-    },
-
-    answer(answer) {
-
-      if (
-        this.ended ||
-        state.game.paused
-      ) {
-        return null;
-      }
-
-      const question =
-        this.current();
-
-      if (!question) {
-        return null;
-      }
-
-      const correct =
-        isCorrectAnswer(
-          question,
-          answer
-        );
-
-      state.statistics.questionsAnswered++;
-
-      if (correct) {
-
-        state.game.correctAnswers++;
-
-        state.statistics.correctAnswers++;
-
-        increaseStreak();
-
-        const score =
-          calculateScore({
-            correct: true,
-            timeLeft:
-              state.game.timeLeft,
-            difficultyMultiplier:
-              getDifficulty().multiplier,
-            modeMultiplier:
-              GAME_MODES[
-                state.game.mode
-              ].multiplier,
-            streak:
-              state.player.streak
-          });
-
-        this.score +=
-          score;
-
-        state.player.score +=
-          score;
-
-        state.player.bestScore =
-          Math.max(
-            state.player.bestScore,
-            state.player.score
-          );
-
-        addXP(
-          Math.max(
-            5,
-            Math.floor(score / 10)
-          )
-        );
-
-        AudioEngine.correct();
-        Vibration.correct();
-
-        emitEvent(
-          "answerCorrect",
-          {
-            question,
-            answer,
-            score,
-            totalScore:
-              this.score
-          }
-        );
-
-      } else {
-
-        state.game.wrongAnswers++;
-
-        state.statistics.wrongAnswers++;
-
-        resetStreak();
-
-        AudioEngine.wrong();
-        Vibration.wrong();
-
-        emitEvent(
-          "answerWrong",
-          {
-            question,
-            answer
-          }
-        );
-      }
-
-      state.statistics.gamesPlayed =
-        Math.max(
-          0,
-          state.statistics.gamesPlayed
-        );
-
-      saveGame();
-
-      return {
-        correct,
-        question,
-        answer,
-        score: this.score
-      };
-    },
-
-    pause() {
-
-      if (
-        this.ended
-      ) return;
-
-      state.game.paused =
-        true;
-
-      emitEvent(
-        "gamePaused"
-      );
-
-      saveGame();
-    },
-
-    resume() {
-
-      if (
-        this.ended
-      ) return;
-
-      state.game.paused =
-        false;
-
-      emitEvent(
-        "gameResumed"
-      );
-
-      saveGame();
-    },
-
-    finish(
-      completed = false
-    ) {
-
-      if (this.ended) {
-        return;
-      }
-
-      this.ended = true;
-
-      this.stopTimer();
-
-      state.game.active =
-        false;
-
-      state.game.paused =
-        false;
-
-      if (completed) {
-
-        state.statistics.gamesWon++;
-
-        if (
-          state.game.wrongAnswers === 0
-        ) {
-
-          state.statistics.perfectGames++;
-
-        }
-
-        const reward =
-          giveReward(
-            this.score,
-            "game"
-          );
-
-        createConfetti(25);
-
-        AudioEngine.win();
-        Vibration.win();
-
-        emitEvent(
-          "gameWon",
-          {
-            score:
-              this.score,
-            reward
-          }
-        );
-
-      } else {
-
-        state.statistics.gamesLost++;
-
-        emitEvent(
-          "gameLost",
-          {
-            score:
-              this.score
-          }
-        );
-      }
-
-      state.history.unshift({
-        id:
-          `${now()}_${random(
-            1000,
-            9999
-          )}`,
-
-        mode:
-          state.game.mode,
-
-        score:
-          this.score,
-
-        correct:
-          state.game.correctAnswers,
-
-        wrong:
-          state.game.wrongAnswers,
-
-        date:
-          new Date().toISOString()
-      });
-
-      state.history =
-        state.history.slice(
-          0,
-          50
-        );
-
-      saveGame();
-
-      emitEvent(
-        "gameFinished",
-        {
-          completed,
-          score:
-            this.score,
-          state:
-            state.game
-        }
-      );
-    },
-
-    startTimer() {
-
-      this.stopTimer();
-
-      this.timer =
-        setInterval(() => {
-
-          if (
-            this.ended ||
-            state.game.paused
-          ) {
-            return;
-          }
-
-          state.game.timeLeft--;
-
-          emitEvent(
-            "timerTick",
-            state.game.timeLeft
-          );
-
-          if (
-            state.game.timeLeft <= 0
-          ) {
-
-            state.game.timeLeft =
-              0;
-
-            this.finish(
-              false
-            );
-          }
-
-        }, 1000);
-    },
-
-    stopTimer() {
-
-      if (this.timer) {
-
-        clearInterval(
-          this.timer
-        );
-
-        this.timer = null;
-      }
-    },
-
-    useHint(type = "normal") {
-
-      if (this.ended) {
-        return false;
-      }
-
-      const inventory =
-        state.inventory;
-
-      let item = null;
-
-      if (
-        type === "freeze"
-      ) {
-
-        item = "freezes";
-
-      } else if (
-        type === "reveal"
-      ) {
-
-        item = "reveals";
-
-      } else if (
-        type === "shield"
-      ) {
-
-        item = "shields";
-
-      } else {
-
-        item = "hints";
-      }
-
-      if (
-        !safeNumber(
-          inventory[item]
-        )
-      ) {
-
-        notify(
-          "❌ لا تملك هذه المساعدة",
-          "warning"
-        );
-
-        return false;
-      }
-
-      inventory[item]--;
-
-      state.game.hintsUsed++;
-
-      saveGame();
-
-      emitEvent(
-        "hintUsed",
-        {
-          type,
-          question:
-            this.current()
-        }
-      );
-
-      return true;
-    }
-  };
-
-  /* =========================================================
-     25. ACHIEVEMENTS
-     ========================================================= */
-
-  const ACHIEVEMENTS = [
-
-    {
-      id: "first_game",
-      title: "البداية",
-      description:
-        "العب أول قضية.",
-      rewardCoins: 50,
-      rewardXP: 25
-    },
-
-    {
-      id: "first_win",
-      title: "أول انتصار",
-      description:
-        "أكمل أول قضية بنجاح.",
-      rewardCoins: 75,
-      rewardXP: 40
-    },
-
-    {
-      id: "perfect",
-      title: "المحقق المثالي",
-      description:
-        "أكمل قضية بدون أي خطأ.",
-      rewardCoins: 150,
-      rewardXP: 100
-    },
-
-    {
-      id: "streak_5",
-      title: "سلسلة نارية",
-      description:
-        "حقق سلسلة من 5 إجابات صحيحة.",
-      rewardCoins: 100,
-      rewardXP: 75
-    },
-
-    {
-      id: "streak_10",
-      title: "لا يخطئ",
-      description:
-        "حقق سلسلة من 10 إجابات صحيحة.",
-      rewardCoins: 250,
-      rewardXP: 150
-    },
-
-    {
-      id: "level_5",
-      title: "محقق متقدم",
-      description:
-        "الوصول إلى المستوى 5.",
-      rewardCoins: 200,
-      rewardXP: 100
-    },
-
-    {
-      id: "level_10",
-      title: "أسطورة التحقيق",
-      description:
-        "الوصول إلى المستوى 10.",
-      rewardCoins: 500,
-      rewardXP: 250
-    },
-
-    {
-      id: "score_1000",
-      title: "نقاط أولى",
-      description:
-        "الوصول إلى 1000 نقطة.",
-      rewardCoins: 150,
-      rewardXP: 100
-    },
-
-    {
-      id: "score_10000",
-      title: "عبقري",
-      description:
-        "الوصول إلى 10000 نقطة.",
-      rewardCoins: 500,
-      rewardXP: 300
-    },
-
-    {
-      id: "daily",
-      title: "ملتزم",
-      description:
-        "أكمل تحدياً يومياً.",
-      rewardCoins: 100,
-      rewardXP: 75
-    },
-
-    {
-      id: "hardcore",
-      title: "بلا خوف",
-      description:
-        "أكمل قضية في الوضع القاسي.",
-      rewardCoins: 300,
-      rewardXP: 200
-    }
-  ];
-
-  function hasAchievement(id) {
-
-    return state.achievements
-      .includes(id);
-  }
-
-  function unlockAchievement(id) {
-
-    if (
-      hasAchievement(id)
-    ) {
-      return false;
-    }
-
-    const achievement =
-      ACHIEVEMENTS.find(
-        item =>
-          item.id === id
-      );
-
-    if (!achievement) {
-      return false;
-    }
-
-    state.achievements.push(
-      id
-    );
-
-    addCoins(
-      achievement.rewardCoins,
-      "achievement"
-    );
-
-    addXP(
-      achievement.rewardXP
-    );
-
-    notify(
-      `🏆 إنجاز جديد: ${achievement.title}`,
-      "success",
-      3500
-    );
-
-    emitEvent(
-      "achievementUnlocked",
-      achievement
-    );
-
-    saveGame();
-
-    return true;
-  }
-
-  function checkAchievements() {
-
-    if (
-      state.statistics.gamesPlayed >=
-      1
-    ) {
-      unlockAchievement(
-        "first_game"
-      );
-    }
-
-    if (
-      state.statistics.gamesWon >=
-      1
-    ) {
-      unlockAchievement(
-        "first_win"
-      );
-    }
-
-    if (
-      state.statistics.perfectGames >=
-      1
-    ) {
-      unlockAchievement(
-        "perfect"
-      );
-    }
-
-    if (
-      state.player.maxStreak >=
-      5
-    ) {
-      unlockAchievement(
-        "streak_5"
-      );
-    }
-
-    if (
-      state.player.maxStreak >=
-      10
-    ) {
-      unlockAchievement(
-        "streak_10"
-      );
-    }
-
-    if (
-      state.player.level >=
-      5
-    ) {
-      unlockAchievement(
-        "level_5"
-      );
-    }
-
-    if (
-      state.player.level >=
-      10
-    ) {
-      unlockAchievement(
-        "level_10"
-      );
-    }
-
-    if (
-      state.player.score >=
-      1000
-    ) {
-      unlockAchievement(
-        "score_1000"
-      );
-    }
-
-    if (
-      state.player.score >=
-      10000
-    ) {
-      unlockAchievement(
-        "score_10000"
-      );
-    }
-
-    if (
-      state.daily.completed
-    ) {
-      unlockAchievement(
-        "daily"
-      );
-    }
-
-    if (
-      state.statistics.gamesWon > 0 &&
-      state.history.some(
-        game =>
-          game.mode ===
-          "hardcore"
-      )
-    ) {
-      unlockAchievement(
-        "hardcore"
-      );
-    }
-  }
-
-  /* =========================================================
-     26. MISSION ENGINE
-     ========================================================= */
-
-  const MISSIONS = [
-
-    {
-      id: "play_3",
-      title: "المبتدئ النشيط",
-      description:
-        "العب 3 قضايا.",
-      target: 3,
-      rewardCoins: 100,
-      rewardXP: 50
-    },
-
-    {
-      id: "win_5",
-      title: "صياد القضايا",
-      description:
-        "اربح 5 قضايا.",
-      target: 5,
-      rewardCoins: 200,
-      rewardXP: 100
-    },
-
-    {
-      id: "correct_20",
-      title: "عين الصقر",
-      description:
-        "أجب بشكل صحيح 20 مرة.",
-      target: 20,
-      rewardCoins: 250,
-      rewardXP: 150
-    },
-
-    {
-      id: "coins_1000",
-      title: "جامع العملات",
-      description:
-        "اكسب 1000 عملة.",
-      target: 1000,
-      rewardCoins: 200,
-      rewardXP: 100
-    }
-  ];
-
-  function getMissionProgress(
-    mission
-  ) {
-
-    switch (mission.id) {
-
-      case "play_3":
-        return Math.min(
-          mission.target,
-          state.statistics.gamesPlayed
-        );
-
-      case "win_5":
-        return Math.min(
-          mission.target,
-          state.statistics.gamesWon
-        );
-
-      case "correct_20":
-        return Math.min(
-          mission.target,
-          state.statistics.correctAnswers
-        );
-
-      case "coins_1000":
-        return Math.min(
-          mission.target,
-          state.statistics.totalCoinsEarned
-        );
-
-      default:
-        return 0;
-    }
-  }
-
-  function checkMissions() {
-
-    MISSIONS.forEach(
-      mission => {
-
-        if (
-          state.missions.completed
-            .includes(mission.id)
-        ) {
-          return;
-        }
-
-        const progress =
-          getMissionProgress(
-            mission
-          );
-
-        state.missions.progress[
-          mission.id
-        ] = progress;
-
-        if (
-          progress >=
-          mission.target
-        ) {
-
-          state.missions.completed
-            .push(
-              mission.id
-            );
-
-          addCoins(
-            mission.rewardCoins,
-            "mission"
-          );
-
-          addXP(
-            mission.rewardXP
-          );
-
-          notify(
-            `🎯 مهمة مكتملة: ${mission.title}`,
-            "success",
-            3200
-          );
-
-          emitEvent(
-            "missionCompleted",
-            mission
-          );
-        }
-      }
-    );
-
-    saveGame();
-  }
-
-  /* =========================================================
-     27. UI UPDATE CORE
-     ========================================================= */
-
-  function updatePlayerUI() {
-
-    const level =
-      byId("player-level");
-
-    if (level) {
-      level.textContent =
-        state.player.level;
-    }
-
-    const coins =
-      byId("coins");
-
-    if (coins) {
-      coins.textContent =
-        formatNumber(
-          state.player.coins
-        );
-    }
-
-    const gems =
-      byId("gems");
-
-    if (gems) {
-      gems.textContent =
-        formatNumber(
-          state.player.gems
-        );
-    }
-
-    const xp =
-      byId("xp");
-
-    if (xp) {
-      xp.textContent =
-        formatNumber(
-          state.player.xp
-        );
-    }
-
-    const score =
-      byId("score");
-
-    if (score) {
-      score.textContent =
-        formatNumber(
-          state.player.score
-        );
-    }
-
-    const streak =
-      byId("streak");
-
-    if (streak) {
-      streak.textContent =
-        formatNumber(
-          state.player.streak
-        );
-    }
-
-    const progress =
-      getLevelProgress();
-
-    $$(".xp-progress")
-      .forEach(
-        element => {
-
-          element.style.width =
-            `${progress.percent}%`;
-        }
-      );
-  }
-
-  function updateGameUI() {
-
-    const time =
-      byId("timer");
-
-    if (time) {
-
-      time.textContent =
-        formatNumber(
-          state.game.timeLeft
-        );
-    }
-
-    const current =
-      byId("question-number");
-
-    if (current) {
-
-      current.textContent =
-        formatNumber(
-          state.game.currentQuestion +
-          1
-        );
-    }
-
-    const correct =
-      byId("correct-count");
-
-    if (correct) {
-
-      correct.textContent =
-        formatNumber(
-          state.game.correctAnswers
-        );
-    }
-
-    const wrong =
-      byId("wrong-count");
-
-    if (wrong) {
-
-      wrong.textContent =
-        formatNumber(
-          state.game.wrongAnswers
-        );
-    }
-
-    const gameScore =
-      byId("game-score");
-
-    if (gameScore) {
-
-      gameScore.textContent =
-        formatNumber(
-          GameSession.score
-        );
-    }
-  }
-
-  function updateAllUI() {
-
-    updatePlayerUI();
-
-    updateGameUI();
-
-    updateDailyChallenge();
-
-    checkAchievements();
-
-    checkMissions();
-
-    emitEvent(
-      "uiUpdated",
-      state
-    );
-  }
-
-  /* =========================================================
-     28. SETTINGS
-     ========================================================= */
-
-  function setSetting(
-    key,
-    value
-  ) {
-
-    if (
-      !(key in state.settings)
-    ) {
-      return false;
-    }
-
-    state.settings[key] =
-      value;
-
-    if (
-      key === "darkMode"
-    ) {
-
-      document.body.classList
-        .toggle(
-          "light-mode",
-          !value
-        );
-    }
-
-    saveGame();
-
-    emitEvent(
-      "settingChanged",
-      {
-        key,
-        value
-      }
-    );
-
-    return true;
-  }
-
-  /* =========================================================
-     29. BOOTSTRAP
-     ========================================================= */
-
-  function bootstrap() {
-
-    buildQuestionPool();
-
-    updateDailyChallenge();
-
-    updateAllUI();
-
-    document.body.classList
-      .toggle(
-        "light-mode",
-        !state.settings.darkMode
-      );
-
-    onEvent(
-      "coinsChanged",
-      updatePlayerUI
-    );
-
-    onEvent(
-      "xpChanged",
-      updatePlayerUI
-    );
-
-    onEvent(
-      "timerTick",
-      updateGameUI
-    );
-
-    onEvent(
-      "answerCorrect",
-      updateAllUI
-    );
-
-    onEvent(
-      "answerWrong",
-      updateAllUI
-    );
-
-    onEvent(
-      "gameFinished",
-      updateAllUI
-    );
-
-    emitEvent(
-      "bootComplete",
-      state
-    );
-  }
-
-  /* =========================================================
-     30. GLOBAL API
-     ========================================================= */
-
-  window.SHADOWS = {
-
-    state,
-
-    GAME_MODES,
-
-    DIFFICULTIES,
-
-    ACHIEVEMENTS,
-
-    MISSIONS,
-
-    GameSession,
-
-    AudioEngine,
-
-    Vibration,
-
-    storage,
-
-    saveGame,
-
-    resetGame,
-
-    notify,
-
-    createConfetti,
-
-    addXP,
-
-    addCoins,
-
-    spendCoins,
-
-    unlockMode,
-
-    isModeUnlocked,
-
-    getDifficulty,
-
-    getNextQuestion,
-
-    calculateScore,
-
-    calculateReward,
-
-    giveReward,
-
-    checkAchievements,
-
-    checkMissions,
-
-    updateAllUI,
-
-    setSetting,
-
-    onEvent,
-
-    emitEvent
-  };
-
-  /* =========================================================
-     31. DOM READY
-     ========================================================= */
-
-  if (
-    document.readyState ===
-    "loading"
-  ) {
-
-    document.addEventListener(
-      "DOMContentLoaded",
-      bootstrap,
-      {
-        once: true
-      }
-    );
-
-  } else {
-
-    bootstrap();
-  }
-
-})();
-
-/* =========================================================
-   ظلال المجهول — SHADOWS OF THE UNKNOWN
-   script.js — GAME ENGINE
-   ULTRA V5 — PART 2/2
-   ========================================================= */
-
-(() => {
-  "use strict";
-
-  const API = window.SHADOWS;
-
-  if (!API) {
-    console.error(
-      "SHADOWS ULTRA V5: Part 1 must be loaded before Part 2."
-    );
-    return;
-  }
-
-  const {
-    state,
-    GAME_MODES,
-    DIFFICULTIES,
-    ACHIEVEMENTS,
-    MISSIONS,
-    GameSession,
-    AudioEngine,
-    Vibration,
-    saveGame,
-    notify,
-    createConfetti,
-    addCoins,
-    addXP,
-    spendCoins,
-    unlockMode,
-    isModeUnlocked,
-    updateAllUI,
-    setSetting,
-    onEvent,
-    emitEvent
-  } = API;
-
-  /* =========================================================
-     1. DOM HELPERS
-     ========================================================= */
-
-  const $ = (selector, root = document) =>
-    root.querySelector(selector);
-
-  const $$ = (selector, root = document) =>
-    [...root.querySelectorAll(selector)];
-
-  const byId = id =>
-    document.getElementById(id);
+  const shuffle = (arr) =>
+    [...arr].sort(() => Math.random() - 0.5);
 
   const safeNumber = (value, fallback = 0) => {
     const n = Number(value);
     return Number.isFinite(n) ? n : fallback;
   };
 
-  const clamp = (value, min, max) =>
-    Math.min(Math.max(value, min), max);
-
-  const escapeHTML = value =>
+  const escapeHTML = (value) =>
     String(value ?? "")
       .replace(/&/g, "&amp;")
       .replace(/</g, "&lt;")
@@ -2950,2865 +40,4242 @@
       .replace(/"/g, "&quot;")
       .replace(/'/g, "&#039;");
 
-  const formatNumber = value =>
-    safeNumber(value).toLocaleString("ar-DZ");
+  const formatNumber = (n) =>
+    safeNumber(n).toLocaleString("ar-DZ");
 
-  /* =========================================================
-     2. SCREEN ENGINE
-     ========================================================= */
+  const wait = (ms) =>
+    new Promise(resolve => setTimeout(resolve, ms));
 
-  const ScreenManager = {
 
-    current: null,
+  /* =======================================================
+     STORAGE
+     ======================================================= */
 
-    aliases: {
-      home: [
-        "home",
-        "screen-home",
-        "home-screen",
-        "main-screen"
-      ],
+  const STORAGE_KEY = "shadows_of_unknown_ultra_v6";
 
-      game: [
-        "game",
-        "screen-game",
-        "game-screen"
-      ],
+  const defaultState = {
+    version: 6,
 
-      profile: [
-        "profile",
-        "screen-profile",
-        "profile-screen"
-      ],
+    firstLaunch: true,
 
-      shop: [
-        "shop",
-        "screen-shop",
-        "shop-screen"
-      ],
-
-      achievements: [
-        "achievements",
-        "screen-achievements",
-        "achievements-screen"
-      ],
-
-      modes: [
-        "modes",
-        "screen-modes",
-        "modes-screen"
-      ]
+    player: {
+      name: "المحقق",
+      level: 1,
+      xp: 0,
+      coins: 250,
+      score: 0,
+      bestScore: 0,
+      streak: 0,
+      maxStreak: 0
     },
 
-    find(name) {
+    game: {
+      active: false,
+      paused: false,
 
-      const ids =
-        this.aliases[name] || [name];
+      chapter: 1,
+      sceneIndex: 0,
 
-      for (const id of ids) {
+      health: 100,
+      maxHealth: 100,
 
-        const element =
-          byId(id);
+      choicesMade: 0,
+      correctChoices: 0,
 
-        if (element) {
-          return element;
-        }
-      }
+      totalChoices: 0,
+      totalDeaths: 0,
 
-      return null;
+      startedAt: 0,
+      elapsed: 0
     },
 
-    hideAll() {
-
-      const selectors = [
-        "[data-screen]",
-        ".screen",
-        ".app-screen"
-      ];
-
-      const elements =
-        $$(selectors.join(","));
-
-      elements.forEach(
-        element => {
-          element.classList.remove(
-            "active",
-            "show",
-            "visible"
-          );
-
-          element.setAttribute(
-            "aria-hidden",
-            "true"
-          );
-        }
-      );
+    settings: {
+      sound: true,
+      music: true,
+      motion: true
     },
 
-    show(name) {
+    inventory: [],
 
-      const target =
-        this.find(name);
+    achievements: [],
 
-      if (!target) {
-        console.warn(
-          "Screen not found:",
-          name
-        );
-        return false;
-      }
+    journal: [],
 
-      this.hideAll();
+    history: [],
 
-      target.classList.add(
-        "active",
-        "show",
-        "visible"
-      );
+    unlockedChapters: [1],
 
-      target.setAttribute(
-        "aria-hidden",
-        "false"
-      );
+    completedChapters: [],
 
-      this.current =
-        name;
+    flags: {},
 
-      document.body.dataset.screen =
-        name;
-
-      emitEvent(
-        "screenChanged",
-        name
-      );
-
-      updateAllUI();
-
-      return true;
+    daily: {
+      date: "",
+      completed: false,
+      rewardClaimed: false
     },
 
-    home() {
-      return this.show("home");
-    },
-
-    game() {
-      return this.show("game");
-    },
-
-    profile() {
-      return this.show("profile");
-    },
-
-    shop() {
-      return this.show("shop");
-    },
-
-    achievements() {
-      return this.show("achievements");
-    },
-
-    modes() {
-      return this.show("modes");
+    statistics: {
+      gamesPlayed: 0,
+      endings: 0,
+      choices: 0,
+      correctChoices: 0,
+      coinsEarned: 0,
+      achievementsUnlocked: 0,
+      longestStreak: 0
     }
   };
 
-  /* =========================================================
-     3. MODAL ENGINE
-     ========================================================= */
 
-  const Modal = {
+  const clone = (obj) =>
+    JSON.parse(JSON.stringify(obj));
 
-    current: null,
 
-    close() {
-
-      const modal =
-        byId("game-modal") ||
-        $(".modal.active") ||
-        $(".modal.show");
-
-      if (!modal) return;
-
-      modal.classList.remove(
-        "active",
-        "show"
-      );
-
-      modal.setAttribute(
-        "aria-hidden",
-        "true"
-      );
-
-      this.current = null;
-
-      emitEvent(
-        "modalClosed"
-      );
-    },
-
-    open({
-      title = "",
-      content = "",
-      buttons = []
-    } = {}) {
-
-      let modal =
-        byId("game-modal");
-
-      if (!modal) {
-
-        modal =
-          document.createElement("div");
-
-        modal.id =
-          "game-modal";
-
-        modal.className =
-          "modal game-modal";
-
-        modal.innerHTML = `
-          <div class="modal-backdrop"
-               data-modal-close></div>
-
-          <div class="modal-card"
-               role="dialog"
-               aria-modal="true">
-
-            <button
-              class="modal-close"
-              data-modal-close
-              aria-label="إغلاق">
-              ×
-            </button>
-
-            <div class="modal-title"></div>
-
-            <div class="modal-content"></div>
-
-            <div class="modal-actions"></div>
-
-          </div>
-        `;
-
-        document.body.appendChild(
-          modal
-        );
-      }
-
-      const titleElement =
-        $(".modal-title", modal);
-
-      const contentElement =
-        $(".modal-content", modal);
-
-      const actionsElement =
-        $(".modal-actions", modal);
-
-      if (titleElement) {
-        titleElement.textContent =
-          title;
-      }
-
-      if (contentElement) {
-        contentElement.innerHTML =
-          content;
-      }
-
-      if (actionsElement) {
-
-        actionsElement.innerHTML = "";
-
-        buttons.forEach(
-          button => {
-
-            const element =
-              document.createElement(
-                "button"
-              );
-
-            element.type =
-              "button";
-
-            element.className =
-              button.className ||
-              "modal-button";
-
-            element.textContent =
-              button.text ||
-              "حسناً";
-
-            element.addEventListener(
-              "click",
-              () => {
-
-                AudioEngine.click();
-
-                if (
-                  typeof button.action ===
-                  "function"
-                ) {
-                  button.action();
-                }
-              }
-            );
-
-            actionsElement.appendChild(
-              element
-            );
-          }
-        );
-      }
-
-      modal.classList.add(
-        "active",
-        "show"
-      );
-
-      modal.setAttribute(
-        "aria-hidden",
-        "false"
-      );
-
-      this.current =
-        modal;
-
-      emitEvent(
-        "modalOpened",
-        {
-          title,
-          content
-        }
-      );
+  function merge(base, saved) {
+    if (!saved || typeof saved !== "object") {
+      return clone(base);
     }
-  };
 
-  /* =========================================================
-     4. QUESTION RENDERER
-     ========================================================= */
+    const result = clone(base);
 
-  const QuestionRenderer = {
-
-    render(question) {
-
-      if (!question) {
-        this.empty();
-        return;
-      }
-
-      const text =
-        question.question ||
-        question.text ||
-        question.title ||
-        question.prompt ||
-        "ما قرارك؟";
-
-      const questionElements = [
-        byId("question-text"),
-        byId("question"),
-        $(".question-text"),
-        $(".question-title")
-      ].filter(Boolean);
-
-      questionElements.forEach(
-        element => {
-          element.textContent =
-            text;
-        }
-      );
-
-      this.renderAnswers(
-        question
-      );
-
-      this.renderEvidence(
-        question
-      );
-
-      this.renderProgress();
-
-      emitEvent(
-        "questionRendered",
-        question
-      );
-    },
-
-    renderAnswers(question) {
-
-      let answers =
-        question.options ||
-        question.choices ||
-        question.answers ||
-        [];
-
-      if (!Array.isArray(answers)) {
-        answers = [];
-      }
-
-      const containers = [
-        byId("answers"),
-        byId("answer-list"),
-        $(".answers"),
-        $(".answer-list"),
-        $("[data-answers]")
-      ].filter(Boolean);
-
-      if (!containers.length) {
-        return;
-      }
-
-      const html =
-        answers.map(
-          (answer, index) => {
-
-            let value =
-              answer;
-
-            let label =
-              answer;
-
-            if (
-              answer &&
-              typeof answer ===
-              "object"
-            ) {
-
-              value =
-                answer.id ??
-                answer.value ??
-                answer.text ??
-                answer.answer ??
-                index;
-
-              label =
-                answer.text ??
-                answer.label ??
-                answer.value ??
-                answer.answer ??
-                `الخيار ${index + 1}`;
-            }
-
-            return `
-              <button
-                type="button"
-                class="answer-button"
-                data-answer="${escapeHTML(value)}"
-                data-answer-index="${index}">
-                <span class="answer-number">
-                  ${index + 1}
-                </span>
-                <span class="answer-label">
-                  ${escapeHTML(label)}
-                </span>
-              </button>
-            `;
-          }
-        ).join("");
-
-      containers.forEach(
-        container => {
-          container.innerHTML =
-            html;
-        }
-      );
-    },
-
-    renderEvidence(question) {
-
-      const evidence =
-        question.evidence ||
-        question.clue ||
-        question.description ||
-        "";
-
-      const elements = [
-        byId("evidence"),
-        byId("clue"),
-        $(".evidence"),
-        $(".clue")
-      ].filter(Boolean);
-
-      elements.forEach(
-        element => {
-
-          if (!evidence) {
-            element.classList.add(
-              "hidden"
-            );
-            return;
-          }
-
-          element.classList.remove(
-            "hidden"
-          );
-
-          element.textContent =
-            evidence;
-        }
-      );
-    },
-
-    renderProgress() {
-
-      const total =
-        GameSession.questions.length ||
-        state.game.totalRounds ||
-        1;
-
-      const current =
-        GameSession.index + 1;
-
-      const percent =
-        clamp(
-          (current / total) * 100,
-          0,
-          100
-        );
-
-      $$(".game-progress")
-        .forEach(
-          element => {
-            element.style.width =
-              `${percent}%`;
-          }
-        );
-
-      const labels = [
-        byId("round"),
-        byId("question-number"),
-        $(".round-number")
-      ].filter(Boolean);
-
-      labels.forEach(
-        element => {
-          element.textContent =
-            `${current}/${total}`;
-        }
-      );
-    },
-
-    empty() {
-
-      const elements = [
-        byId("question-text"),
-        byId("question")
-      ].filter(Boolean);
-
-      elements.forEach(
-        element => {
-          element.textContent =
-            "لا توجد قضية متاحة حالياً.";
-        }
-      );
-    }
-  };
-
-  /* =========================================================
-     5. GAME FLOW
-     ========================================================= */
-
-  const GameController = {
-
-    start(mode = "classic") {
-
+    Object.keys(saved).forEach(key => {
       if (
-        !GAME_MODES[mode]
+        saved[key] &&
+        typeof saved[key] === "object" &&
+        !Array.isArray(saved[key]) &&
+        result[key] &&
+        typeof result[key] === "object" &&
+        !Array.isArray(result[key])
       ) {
-        mode = "classic";
-      }
-
-      if (
-        !isModeUnlocked(mode)
-      ) {
-
-        this.showLockedMode(
-          mode
-        );
-
-        return false;
-      }
-
-      const started =
-        GameSession.init(mode);
-
-      if (!started) {
-        return false;
-      }
-
-      ScreenManager.game();
-
-      const question =
-        GameSession.current();
-
-      QuestionRenderer.render(
-        question
-      );
-
-      GameSession.startTimer();
-
-      updateGameUI();
-
-      return true;
-    },
-
-    answer(value) {
-
-      if (
-        state.game.paused
-      ) {
-        return;
-      }
-
-      const result =
-        GameSession.answer(
-          value
-        );
-
-      if (!result) {
-        return;
-      }
-
-      const buttons =
-        $$(".answer-button");
-
-      buttons.forEach(
-        button => {
-
-          button.disabled =
-            true;
-
-          const buttonValue =
-            button.dataset.answer;
-
-          if (
-            String(buttonValue) ===
-            String(value)
-          ) {
-
-            button.classList.add(
-              result.correct
-                ? "correct"
-                : "wrong"
-            );
-          }
-        }
-      );
-
-      if (result.correct) {
-
-        notify(
-          `✅ إجابة صحيحة! +${formatNumber(
-            Math.max(
-              0,
-              result.score -
-              (GameSession.score -
-                result.score)
-            )
-          )}`,
-          "success",
-          1300
-        );
-
+        result[key] = merge(result[key], saved[key]);
       } else {
+        result[key] = saved[key];
+      }
+    });
 
-        notify(
-          "❌ إجابة خاطئة",
-          "error",
-          1300
-        );
+    return result;
+  }
+
+
+  function loadState() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+
+      if (!raw) {
+        return clone(defaultState);
       }
 
-      setTimeout(
-        () => {
-
-          if (
-            GameSession.ended
-          ) {
-            return;
-          }
-
-          const next =
-            GameSession.next();
-
-          if (next) {
-
-            QuestionRenderer.render(
-              next
-            );
-
-            updateGameUI();
-          }
-
-        },
-        result.correct
-          ? 650
-          : 900
+      return merge(
+        defaultState,
+        JSON.parse(raw)
       );
-    },
-
-    pause() {
-
-      if (
-        !state.game.active
-      ) {
-        return;
-      }
-
-      GameSession.pause();
-
-      Modal.open({
-        title: "⏸️ اللعبة متوقفة",
-        content: `
-          <p>
-            خذ وقتك، القضية مازالت محفوظة.
-          </p>
-        `,
-        buttons: [
-          {
-            text: "▶️ متابعة",
-            className:
-              "modal-button primary",
-            action: () => {
-              Modal.close();
-              GameSession.resume();
-            }
-          },
-          {
-            text: "🏠 الخروج",
-            className:
-              "modal-button danger",
-            action: () => {
-              Modal.close();
-              GameSession.finish(false);
-              ScreenManager.home();
-            }
-          }
-        ]
-      });
-    },
-
-    useHint(type) {
-
-      const success =
-        GameSession.useHint(type);
-
-      if (!success) {
-        return;
-      }
-
-      const question =
-        GameSession.current();
-
-      if (!question) {
-        return;
-      }
-
-      if (
-        type === "freeze"
-      ) {
-
-        const old =
-          state.game.timeLeft;
-
-        state.game.timeLeft +=
-          10;
-
-        notify(
-          "❄️ تم تجميد الوقت +10 ثوانٍ",
-          "success"
-        );
-
-        emitEvent(
-          "freezeActivated",
-          {
-            old,
-            current:
-              state.game.timeLeft
-          }
-        );
-
-      } else if (
-        type === "reveal"
-      ) {
-
-        this.revealClue(
-          question
-        );
-
-      } else if (
-        type === "shield"
-      ) {
-
-        notify(
-          "🛡️ الدرع جاهز لحماية إجابتك القادمة.",
-          "success"
-        );
-
-        state.game.shieldActive =
-          true;
-
-      } else {
-
-        this.smartHint(
-          question
-        );
-      }
-
-      saveGame();
-      updateAllUI();
-    },
-
-    smartHint(question) {
-
-      const hint =
-        question.hint ||
-        question.clue ||
-        question.evidence ||
-        "راجع الأدلة الموجودة أمامك جيداً.";
-
-      Modal.open({
-        title: "💡 دليل",
-        content: `
-          <div class="hint-box">
-            ${escapeHTML(hint)}
-          </div>
-        `,
-        buttons: [
-          {
-            text: "فهمت",
-            className:
-              "modal-button primary",
-            action: () =>
-              Modal.close()
-          }
-        ]
-      });
-    },
-
-    revealClue(question) {
-
-      const clue =
-        question.reveal ||
-        question.evidence ||
-        question.clue ||
-        question.description ||
-        "لا يوجد دليل إضافي.";
-
-      Modal.open({
-        title: "🔎 الدليل السري",
-        content: `
-          <div class="reveal-box">
-            ${escapeHTML(clue)}
-          </div>
-        `,
-        buttons: [
-          {
-            text: "متابعة",
-            className:
-              "modal-button primary",
-            action: () =>
-              Modal.close()
-          }
-        ]
-      });
-    },
-
-    showLockedMode(mode) {
-
-      const data =
-        GAME_MODES[mode];
-
-      if (!data) return;
-
-      Modal.open({
-        title: "🔒 ملف مغلق",
-        content: `
-          <div class="locked-mode">
-            <div class="locked-icon">
-              ${data.icon}
-            </div>
-
-            <h3>
-              ${escapeHTML(data.name)}
-            </h3>
-
-            <p>
-              ${escapeHTML(
-                data.description
-              )}
-            </p>
-
-            <p>
-              هذا الوضع غير متاح حالياً.
-            </p>
-          </div>
-        `,
-        buttons: [
-          {
-            text: "رجوع",
-            className:
-              "modal-button primary",
-            action: () =>
-              Modal.close()
-          }
-        ]
-      });
-    },
-
-    finishScreen(data) {
-
-      const completed =
-        Boolean(
-          data &&
-          data.completed
-        );
-
-      const score =
-        safeNumber(
-          data?.score
-        );
-
-      const correct =
-        safeNumber(
-          data?.state?.correctAnswers ||
-          state.game.correctAnswers
-        );
-
-      const wrong =
-        safeNumber(
-          data?.state?.wrongAnswers ||
-          state.game.wrongAnswers
-        );
-
-      const reward =
-        API.calculateReward
-          ? API.calculateReward(score)
-          : {
-              coins: Math.floor(
-                score / 10
-              ),
-              xp: Math.floor(
-                score / 6
-              )
-            };
-
-      Modal.open({
-        title: completed
-          ? "🏆 القضية حُلّت!"
-          : "⌛ انتهى التحقيق",
-
-        content: `
-          <div class="result-panel">
-
-            <div class="result-icon">
-              ${completed
-                ? "🏆"
-                : "⌛"}
-            </div>
-
-            <h2>
-              ${completed
-                ? "أحسنت أيها المحقق"
-                : "حاول مرة أخرى"}
-            </h2>
-
-            <div class="result-score">
-              ${formatNumber(score)}
-              <small>نقطة</small>
-            </div>
-
-            <div class="result-stats">
-
-              <div>
-                <span>✅ صحيحة</span>
-                <strong>
-                  ${formatNumber(correct)}
-                </strong>
-              </div>
-
-              <div>
-                <span>❌ خاطئة</span>
-                <strong>
-                  ${formatNumber(wrong)}
-                </strong>
-              </div>
-
-              <div>
-                <span>🪙 المكافأة</span>
-                <strong>
-                  +${formatNumber(
-                    reward.coins
-                  )}
-                </strong>
-              </div>
-
-              <div>
-                <span>⭐ XP</span>
-                <strong>
-                  +${formatNumber(
-                    reward.xp
-                  )}
-                </strong>
-              </div>
-
-            </div>
-
-          </div>
-        `,
-
-        buttons: [
-          {
-            text: "🔄 قضية جديدة",
-            className:
-              "modal-button primary",
-            action: () => {
-              Modal.close();
-              this.start(
-                state.game.mode
-              );
-            }
-          },
-
-          {
-            text: "🏠 الرئيسية",
-            className:
-              "modal-button",
-            action: () => {
-              Modal.close();
-              ScreenManager.home();
-            }
-          }
-        ]
-      });
-    }
-  };
-
-  /* =========================================================
-     6. SHOP ENGINE
-     ========================================================= */
-
-  const SHOP_ITEMS = [
-
-    {
-      id: "hint",
-      name: "مساعدة",
-      icon: "💡",
-      description:
-        "يعطيك تلميحاً أثناء التحقيق.",
-      price: 40,
-      currency: "coins",
-      inventoryKey: "hints"
-    },
-
-    {
-      id: "freeze",
-      name: "تجميد الوقت",
-      icon: "❄️",
-      description:
-        "يمنحك وقتاً إضافياً.",
-      price: 80,
-      currency: "coins",
-      inventoryKey: "freezes"
-    },
-
-    {
-      id: "reveal",
-      name: "كشف الدليل",
-      icon: "🔎",
-      description:
-        "يكشف دليلاً إضافياً.",
-      price: 120,
-      currency: "coins",
-      inventoryKey: "reveals"
-    },
-
-    {
-      id: "shield",
-      name: "درع",
-      icon: "🛡️",
-      description:
-        "يساعدك على تجاوز موقف صعب.",
-      price: 150,
-      currency: "coins",
-      inventoryKey: "shields"
-    }
-  ];
-
-  const Shop = {
-
-    render() {
-
-      const containers = [
-        byId("shop-items"),
-        $(".shop-items"),
-        $("[data-shop]")
-      ].filter(Boolean);
-
-      if (!containers.length) {
-        return;
-      }
-
-      const html =
-        SHOP_ITEMS.map(
-          item => `
-            <div class="shop-item"
-                 data-shop-item="${item.id}">
-
-              <div class="shop-item-icon">
-                ${item.icon}
-              </div>
-
-              <div class="shop-item-info">
-
-                <h3>
-                  ${escapeHTML(item.name)}
-                </h3>
-
-                <p>
-                  ${escapeHTML(
-                    item.description
-                  )}
-                </p>
-
-                <span class="shop-owned">
-                  لديك:
-                  ${formatNumber(
-                    state.inventory[
-                      item.inventoryKey
-                    ] || 0
-                  )}
-                </span>
-
-              </div>
-
-              <button
-                type="button"
-                class="shop-buy"
-                data-buy-item="${item.id}">
-
-                🪙 ${formatNumber(
-                  item.price
-                )}
-
-              </button>
-
-            </div>
-          `
-        ).join("");
-
-      containers.forEach(
-        container => {
-          container.innerHTML =
-            html;
-        }
-      );
-    },
-
-    buy(itemId) {
-
-      const item =
-        SHOP_ITEMS.find(
-          item =>
-            item.id === itemId
-        );
-
-      if (!item) {
-        return false;
-      }
-
-      if (
-        !spendCoins(
-          item.price
-        )
-      ) {
-        return false;
-      }
-
-      const key =
-        item.inventoryKey;
-
-      state.inventory[key] =
-        safeNumber(
-          state.inventory[key]
-        ) + 1;
-
-      saveGame();
-
-      notify(
-        `🛒 تم شراء ${item.name}`,
-        "success"
-      );
-
-      AudioEngine.correct();
-      Vibration.correct();
-
-      this.render();
-
-      updateAllUI();
-
-      return true;
-    }
-  };
-
-  /* =========================================================
-     7. PROFILE ENGINE
-     ========================================================= */
-
-  const Profile = {
-
-    render() {
-
-      const nameElements = [
-        byId("player-name"),
-        $(".player-name"),
-        $("[data-player-name]")
-      ].filter(Boolean);
-
-      nameElements.forEach(
-        element => {
-          element.textContent =
-            state.player.name;
-        }
-      );
-
-      const avatarElements = [
-        byId("player-avatar"),
-        $(".player-avatar"),
-        $("[data-player-avatar]")
-      ].filter(Boolean);
-
-      avatarElements.forEach(
-        element => {
-          element.textContent =
-            state.player.avatar;
-        }
-      );
-
-      const levelElements = [
-        byId("player-level"),
-        $(".player-level")
-      ].filter(Boolean);
-
-      levelElements.forEach(
-        element => {
-          element.textContent =
-            formatNumber(
-              state.player.level
-            );
-        }
-      );
-
-      const stats = {
-        "games-played":
-          state.statistics.gamesPlayed,
-
-        "games-won":
-          state.statistics.gamesWon,
-
-        "correct-answers":
-          state.statistics.correctAnswers,
-
-        "best-score":
-          state.player.bestScore,
-
-        "max-streak":
-          state.player.maxStreak
-      };
-
-      Object.entries(
-        stats
-      ).forEach(
-        ([key, value]) => {
-
-          $$(
-            `[data-stat="${key}"], #${key}`
-          ).forEach(
-            element => {
-              element.textContent =
-                formatNumber(value);
-            }
-          );
-        }
-      );
-
-      const progress =
-        API.getLevelProgress
-          ? API.getLevelProgress()
-          : {
-              percent: 0
-            };
-
-      $$(".xp-progress")
-        .forEach(
-          element => {
-            element.style.width =
-              `${progress.percent}%`;
-          }
-        );
-    },
-
-    editName() {
-
-      Modal.open({
-        title: "✏️ اسم المحقق",
-
-        content: `
-          <input
-            id="new-player-name"
-            class="modal-input"
-            maxlength="20"
-            value="${escapeHTML(
-              state.player.name
-            )}"
-            placeholder="اكتب اسمك">
-
-          <small>
-            يمكنك استعمال اسم مستعار.
-          </small>
-        `,
-
-        buttons: [
-          {
-            text: "حفظ",
-            className:
-              "modal-button primary",
-            action: () => {
-
-              const input =
-                byId(
-                  "new-player-name"
-                );
-
-              const value =
-                input?.value
-                  ?.trim();
-
-              if (!value) {
-                notify(
-                  "اكتب اسماً أولاً",
-                  "warning"
-                );
-                return;
-              }
-
-              state.player.name =
-                value.slice(
-                  0,
-                  20
-                );
-
-              saveGame();
-
-              Profile.render();
-
-              Modal.close();
-
-              notify(
-                "✅ تم تغيير الاسم",
-                "success"
-              );
-            }
-          },
-
-          {
-            text: "إلغاء",
-            className:
-              "modal-button",
-            action: () =>
-              Modal.close()
-          }
-        ]
-      });
-    }
-  };
-
-  /* =========================================================
-     8. ACHIEVEMENTS UI
-     ========================================================= */
-
-  const AchievementsUI = {
-
-    render() {
-
-      const containers = [
-        byId("achievements-list"),
-        $(".achievements-list"),
-        $("[data-achievements]")
-      ].filter(Boolean);
-
-      if (!containers.length) {
-        return;
-      }
-
-      const html =
-        ACHIEVEMENTS.map(
-          achievement => {
-
-            const unlocked =
-              state.achievements
-                .includes(
-                  achievement.id
-                );
-
-            return `
-              <div
-                class="achievement-card ${
-                  unlocked
-                    ? "unlocked"
-                    : "locked"
-                }">
-
-                <div class="achievement-icon">
-                  ${
-                    unlocked
-                      ? "🏆"
-                      : "🔒"
-                  }
-                </div>
-
-                <div class="achievement-info">
-
-                  <h3>
-                    ${escapeHTML(
-                      achievement.title
-                    )}
-                  </h3>
-
-                  <p>
-                    ${escapeHTML(
-                      achievement.description
-                    )}
-                  </p>
-
-                  <span>
-                    +${formatNumber(
-                      achievement.rewardCoins
-                    )} 🪙
-                    ·
-                    +${formatNumber(
-                      achievement.rewardXP
-                    )} XP
-                  </span>
-
-                </div>
-
-              </div>
-            `;
-          }
-        ).join("");
-
-      containers.forEach(
-        container => {
-          container.innerHTML =
-            html;
-        }
-      );
-    }
-  };
-
-  /* =========================================================
-     9. MISSIONS UI
-     ========================================================= */
-
-  const MissionsUI = {
-
-    render() {
-
-      const containers = [
-        byId("missions-list"),
-        $(".missions-list"),
-        $("[data-missions]")
-      ].filter(Boolean);
-
-      if (!containers.length) {
-        return;
-      }
-
-      const html =
-        MISSIONS.map(
-          mission => {
-
-            const progress =
-              API.getMissionProgress
-                ? API.getMissionProgress(
-                    mission
-                  )
-                : 0;
-
-            const percent =
-              clamp(
-                (
-                  progress /
-                  mission.target
-                ) * 100,
-                0,
-                100
-              );
-
-            const completed =
-              state.missions.completed
-                .includes(
-                  mission.id
-                );
-
-            return `
-              <div
-                class="mission-card ${
-                  completed
-                    ? "completed"
-                    : ""
-                }">
-
-                <div class="mission-header">
-
-                  <strong>
-                    ${escapeHTML(
-                      mission.title
-                    )}
-                  </strong>
-
-                  <span>
-                    ${formatNumber(
-                      progress
-                    )}/${formatNumber(
-                      mission.target
-                    )}
-                  </span>
-
-                </div>
-
-                <p>
-                  ${escapeHTML(
-                    mission.description
-                  )}
-                </p>
-
-                <div class="mission-progress">
-                  <span
-                    style="width:${percent}%">
-                  </span>
-                </div>
-
-                <small>
-                  المكافأة:
-                  +${formatNumber(
-                    mission.rewardCoins
-                  )} 🪙
-                  +
-                  ${formatNumber(
-                    mission.rewardXP
-                  )} XP
-                </small>
-
-              </div>
-            `;
-          }
-        ).join("");
-
-      containers.forEach(
-        container => {
-          container.innerHTML =
-            html;
-        }
-      );
-    }
-  };
-
-  /* =========================================================
-     10. MODES UI
-     ========================================================= */
-
-  const ModesUI = {
-
-    render() {
-
-      const containers = [
-        byId("modes-list"),
-        $(".modes-list"),
-        $("[data-modes]")
-      ].filter(Boolean);
-
-      if (!containers.length) {
-        return;
-      }
-
-      const html =
-        Object.values(
-          GAME_MODES
-        ).map(
-          mode => {
-
-            const unlocked =
-              isModeUnlocked(
-                mode.id
-              );
-
-            const premium =
-              mode.id ===
-              "premium";
-
-            return `
-              <div
-                class="mode-card ${
-                  unlocked
-                    ? "unlocked"
-                    : "locked"
-                }"
-                data-mode="${mode.id}">
-
-                <div class="mode-icon">
-                  ${mode.icon}
-                </div>
-
-                <div class="mode-info">
-
-                  <h3>
-                    ${escapeHTML(
-                      mode.name
-                    )}
-                  </h3>
-
-                  <p>
-                    ${escapeHTML(
-                      mode.description
-                    )}
-                  </p>
-
-                </div>
-
-                <button
-                  type="button"
-                  class="mode-action"
-                  data-start-mode="${mode.id}">
-
-                  ${
-                    unlocked
-                      ? "▶️ لعب"
-                      : premium
-                        ? "🔐 Premium"
-                        : "🔒 مغلق"
-                  }
-
-                </button>
-
-              </div>
-            `;
-          }
-        ).join("");
-
-      containers.forEach(
-        container => {
-          container.innerHTML =
-            html;
-        }
-      );
-    }
-  };
-
-  /* =========================================================
-     11. PREMIUM ENGINE
-     ========================================================= */
-
-  const Premium = {
-
-    isActive() {
-      return Boolean(
-        state.premium &&
-        state.premium.active
-      );
-    },
-
-    activateDemo() {
-
-      /*
-       * هذا لا ينفذ شراء حقيقياً.
-       * مخصص لاختبار واجهة Premium
-       * داخل النسخة المحلية.
-       */
-
-      state.premium.active =
-        true;
-
-      if (
-        !state.unlockedModes
-          .includes("premium")
-      ) {
-
-        state.unlockedModes.push(
-          "premium"
-        );
-      }
-
-      saveGame();
-
-      notify(
-        "🔓 تم تفعيل Premium للاختبار",
-        "success",
-        3000
-      );
-
-      ModesUI.render();
-
-      emitEvent(
-        "premiumChanged",
-        true
-      );
-    },
-
-    show() {
-
-      Modal.open({
-
-        title:
-          "👑 SHADOWS PREMIUM",
-
-        content: `
-          <div class="premium-panel">
-
-            <div class="premium-icon">
-              👑
-            </div>
-
-            <h2>
-              ملفات سرية
-            </h2>
-
-            <p>
-              افتح أوضاعاً وقضايا إضافية
-              ومزايا متقدمة.
-            </p>
-
-            <ul>
-              <li>🔐 ملفات Premium</li>
-              <li>⚡ مكافآت إضافية</li>
-              <li>🎯 تحديات متقدمة</li>
-              <li>🏆 إنجازات خاصة</li>
-            </ul>
-
-            <p>
-              حالة الحساب:
-              <strong>
-                ${
-                  this.isActive()
-                    ? "مفعّل"
-                    : "غير مفعّل"
-                }
-              </strong>
-            </p>
-
-          </div>
-        `,
-
-        buttons: [
-          {
-            text:
-              this.isActive()
-                ? "تم التفعيل"
-                : "تجربة Premium",
-            className:
-              "modal-button primary",
-            action: () => {
-
-              if (
-                !this.isActive()
-              ) {
-                this.activateDemo();
-              }
-
-              Modal.close();
-            }
-          },
-
-          {
-            text: "إغلاق",
-            className:
-              "modal-button",
-            action: () =>
-              Modal.close()
-          }
-        ]
-      });
-    }
-  };
-
-  /* =========================================================
-     12. SETTINGS UI
-     ========================================================= */
-
-  const SettingsUI = {
-
-    sync() {
-
-      $$(
-        "[data-setting]"
-      ).forEach(
-        element => {
-
-          const key =
-            element.dataset.setting;
-
-          if (
-            !(key in state.settings)
-          ) {
-            return;
-          }
-
-          const value =
-            state.settings[key];
-
-          if (
-            element.type ===
-            "checkbox"
-          ) {
-
-            element.checked =
-              Boolean(value);
-
-          } else {
-
-            element.value =
-              value;
-          }
-        }
-      );
-    },
-
-    toggle(key) {
-
-      if (
-        !(key in state.settings)
-      ) {
-        return;
-      }
-
-      setSetting(
-        key,
-        !state.settings[key]
-      );
-
-      this.sync();
-
-      updateAllUI();
-    }
-  };
-
-  /* =========================================================
-     13. DAILY UI
-     ========================================================= */
-
-  const DailyUI = {
-
-    render() {
-
-      const daily =
-        state.daily;
-
-      const elements = [
-        byId("daily-status"),
-        $(".daily-status"),
-        $("[data-daily-status]")
-      ].filter(Boolean);
-
-      elements.forEach(
-        element => {
-
-          if (
-            daily.completed
-          ) {
-
-            element.textContent =
-              "✅ مكتمل";
-
-            element.classList.add(
-              "completed"
-            );
-
-          } else {
-
-            element.textContent =
-              "🎯 متاح";
-
-            element.classList.remove(
-              "completed"
-            );
-          }
-        }
-      );
-    }
-  };
-
-  /* =========================================================
-     14. NAVIGATION
-     ========================================================= */
-
-  function navigate(target) {
-
-    AudioEngine.click();
-    Vibration.click();
-
-    switch (target) {
-
-      case "home":
-        ScreenManager.home();
-        break;
-
-      case "game":
-        GameController.start(
-          "classic"
-        );
-        break;
-
-      case "profile":
-        Profile.render();
-        ScreenManager.profile();
-        break;
-
-      case "shop":
-        Shop.render();
-        ScreenManager.shop();
-        break;
-
-      case "achievements":
-        AchievementsUI.render();
-        ScreenManager.achievements();
-        break;
-
-      case "modes":
-        ModesUI.render();
-        ScreenManager.modes();
-        break;
-
-      case "premium":
-        Premium.show();
-        break;
-
-      default:
-        console.warn(
-          "Unknown navigation:",
-          target
-        );
+    } catch {
+      return clone(defaultState);
     }
   }
 
-  /* =========================================================
-     15. GLOBAL CLICK DELEGATION
-     ========================================================= */
 
-  document.addEventListener(
-    "click",
-    event => {
+  let state = loadState();
 
-      const target =
-        event.target.closest(
-          "button, [role='button'], [data-action], [data-nav], [data-start-mode], [data-buy-item], [data-answer], [data-hint]"
-        );
 
-      if (!target) {
-        return;
-      }
-
-      /* -----------------------------------------
-         MODAL CLOSE
-         ----------------------------------------- */
-
-      if (
-        target.matches(
-          "[data-modal-close]"
-        )
-      ) {
-
-        AudioEngine.click();
-        Modal.close();
-
-        return;
-      }
-
-      /* -----------------------------------------
-         NAVIGATION
-         ----------------------------------------- */
-
-      const nav =
-        target.dataset.nav ||
-        target.dataset.action;
-
-      if (nav) {
-
-        const navigationActions = [
-          "home",
-          "game",
-          "profile",
-          "shop",
-          "achievements",
-          "modes",
-          "premium"
-        ];
-
-        if (
-          navigationActions.includes(
-            nav
-          )
-        ) {
-
-          navigate(nav);
-
-          return;
-        }
-
-        if (
-          nav === "pause"
-        ) {
-
-          GameController.pause();
-
-          return;
-        }
-
-        if (
-          nav === "edit-name"
-        ) {
-
-          Profile.editName();
-
-          return;
-        }
-
-        if (
-          nav === "daily"
-        ) {
-
-          if (
-            state.daily.completed
-          ) {
-
-            notify(
-              "✅ أكملت تحدي اليوم بالفعل",
-              "info"
-            );
-
-          } else {
-
-            GameController.start(
-              "daily"
-            );
-          }
-
-          return;
-        }
-
-        if (
-          nav === "reset"
-        ) {
-
-          Modal.open({
-
-            title:
-              "⚠️ إعادة ضبط اللعبة",
-
-            content: `
-              <p>
-                سيتم حذف التقدم المحلي
-                وإعادة اللعبة من البداية.
-              </p>
-            `,
-
-            buttons: [
-
-              {
-                text:
-                  "حذف التقدم",
-                className:
-                  "modal-button danger",
-                action: () => {
-
-                  Modal.close();
-
-                  API.resetGame();
-                }
-              },
-
-              {
-                text:
-                  "إلغاء",
-                className:
-                  "modal-button",
-                action: () =>
-                  Modal.close()
-              }
-            ]
-          });
-
-          return;
-        }
-      }
-
-      /* -----------------------------------------
-         START MODE
-         ----------------------------------------- */
-
-      const mode =
-        target.dataset.startMode;
-
-      if (mode) {
-
-        GameController.start(
-          mode
-        );
-
-        return;
-      }
-
-      /* -----------------------------------------
-         ANSWER
-         ----------------------------------------- */
-
-      if (
-        target.dataset.answer !==
-        undefined
-      ) {
-
-        GameController.answer(
-          target.dataset.answer
-        );
-
-        return;
-      }
-
-      /* -----------------------------------------
-         SHOP
-         ----------------------------------------- */
-
-      const buyItem =
-        target.dataset.buyItem;
-
-      if (buyItem) {
-
-        Shop.buy(
-          buyItem
-        );
-
-        return;
-      }
-
-      /* -----------------------------------------
-         HINT
-         ----------------------------------------- */
-
-      const hint =
-        target.dataset.hint;
-
-      if (hint) {
-
-        GameController.useHint(
-          hint
-        );
-
-        return;
-      }
-
-      /* -----------------------------------------
-         SETTING
-         ----------------------------------------- */
-
-      const setting =
-        target.dataset.setting;
-
-      if (
-        setting &&
-        (
-          target.type ===
-          "checkbox" ||
-          target.dataset.toggle !==
-          undefined
-        )
-      ) {
-
-        SettingsUI.toggle(
-          setting
-        );
-
-        return;
-      }
-
-      /* -----------------------------------------
-         GENERIC SOUND
-         ----------------------------------------- */
-
-      if (
-        target.dataset.sound ===
-        "click"
-      ) {
-
-        AudioEngine.click();
-        Vibration.click();
-      }
-    }
-  );
-
-  /* =========================================================
-     16. KEYBOARD CONTROLS
-     ========================================================= */
-
-  document.addEventListener(
-    "keydown",
-    event => {
-
-      if (
-        event.key ===
-        "Escape"
-      ) {
-
-        if (Modal.current) {
-          Modal.close();
-          return;
-        }
-
-        if (
-          state.game.active
-        ) {
-          GameController.pause();
-        }
-
-        return;
-      }
-
-      if (
-        !state.game.active ||
-        state.game.paused
-      ) {
-        return;
-      }
-
-      const key =
-        event.key;
-
-      if (
-        /^[1-9]$/.test(key)
-      ) {
-
-        const index =
-          Number(key) - 1;
-
-        const buttons =
-          $$(".answer-button");
-
-        if (
-          buttons[index]
-        ) {
-
-          buttons[index].click();
-        }
-      }
-
-      if (
-        key === " "
-      ) {
-
-        event.preventDefault();
-
-        GameController.pause();
-      }
-    }
-  );
-
-  /* =========================================================
-     17. GAME EVENTS
-     ========================================================= */
-
-  onEvent(
-    "questionChanged",
-    data => {
-
-      QuestionRenderer.render(
-        data?.question
+  function saveState() {
+    try {
+      localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify(state)
       );
+    } catch {}
+  }
 
-      updateGameUI();
-    }
-  );
 
-  onEvent(
-    "timerTick",
-    seconds => {
+  function resetState() {
+    state = clone(defaultState);
+    saveState();
+    return state;
+  }
 
-      const timerElements = [
-        byId("timer"),
-        $(".timer"),
-        $("[data-timer]")
-      ].filter(Boolean);
 
-      timerElements.forEach(
-        element => {
+  /* =======================================================
+     DATA BRIDGE
+     ======================================================= */
 
-          element.textContent =
-            formatNumber(seconds);
-
-          element.classList.toggle(
-            "danger",
-            seconds <= 10
-          );
-
-          element.classList.toggle(
-            "warning",
-            seconds <= 20 &&
-            seconds > 10
-          );
-        }
-      );
-
-      const maxTime =
-        state.game.totalTime ||
-        1;
-
-      const percent =
-        clamp(
-          (
-            seconds /
-            maxTime
-          ) * 100,
-          0,
-          100
-        );
-
-      $$(".timer-progress")
-        .forEach(
-          element => {
-            element.style.width =
-              `${percent}%`;
-          }
-        );
-    }
-  );
-
-  onEvent(
-    "gameStarted",
-    () => {
-
-      document.body.classList.add(
-        "playing"
-      );
-
-      updateAllUI();
-    }
-  );
-
-  onEvent(
-    "gameFinished",
-    data => {
-
-      document.body.classList.remove(
-        "playing"
-      );
-
-      updateAllUI();
-
-      GameController.finishScreen(
-        data
-      );
-
-      Profile.render();
-      AchievementsUI.render();
-      MissionsUI.render();
-      DailyUI.render();
-    }
-  );
-
-  onEvent(
-    "achievementUnlocked",
-    () => {
-
-      AchievementsUI.render();
-      updateAllUI();
-    }
-  );
-
-  onEvent(
-    "missionCompleted",
-    () => {
-
-      MissionsUI.render();
-      updateAllUI();
-    }
-  );
-
-  onEvent(
-    "coinsChanged",
-    () => {
-
-      Shop.render();
-      updateAllUI();
-    }
-  );
-
-  onEvent(
-    "xpChanged",
-    () => {
-
-      Profile.render();
-      updateAllUI();
-    }
-  );
-
-  /* =========================================================
-     18. VISIBILITY / AUTO PAUSE
-     ========================================================= */
-
-  document.addEventListener(
-    "visibilitychange",
-    () => {
-
-      if (
-        document.hidden &&
-        state.game.active &&
-        !state.game.paused
-      ) {
-
-        GameSession.pause();
-
-        emitEvent(
-          "autoPaused"
-        );
-      }
-    }
-  );
-
-  /* =========================================================
-     19. BEFORE UNLOAD SAVE
-     ========================================================= */
-
-  window.addEventListener(
-    "beforeunload",
-    () => {
-
-      try {
-        saveGame();
-      } catch (error) {
-        console.warn(
-          "Could not save before unload."
-        );
-      }
-    }
-  );
-
-  /* =========================================================
-     20. UI INITIALIZATION
-     ========================================================= */
-
-  function initializeUI() {
-
-    Profile.render();
-
-    Shop.render();
-
-    AchievementsUI.render();
-
-    MissionsUI.render();
-
-    ModesUI.render();
-
-    DailyUI.render();
-
-    SettingsUI.sync();
-
-    updateAllUI();
-
-    /*
-     * إذا كانت هناك شاشة رئيسية
-     * اجعلها هي البداية.
-     */
-
-    if (
-      ScreenManager.find("home")
-    ) {
-
-      ScreenManager.home();
-    }
-
-    emitEvent(
-      "ultraUIReady"
+  function getData() {
+    return (
+      window.GAME_DATA ||
+      window.DATA ||
+      window.SHADOWS_DATA ||
+      {}
     );
   }
 
-  /* =========================================================
-     21. CSS SAFETY PATCH
-     ========================================================= */
 
-  function installSafetyCSS() {
+  function getChapters() {
+    const data = getData();
+
+    return (
+      data.chapters ||
+      data.CHAPTERS ||
+      data.story?.chapters ||
+      []
+    );
+  }
+
+
+  function getChapter(id) {
+    const chapters = getChapters();
+
+    return chapters.find(ch =>
+      Number(
+        ch.id ??
+        ch.chapter ??
+        ch.number
+      ) === Number(id)
+    ) || null;
+  }
+
+
+  function getScenes(chapter) {
+    if (!chapter) return [];
+
+    return (
+      chapter.scenes ||
+      chapter.story ||
+      chapter.events ||
+      []
+    );
+  }
+
+
+  function getScene(chapterId, sceneIndex) {
+    const chapter = getChapter(chapterId);
+
+    if (!chapter) return null;
+
+    const scenes = getScenes(chapter);
+
+    return scenes[sceneIndex] || null;
+  }
+
+
+  function getCurrentScene() {
+    return getScene(
+      state.game.chapter,
+      state.game.sceneIndex
+    );
+  }
+
+
+  /* =======================================================
+     EVENTS
+     ======================================================= */
+
+  const listeners = {};
+
+  function on(event, callback) {
+    if (!listeners[event]) {
+      listeners[event] = [];
+    }
+
+    listeners[event].push(callback);
+
+    return () => {
+      listeners[event] =
+        listeners[event].filter(fn => fn !== callback);
+    };
+  }
+
+
+  function emit(event, payload = {}) {
+    (listeners[event] || []).forEach(fn => {
+      try {
+        fn(payload);
+      } catch {}
+    });
+  }
+
+
+  /* =======================================================
+     AUDIO
+     ======================================================= */
+
+  const AudioEngine = {
+    context: null,
+
+    ensure() {
+      if (!state.settings.sound) return null;
+
+      if (!this.context) {
+        try {
+          this.context =
+            new (window.AudioContext ||
+              window.webkitAudioContext)();
+        } catch {
+          return null;
+        }
+      }
+
+      if (this.context.state === "suspended") {
+        this.context.resume().catch(() => {});
+      }
+
+      return this.context;
+    },
+
+    tone(
+      frequency = 440,
+      duration = 0.08,
+      type = "sine",
+      volume = 0.035
+    ) {
+      const ctx = this.ensure();
+
+      if (!ctx) return;
+
+      try {
+        const oscillator =
+          ctx.createOscillator();
+
+        const gain =
+          ctx.createGain();
+
+        oscillator.type = type;
+        oscillator.frequency.value = frequency;
+
+        gain.gain.setValueAtTime(
+          0.0001,
+          ctx.currentTime
+        );
+
+        gain.gain.exponentialRampToValueAtTime(
+          volume,
+          ctx.currentTime + 0.01
+        );
+
+        gain.gain.exponentialRampToValueAtTime(
+          0.0001,
+          ctx.currentTime + duration
+        );
+
+        oscillator.connect(gain);
+        gain.connect(ctx.destination);
+
+        oscillator.start();
+        oscillator.stop(
+          ctx.currentTime + duration + 0.02
+        );
+      } catch {}
+    },
+
+    click() {
+      this.tone(520, 0.055, "sine", 0.025);
+    },
+
+    choice() {
+      this.tone(390, 0.08, "triangle", 0.03);
+    },
+
+    correct() {
+      this.tone(660, 0.08, "sine", 0.035);
+
+      setTimeout(() => {
+        this.tone(880, 0.12, "sine", 0.03);
+      }, 70);
+    },
+
+    danger() {
+      this.tone(130, 0.18, "sawtooth", 0.025);
+    },
+
+    success() {
+      [523, 659, 784].forEach((f, i) => {
+        setTimeout(() => {
+          this.tone(f, 0.16, "sine", 0.035);
+        }, i * 90);
+      });
+    }
+  };
+
+
+  /* =======================================================
+     NOTIFICATIONS
+     ======================================================= */
+
+  function notify(
+    text,
+    icon = "icon-spark",
+    duration = 2400
+  ) {
+    const box = $("notification");
+
+    if (!box) return;
+
+    const iconEl = $("notificationIcon");
+    const textEl = $("notificationText");
+
+    if (iconEl) {
+      iconEl.className =
+        `notification-icon ${icon}`;
+    }
+
+    if (textEl) {
+      textEl.textContent = text;
+    }
+
+    box.classList.remove("show");
+
+    requestAnimationFrame(() => {
+      box.classList.add("show");
+    });
+
+    clearTimeout(notify.timer);
+
+    notify.timer = setTimeout(() => {
+      box.classList.remove("show");
+    }, duration);
+  }
+
+
+  function toastItem(name, icon = "icon-item") {
+    const toast = $("itemToast");
+
+    if (!toast) return;
+
+    const iconEl = $("itemToastIcon");
+    const nameEl = $("itemToastName");
+
+    if (iconEl) {
+      iconEl.className =
+        `toast-icon ${icon}`;
+    }
+
+    if (nameEl) {
+      nameEl.textContent = name;
+    }
+
+    toast.classList.remove("show");
+
+    requestAnimationFrame(() => {
+      toast.classList.add("show");
+    });
+  }
+
+
+  /* =======================================================
+     PROGRESSION
+     ======================================================= */
+
+  function xpRequired(level) {
+    return 100 + (level - 1) * 60;
+  }
+
+
+  function addXP(amount) {
+    amount = Math.max(0, safeNumber(amount));
+
+    state.player.xp += amount;
+    state.statistics.totalXpEarned =
+      safeNumber(state.statistics.totalXpEarned) + amount;
+
+    let leveledUp = false;
+
+    while (
+      state.player.xp >=
+      xpRequired(state.player.level)
+    ) {
+      state.player.xp -=
+        xpRequired(state.player.level);
+
+      state.player.level++;
+
+      leveledUp = true;
+
+      notify(
+        `وصلت إلى المستوى ${state.player.level}`,
+        "icon-spark"
+      );
+
+      AudioEngine.success();
+    }
+
+    if (leveledUp) {
+      emit("levelUp", {
+        level: state.player.level
+      });
+    }
+
+    saveState();
+
+    return leveledUp;
+  }
+
+
+  function addCoins(amount) {
+    amount = Math.max(0, safeNumber(amount));
+
+    state.player.coins += amount;
+
+    state.statistics.coinsEarned += amount;
+
+    saveState();
+
+    emit("coinsChanged", {
+      amount,
+      total: state.player.coins
+    });
+  }
+
+
+  function spendCoins(amount) {
+    amount = Math.max(0, safeNumber(amount));
+
+    if (state.player.coins < amount) {
+      notify("لا تملك ما يكفي من العملات", "icon-coin");
+      return false;
+    }
+
+    state.player.coins -= amount;
+
+    saveState();
+
+    emit("coinsChanged", {
+      amount: -amount,
+      total: state.player.coins
+    });
+
+    return true;
+  }
+
+
+  /* =======================================================
+     FLAGS
+     ======================================================= */
+
+  function setFlag(key, value = true) {
+    state.flags[key] = value;
+    saveState();
+  }
+
+
+  function getFlag(key, fallback = false) {
+    return Object.prototype.hasOwnProperty.call(
+      state.flags,
+      key
+    )
+      ? state.flags[key]
+      : fallback;
+  }
+
+
+  /* =======================================================
+     INVENTORY
+     ======================================================= */
+
+  function hasItem(id) {
+    return state.inventory.some(
+      item =>
+        typeof item === "string"
+          ? item === id
+          : item?.id === id
+    );
+  }
+
+
+  function addItem(item) {
+    if (!item) return false;
+
+    const id =
+      typeof item === "string"
+        ? item
+        : item.id;
+
+    if (!id || hasItem(id)) {
+      return false;
+    }
+
+    state.inventory.push(
+      typeof item === "string"
+        ? {
+            id: item,
+            name: item,
+            icon: "icon-item"
+          }
+        : clone(item)
+    );
+
+    saveState();
+
+    const name =
+      typeof item === "string"
+        ? item
+        : item.name || item.id;
+
+    toastItem(
+      name,
+      typeof item === "string"
+        ? "icon-item"
+        : item.icon || "icon-item"
+    );
+
+    emit("itemAdded", {
+      item
+    });
+
+    return true;
+  }
+
+
+  function removeItem(id) {
+    const index =
+      state.inventory.findIndex(item =>
+        typeof item === "string"
+          ? item === id
+          : item?.id === id
+      );
+
+    if (index === -1) {
+      return false;
+    }
+
+    state.inventory.splice(index, 1);
+
+    saveState();
+
+    emit("itemRemoved", {
+      id
+    });
+
+    return true;
+  }
+
+
+  /* =======================================================
+     ACHIEVEMENTS
+     ======================================================= */
+
+  const ACHIEVEMENTS = [
+    {
+      id: "first_step",
+      title: "البداية",
+      description: "ابدأ رحلتك الأولى.",
+      icon: "icon-spark",
+      condition: () =>
+        state.statistics.choices >= 1
+    },
+
+    {
+      id: "first_choice",
+      title: "القرار الأول",
+      description: "اتخذ أول قرار في القصة.",
+      icon: "icon-item",
+      condition: () =>
+        state.game.choicesMade >= 1
+    },
+
+    {
+      id: "explorer",
+      title: "المستكشف",
+      description: "اكتشف عدة مواقع.",
+      icon: "icon-chapter",
+      condition: () =>
+        state.history.length >= 5
+    },
+
+    {
+      id: "survivor",
+      title: "الناجي",
+      description: "أكمل فصلاً دون فقدان كامل للصحة.",
+      icon: "icon-heart",
+      condition: () =>
+        state.game.health > 0 &&
+        state.completedChapters.length >= 1
+    },
+
+    {
+      id: "collector",
+      title: "جامع الأسرار",
+      description: "اجمع 5 عناصر.",
+      icon: "icon-bag",
+      condition: () =>
+        state.inventory.length >= 5
+    },
+
+    {
+      id: "rich",
+      title: "ثروة الظلال",
+      description: "اجمع 1000 عملة.",
+      icon: "icon-coin",
+      condition: () =>
+        state.player.coins >= 1000
+    },
+
+    {
+      id: "chapter_two",
+      title: "ما وراء الجبل",
+      description: "افتح الفصل الثاني.",
+      icon: "icon-chapter",
+      condition: () =>
+        state.unlockedChapters.includes(2)
+    },
+
+    {
+      id: "master",
+      title: "سيد المجهول",
+      description: "أكمل عدة فصول.",
+      icon: "icon-trophy",
+      condition: () =>
+        state.completedChapters.length >= 3
+    }
+  ];
+
+
+  function unlockAchievement(id) {
+    if (state.achievements.includes(id)) {
+      return false;
+    }
+
+    const achievement =
+      ACHIEVEMENTS.find(a => a.id === id);
+
+    if (!achievement) {
+      return false;
+    }
+
+    state.achievements.push(id);
+
+    state.statistics.achievementsUnlocked++;
+
+    addXP(35);
+
+    const toast = $("achievementToast");
+
+    if (toast) {
+      const icon =
+        $("achievementToastIcon");
+
+      const title =
+        $("achievementToastTitle");
+
+      if (icon) {
+        icon.className =
+          `achievement-toast-icon ${achievement.icon}`;
+      }
+
+      if (title) {
+        title.textContent =
+          achievement.title;
+      }
+
+      toast.classList.remove("show");
+
+      requestAnimationFrame(() => {
+        toast.classList.add("show");
+      });
+
+      clearTimeout(unlockAchievement.timer);
+
+      unlockAchievement.timer =
+        setTimeout(() => {
+          toast.classList.remove("show");
+        }, 3200);
+    }
+
+    AudioEngine.success();
+
+    emit("achievement", {
+      achievement
+    });
+
+    saveState();
+
+    return true;
+  }
+
+
+  function checkAchievements() {
+    ACHIEVEMENTS.forEach(achievement => {
+      try {
+        if (achievement.condition()) {
+          unlockAchievement(
+            achievement.id
+          );
+        }
+      } catch {}
+    });
+  }
+
+
+  /* =======================================================
+     JOURNAL
+     ======================================================= */
+
+  function addJournal(entry) {
+    if (!entry) return;
+
+    const id =
+      typeof entry === "string"
+        ? entry
+        : entry.id || entry.title;
 
     if (
-      byId("shadows-ultra-v5-style")
+      id &&
+      state.journal.some(item =>
+        typeof item === "string"
+          ? item === id
+          : item?.id === id
+      )
     ) {
       return;
     }
 
-    const style =
-      document.createElement("style");
-
-    style.id =
-      "shadows-ultra-v5-style";
-
-    style.textContent = `
-
-      [data-screen],
-      .screen,
-      .app-screen {
-        transition:
-          opacity .2s ease,
-          transform .2s ease;
-      }
-
-      [data-screen]:not(.active),
-      .screen:not(.active),
-      .app-screen:not(.active) {
-        display: none !important;
-      }
-
-      .hidden {
-        display: none !important;
-      }
-
-      .answer-button {
-        transition:
-          transform .15s ease,
-          opacity .15s ease;
-      }
-
-      .answer-button:active {
-        transform: scale(.97);
-      }
-
-      .answer-button.correct {
-        outline: 3px solid
-          rgba(50, 200, 100, .8);
-      }
-
-      .answer-button.wrong {
-        outline: 3px solid
-          rgba(220, 70, 70, .8);
-      }
-
-      .timer.danger {
-        animation:
-          timerPulse .65s infinite;
-      }
-
-      @keyframes timerPulse {
-        0%,100% {
-          transform: scale(1);
-        }
-        50% {
-          transform: scale(1.08);
-        }
-      }
-
-      .confetti-piece {
-        animation:
-          confettiFall 2s linear forwards;
-      }
-
-      @keyframes confettiFall {
-        from {
-          transform:
-            translateY(0)
-            rotate(0deg);
-          opacity: 1;
-        }
-
-        to {
-          transform:
-            translateY(105vh)
-            rotate(var(--rotation));
-          opacity: 0;
-        }
-      }
-
-      .game-modal {
-        position: fixed;
-        inset: 0;
-        z-index: 99990;
-      }
-
-      .modal-backdrop {
-        position: absolute;
-        inset: 0;
-        background:
-          rgba(0,0,0,.65);
-        backdrop-filter:
-          blur(5px);
-      }
-
-      .modal-card {
-        position: relative;
-        z-index: 2;
-        width: min(
-          92vw,
-          520px
-        );
-        max-height: 88vh;
-        overflow: auto;
-        margin: 6vh auto;
-        padding: 24px;
-        border-radius: 24px;
-        background:
-          var(--card-bg,
-          #17171d);
-        color:
-          var(--text-color,
-          #fff);
-        box-shadow:
-          0 25px 80px
-          rgba(0,0,0,.4);
-      }
-
-      .modal-close {
-        position: absolute;
-        top: 10px;
-        left: 10px;
-        width: 38px;
-        height: 38px;
-        border: 0;
-        border-radius: 50%;
-        cursor: pointer;
-      }
-
-      .modal-title {
-        font-size: 22px;
-        font-weight: 800;
-        margin-bottom: 18px;
-      }
-
-      .modal-content {
-        line-height: 1.8;
-      }
-
-      .modal-actions {
-        display: flex;
-        gap: 10px;
-        flex-wrap: wrap;
-        margin-top: 20px;
-      }
-
-      .modal-button {
-        flex: 1;
-        min-width: 120px;
-        padding: 12px 16px;
-        border: 0;
-        border-radius: 14px;
-        cursor: pointer;
-        font-weight: 800;
-      }
-
-      .modal-input {
-        width: 100%;
-        padding: 13px;
-        border-radius: 12px;
-        border: 1px solid
-          rgba(255,255,255,.15);
-        background:
-          rgba(255,255,255,.06);
-        color: inherit;
-        outline: none;
-        margin-bottom: 10px;
-      }
-
-      .result-score {
-        font-size: 42px;
-        font-weight: 900;
-        text-align: center;
-        margin: 15px 0;
-      }
-
-      .result-score small {
-        font-size: 15px;
-      }
-
-      .result-stats {
-        display: grid;
-        grid-template-columns:
-          repeat(2, 1fr);
-        gap: 10px;
-      }
-
-      .result-stats > div {
-        padding: 12px;
-        border-radius: 14px;
-        background:
-          rgba(255,255,255,.06);
-      }
-
-      .result-stats span,
-      .result-stats strong {
-        display: block;
-      }
-
-      .result-stats strong {
-        margin-top: 5px;
-        font-size: 20px;
-      }
-
-      .shop-item,
-      .mode-card,
-      .achievement-card,
-      .mission-card {
-        display: flex;
-        align-items: center;
-        gap: 14px;
-        padding: 14px;
-        margin-bottom: 10px;
-        border-radius: 18px;
-        background:
-          rgba(255,255,255,.05);
-      }
-
-      .shop-item-info,
-      .mode-info,
-      .achievement-info {
-        flex: 1;
-      }
-
-      .shop-item-info h3,
-      .mode-info h3,
-      .achievement-info h3 {
-        margin: 0 0 4px;
-      }
-
-      .shop-item-info p,
-      .mode-info p,
-      .achievement-info p {
-        margin: 0;
-        opacity: .75;
-        font-size: 13px;
-      }
-
-      .shop-buy,
-      .mode-action {
-        border: 0;
-        border-radius: 12px;
-        padding: 10px 12px;
-        cursor: pointer;
-        font-weight: 800;
-      }
-
-      .achievement-card.locked {
-        opacity: .55;
-      }
-
-      .achievement-card.unlocked {
-        transform: translateZ(0);
-      }
-
-      .mission-progress {
-        height: 7px;
-        overflow: hidden;
-        border-radius: 99px;
-        background:
-          rgba(255,255,255,.1);
-        margin: 8px 0;
-      }
-
-      .mission-progress span {
-        display: block;
-        height: 100%;
-        border-radius: inherit;
-        transition:
-          width .4s ease;
-      }
-
-      .premium-panel,
-      .locked-mode,
-      .hint-box,
-      .reveal-box {
-        text-align: center;
-      }
-
-      .premium-icon,
-      .locked-icon,
-      .result-icon {
-        font-size: 55px;
-        text-align: center;
-        margin: 10px;
-      }
-
-      .premium-panel ul {
-        text-align: right;
-        padding-right: 20px;
-      }
-    `;
-
-    document.head.appendChild(
-      style
+    state.journal.push(
+      typeof entry === "string"
+        ? {
+            id,
+            title: entry,
+            text: "",
+            time: Date.now()
+          }
+        : {
+            ...clone(entry),
+            time: Date.now()
+          }
     );
+
+    saveState();
+
+    emit("journalAdded", {
+      entry
+    });
   }
 
-  /* =========================================================
-     22. PUBLIC ULTRA API
-     ========================================================= */
 
-  window.SHADOWS_ULTRA = {
+  /* =======================================================
+     HISTORY
+     ======================================================= */
 
-    ScreenManager,
+  function addHistory(scene, chapter) {
+    if (!scene) return;
 
-    Modal,
+    state.history.push({
+      chapter:
+        chapter?.id ??
+        state.game.chapter,
 
-    QuestionRenderer,
+      scene:
+        scene.id ??
+        state.game.sceneIndex,
 
-    GameController,
+      title:
+        scene.title ||
+        scene.name ||
+        "مشهد",
 
-    Shop,
+      location:
+        scene.location ||
+        "",
 
-    Profile,
+      time: Date.now()
+    });
 
-    AchievementsUI,
+    if (state.history.length > 100) {
+      state.history =
+        state.history.slice(-100);
+    }
+  }
 
-    MissionsUI,
 
-    ModesUI,
+  /* =======================================================
+     SCENE NORMALIZATION
+     ======================================================= */
 
-    Premium,
+  function normalizeScene(scene) {
+    if (!scene) return null;
 
-    SettingsUI,
+    return {
+      id:
+        scene.id ??
+        state.game.sceneIndex,
 
-    DailyUI,
+      title:
+        scene.title ||
+        scene.name ||
+        "المجهول",
 
-    navigate,
+      text:
+        scene.text ||
+        scene.story ||
+        scene.description ||
+        "",
 
-    initializeUI
+      location:
+        scene.location ||
+        scene.place ||
+        "",
+
+      weather:
+        scene.weather ||
+        "",
+
+      time:
+        scene.time ||
+        "",
+
+      image:
+        scene.image ||
+        scene.background ||
+        "",
+
+      chapterTag:
+        scene.chapterTag ||
+        "",
+
+      choices:
+        Array.isArray(scene.choices)
+          ? scene.choices
+          : Array.isArray(scene.options)
+            ? scene.options
+            : [],
+
+      effects:
+        scene.effects ||
+        scene.effect ||
+        [],
+
+      item:
+        scene.item ||
+        scene.reward ||
+        null,
+
+      journal:
+        scene.journal ||
+        null,
+
+      damage:
+        safeNumber(
+          scene.damage ||
+          scene.healthLoss ||
+          0
+        ),
+
+      coins:
+        safeNumber(
+          scene.coins ||
+          scene.rewardCoins ||
+          0
+        ),
+
+      xp:
+        safeNumber(
+          scene.xp ||
+          scene.rewardXP ||
+          0
+        ),
+
+      cinematic:
+        scene.cinematic ||
+        null,
+
+      ending:
+        !!scene.ending
+    };
+  }
+
+
+  /* =======================================================
+     CHOICE NORMALIZATION
+     ======================================================= */
+
+  function normalizeChoice(choice, index) {
+    if (typeof choice === "string") {
+      return {
+        id: `choice_${index}`,
+        text: choice,
+        next: index + 1
+      };
+    }
+
+    if (!choice || typeof choice !== "object") {
+      return {
+        id: `choice_${index}`,
+        text: "متابعة",
+        next: index + 1
+      };
+    }
+
+    return {
+      ...choice,
+
+      id:
+        choice.id ||
+        `choice_${index}`,
+
+      text:
+        choice.text ||
+        choice.label ||
+        choice.title ||
+        "اختيار",
+
+      next:
+        choice.next ??
+        choice.nextScene ??
+        choice.scene ??
+        choice.target,
+
+      effects:
+        choice.effects ||
+        choice.effect ||
+        [],
+
+      condition:
+        choice.condition ||
+        null,
+
+      requires:
+        choice.requires ||
+        choice.requiredItem ||
+        null,
+
+      reward:
+        choice.reward ||
+        null,
+
+      damage:
+        safeNumber(
+          choice.damage ||
+          choice.healthLoss ||
+          0
+        ),
+
+      coins:
+        safeNumber(
+          choice.coins ||
+          choice.rewardCoins ||
+          0
+        ),
+
+      xp:
+        safeNumber(
+          choice.xp ||
+          choice.rewardXP ||
+          0
+        )
+    };
+  }
+
+
+  /* =======================================================
+     CONDITIONS
+     ======================================================= */
+
+  function conditionMet(condition) {
+    if (!condition) return true;
+
+    if (typeof condition === "function") {
+      try {
+        return !!condition(state);
+      } catch {
+        return false;
+      }
+    }
+
+    if (typeof condition === "string") {
+      return !!getFlag(condition);
+    }
+
+    if (Array.isArray(condition)) {
+      return condition.every(
+        conditionMet
+      );
+    }
+
+    if (typeof condition === "object") {
+      if (condition.flag) {
+        return (
+          getFlag(condition.flag) ===
+          condition.value
+        );
+      }
+
+      if (condition.item) {
+        return hasItem(condition.item);
+      }
+
+      if (condition.chapter) {
+        return (
+          state.game.chapter >=
+          safeNumber(condition.chapter)
+        );
+      }
+
+      if (condition.level) {
+        return (
+          state.player.level >=
+          safeNumber(condition.level)
+        );
+      }
+
+      if (condition.coins) {
+        return (
+          state.player.coins >=
+          safeNumber(condition.coins)
+        );
+      }
+    }
+
+    return true;
+  }
+
+
+  /* =======================================================
+     EFFECTS BRIDGE
+     ======================================================= */
+
+  function playEffect(type, options = {}) {
+    try {
+      if (
+        window.Effects &&
+        typeof window.Effects.play === "function"
+      ) {
+        return window.Effects.play(
+          type,
+          options
+        );
+      }
+    } catch {}
+
+    return null;
+  }
+
+
+  function playStoryEffects(scene, extra = {}) {
+    if (!scene) return;
+
+    const effects = [];
+
+    if (Array.isArray(scene.effects)) {
+      effects.push(...scene.effects);
+    } else if (scene.effects) {
+      effects.push(scene.effects);
+    }
+
+    if (extra.effects) {
+      if (Array.isArray(extra.effects)) {
+        effects.push(...extra.effects);
+      } else {
+        effects.push(extra.effects);
+      }
+    }
+
+    effects.forEach(effect => {
+      if (typeof effect === "string") {
+        playEffect(effect);
+        return;
+      }
+
+      if (effect && typeof effect === "object") {
+        playEffect(
+          effect.type ||
+          effect.name ||
+          "fade",
+          effect
+        );
+      }
+    });
+
+    try {
+      if (
+        window.Effects &&
+        typeof window.Effects.storyEvent === "function"
+      ) {
+        window.Effects.storyEvent(
+          scene.effect ||
+          scene.storyEvent ||
+          scene.event ||
+          "",
+          extra
+        );
+      }
+    } catch {}
+  }
+
+
+  /* =======================================================
+     GAME ENGINE
+     ======================================================= */
+
+  const Game = {
+
+    start(chapter = 1, scene = 0) {
+      chapter = safeNumber(chapter, 1);
+      scene = safeNumber(scene, 0);
+
+      if (
+        !state.unlockedChapters.includes(chapter)
+      ) {
+        notify(
+          "هذا الفصل لم يُفتح بعد",
+          "icon-chapter"
+        );
+        return false;
+      }
+
+      state.game.active = true;
+      state.game.paused = false;
+
+      state.game.chapter = chapter;
+      state.game.sceneIndex = scene;
+
+      state.game.health =
+        state.game.maxHealth;
+
+      state.game.choicesMade = 0;
+      state.game.correctChoices = 0;
+      state.game.startedAt = Date.now();
+      state.game.elapsed = 0;
+
+      state.statistics.gamesPlayed++;
+
+      state.firstLaunch = false;
+
+      saveState();
+
+      showScreen("gameScreen");
+
+      renderScene();
+
+      emit("gameStarted", {
+        chapter,
+        scene
+      });
+
+      return true;
+    },
+
+
+    continueGame() {
+      if (!state.game.active) {
+        return this.start(
+          state.game.chapter || 1,
+          state.game.sceneIndex || 0
+        );
+      }
+
+      showScreen("gameScreen");
+
+      renderScene();
+
+      return true;
+    },
+
+
+    newGame() {
+      state.game.active = false;
+      state.game.paused = false;
+
+      state.game.chapter = 1;
+      state.game.sceneIndex = 0;
+
+      state.game.health =
+        state.game.maxHealth;
+
+      state.game.choicesMade = 0;
+      state.game.correctChoices = 0;
+
+      saveState();
+
+      return this.start(1, 0);
+    },
+
+
+    current() {
+      return normalizeScene(
+        getCurrentScene()
+      );
+    },
+
+
+    choose(choice) {
+      if (!state.game.active) {
+        return false;
+      }
+
+      if (state.game.paused) {
+        return false;
+      }
+
+      const scene = this.current();
+
+      if (!scene) {
+        return false;
+      }
+
+      const normalized =
+        normalizeChoice(
+          choice,
+          0
+        );
+
+      if (
+        normalized.requires &&
+        !hasItem(normalized.requires)
+      ) {
+        notify(
+          "تحتاج إلى عنصر معيّن أولاً",
+          "icon-bag"
+        );
+
+        AudioEngine.danger();
+
+        playEffect("shake", {
+          duration: 350
+        });
+
+        return false;
+      }
+
+      if (
+        normalized.condition &&
+        !conditionMet(
+          normalized.condition
+        )
+      ) {
+        notify(
+          "هذا القرار غير متاح الآن",
+          "icon-settings"
+        );
+
+        return false;
+      }
+
+      state.game.choicesMade++;
+      state.statistics.choices++;
+
+      if (normalized.damage > 0) {
+        damage(
+          normalized.damage
+        );
+      }
+
+      if (normalized.coins > 0) {
+        addCoins(
+          normalized.coins
+        );
+      }
+
+      if (normalized.xp > 0) {
+        addXP(
+          normalized.xp
+        );
+      }
+
+      if (normalized.reward) {
+        applyReward(
+          normalized.reward
+        );
+      }
+
+      applyChoiceEffects(
+        normalized
+      );
+
+      addHistory(
+        scene,
+        getChapter(
+          state.game.chapter
+        )
+      );
+
+      saveState();
+
+      AudioEngine.choice();
+
+      emit("choiceMade", {
+        choice: normalized,
+        scene
+      });
+
+      let next =
+        normalized.next;
+
+      if (
+        next === undefined ||
+        next === null ||
+        next === ""
+      ) {
+        next =
+          state.game.sceneIndex + 1;
+      }
+
+      if (
+        typeof next === "string" &&
+        next.startsWith("chapter:")
+      ) {
+        const parts =
+          next.split(":");
+
+        const chapter =
+          safeNumber(parts[1], 1);
+
+        const index =
+          safeNumber(parts[2], 0);
+
+        return this.goTo(
+          chapter,
+          index
+        );
+      }
+
+      if (
+        typeof next === "object" &&
+        next
+      ) {
+        return this.goTo(
+          safeNumber(
+            next.chapter,
+            state.game.chapter
+          ),
+          safeNumber(
+            next.scene,
+            0
+          )
+        );
+      }
+
+      return this.goTo(
+        state.game.chapter,
+        safeNumber(
+          next,
+          state.game.sceneIndex + 1
+        )
+      );
+    },
+
+
+    goTo(chapter, sceneIndex) {
+      chapter =
+        safeNumber(
+          chapter,
+          state.game.chapter
+        );
+
+      sceneIndex =
+        safeNumber(
+          sceneIndex,
+          0
+        );
+
+      const target =
+        getScene(
+          chapter,
+          sceneIndex
+        );
+
+      if (!target) {
+        return this.finishChapter();
+      }
+
+      const oldScene =
+        this.current();
+
+      state.game.chapter = chapter;
+      state.game.sceneIndex = sceneIndex;
+
+      saveState();
+
+      transitionToScene(
+        () => renderScene(),
+        chapter !==
+          safeNumber(
+            oldScene?.chapter,
+            chapter
+          )
+      );
+
+      return true;
+    },
+
+
+    next() {
+      return this.goTo(
+        state.game.chapter,
+        state.game.sceneIndex + 1
+      );
+    },
+
+
+    pause() {
+      if (!state.game.active) return;
+
+      state.game.paused = true;
+
+      saveState();
+
+      emit("paused");
+    },
+
+
+    resume() {
+      if (!state.game.active) return;
+
+      state.game.paused = false;
+
+      emit("resumed");
+
+      renderScene();
+    },
+
+
+    finishChapter() {
+      const chapter =
+        state.game.chapter;
+
+      if (
+        !state.completedChapters.includes(
+          chapter
+        )
+      ) {
+        state.completedChapters.push(
+          chapter
+        );
+      }
+
+      const reward =
+        100 + chapter * 50;
+
+      addCoins(reward);
+      addXP(100 + chapter * 25);
+
+      state.statistics.endings++;
+
+      const nextChapter =
+        chapter + 1;
+
+      const exists =
+        !!getChapter(nextChapter);
+
+      if (
+        exists &&
+        !state.unlockedChapters.includes(
+          nextChapter
+        )
+      ) {
+        state.unlockedChapters.push(
+          nextChapter
+        );
+      }
+
+      state.game.active = false;
+      state.game.paused = false;
+
+      saveState();
+
+      checkAchievements();
+
+      renderEndScreen(
+        chapter,
+        reward,
+        exists
+      );
+
+      emit("chapterFinished", {
+        chapter,
+        nextChapter:
+          exists
+            ? nextChapter
+            : null
+      });
+    }
   };
 
-  /* =========================================================
-     23. START
-     ========================================================= */
 
-  function bootPart2() {
+  /* =======================================================
+     DAMAGE / HEALTH
+     ======================================================= */
 
-    installSafetyCSS();
+  function damage(amount) {
+    amount =
+      Math.max(
+        0,
+        safeNumber(amount)
+      );
 
-    initializeUI();
+    if (!amount) return;
 
-    console.log(
-      "%c SHADOWS OF THE UNKNOWN ",
-      "font-weight:900;font-size:18px"
+    state.game.health =
+      clamp(
+        state.game.health - amount,
+        0,
+        state.game.maxHealth
+      );
+
+    playEffect(
+      "danger",
+      {
+        duration: 700
+      }
     );
 
-    console.log(
-      "ULTRA V5 — PART 2 READY"
+    AudioEngine.danger();
+
+    if (
+      state.game.health <= 0
+    ) {
+      state.game.totalDeaths++;
+
+      notify(
+        "الظلام يقترب...",
+        "icon-heart"
+      );
+
+      state.game.health =
+        Math.max(
+          1,
+          Math.floor(
+            state.game.maxHealth * 0.25
+          )
+        );
+    }
+
+    saveState();
+  }
+
+
+  /* =======================================================
+     REWARDS
+     ======================================================= */
+
+  function applyReward(reward) {
+    if (!reward) return;
+
+    if (typeof reward === "string") {
+      addItem(reward);
+      return;
+    }
+
+    if (reward.item) {
+      addItem(
+        typeof reward.item === "object"
+          ? reward.item
+          : {
+              id: reward.item,
+              name:
+                reward.itemName ||
+                reward.item,
+              icon:
+                reward.icon ||
+                "icon-item"
+            }
+      );
+    }
+
+    if (reward.coins) {
+      addCoins(
+        safeNumber(reward.coins)
+      );
+    }
+
+    if (reward.xp) {
+      addXP(
+        safeNumber(reward.xp)
+      );
+    }
+
+    if (reward.flag) {
+      setFlag(
+        reward.flag,
+        reward.value ?? true
+      );
+    }
+
+    if (reward.journal) {
+      addJournal(
+        reward.journal
+      );
+    }
+  }
+
+
+  function applyChoiceEffects(choice) {
+    if (!choice) return;
+
+    playStoryEffects(
+      null,
+      {
+        effects:
+          choice.effects
+      }
+    );
+
+    if (choice.flag) {
+      setFlag(
+        choice.flag,
+        choice.value ?? true
+      );
+    }
+
+    if (choice.setFlag) {
+      if (
+        typeof choice.setFlag === "object"
+      ) {
+        Object.keys(
+          choice.setFlag
+        ).forEach(key => {
+          setFlag(
+            key,
+            choice.setFlag[key]
+          );
+        });
+      }
+    }
+
+    if (choice.item) {
+      addItem(
+        choice.item
+      );
+    }
+
+    if (choice.journal) {
+      addJournal(
+        choice.journal
+      );
+    }
+  }
+
+
+  /* =======================================================
+     UI HELPERS
+     ======================================================= */
+
+  function showScreen(id) {
+    document
+      .querySelectorAll(
+        ".screen"
+      )
+      .forEach(screen => {
+        screen.classList.remove(
+          "active"
+        );
+      });
+
+    const screen =
+      $(id);
+
+    if (screen) {
+      screen.classList.add(
+        "active"
+      );
+    }
+  }
+
+
+  function setText(id, value) {
+    const el = $(id);
+
+    if (el) {
+      el.textContent =
+        value ?? "";
+    }
+  }
+
+
+  function setHTML(id, value) {
+    const el = $(id);
+
+    if (el) {
+      el.innerHTML =
+        value ?? "";
+    }
+  }
+
+
+  /* =======================================================
+     SCENE RENDER
+     ======================================================= */
+
+  function renderScene() {
+    const scene =
+      Game.current();
+
+    if (!scene) {
+      Game.finishChapter();
+      return;
+    }
+
+    const chapter =
+      getChapter(
+        state.game.chapter
+      );
+
+    renderHUD(chapter, scene);
+
+    renderSceneVisual(scene);
+
+    renderStory(scene);
+
+    renderChoices(scene);
+
+    updateBottomUI();
+
+    playStoryEffects(scene);
+
+    checkAchievements();
+
+    saveState();
+  }
+
+
+  function renderHUD(chapter, scene) {
+    setText(
+      "chapterLabel",
+      chapter?.label ||
+      `الفصل ${state.game.chapter}`
+    );
+
+    setText(
+      "chapterTitleTop",
+      chapter?.title ||
+      `الفصل ${state.game.chapter}`
+    );
+
+    const total =
+      Math.max(
+        1,
+        getScenes(chapter).length
+      );
+
+    const progress =
+      clamp(
+        ((state.game.sceneIndex + 1) /
+          total) * 100,
+        0,
+        100
+      );
+
+    const bar =
+      $("progressBar");
+
+    if (bar) {
+      bar.style.width =
+        `${progress}%`;
+    }
+
+    setText(
+      "progressText",
+      `${Math.round(progress)}%`
+    );
+
+    setText(
+      "health",
+      formatNumber(
+        state.game.health
+      )
+    );
+
+    setText(
+      "coins",
+      formatNumber(
+        state.player.coins
+      )
+    );
+
+    setText(
+      "chapter",
+      formatNumber(
+        state.game.chapter
+      )
     );
   }
+
+
+  function renderSceneVisual(scene) {
+    const image =
+      $("sceneImage");
+
+    if (image) {
+      if (scene.image) {
+        image.src =
+          scene.image;
+
+        image.style.display =
+          "block";
+      } else {
+        image.removeAttribute(
+          "src"
+        );
+
+        image.style.display =
+          "none";
+      }
+    }
+
+    setText(
+      "sceneWeather",
+      scene.weather
+    );
+
+    setText(
+      "sceneTime",
+      scene.time
+    );
+
+    const location =
+      $("sceneLocation");
+
+    if (location) {
+      location.textContent =
+        scene.location;
+    }
+  }
+
+
+  function renderStory(scene) {
+    setText(
+      "sceneChapterTag",
+      scene.chapterTag ||
+      `الفصل ${state.game.chapter}`
+    );
+
+    setText(
+      "sceneTitle",
+      scene.title
+    );
+
+    const story =
+      $("storyText");
+
+    if (!story) return;
+
+    story.innerHTML = "";
+
+    typeText(
+      story,
+      scene.text
+    );
+  }
+
+
+  let typingToken = 0;
+
+  async function typeText(
+    element,
+    text
+  ) {
+    const token =
+      ++typingToken;
+
+    text =
+      String(text || "");
+
+    element.textContent = "";
+
+    for (
+      let i = 0;
+      i < text.length;
+      i++
+    ) {
+      if (token !== typingToken) {
+        return;
+      }
+
+      element.textContent +=
+        text[i];
+
+      if (
+        text[i] !== " " &&
+        i % 3 === 0
+      ) {
+        await wait(10);
+      }
+    }
+  }
+
+
+  /* =======================================================
+     CHOICE RENDER
+     ======================================================= */
+
+  function renderChoices(scene) {
+    const area =
+      $("choices");
+
+    if (!area) return;
+
+    area.innerHTML = "";
+
+    const choices =
+      scene.choices.length
+        ? scene.choices
+        : [
+            {
+              id: "continue",
+              text: "متابعة",
+              next:
+                state.game.sceneIndex + 1
+            }
+          ];
+
+    choices
+      .map(normalizeChoice)
+      .forEach((choice, index) => {
+        const button =
+          document.createElement(
+            "button"
+          );
+
+        button.type = "button";
+
+        button.className =
+          "choice-button";
+
+        button.dataset.choice =
+          choice.id;
+
+        button.dataset.index =
+          index;
+
+        const locked =
+          !conditionMet(
+            choice.condition
+          ) ||
+          (
+            choice.requires &&
+            !hasItem(
+              choice.requires
+            )
+          );
+
+        if (locked) {
+          button.classList.add(
+            "locked"
+          );
+        }
+
+        const number =
+          document.createElement(
+            "span"
+          );
+
+        number.className =
+          "choice-number";
+
+        number.textContent =
+          String(index + 1);
+
+        const text =
+          document.createElement(
+            "span"
+          );
+
+        text.className =
+          "choice-text";
+
+        text.textContent =
+          choice.text;
+
+        button.append(
+          number,
+          text
+        );
+
+        if (
+          choice.requires &&
+          !hasItem(
+            choice.requires
+          )
+        ) {
+          const lock =
+            document.createElement(
+              "span"
+            );
+
+          lock.className =
+            "choice-lock";
+
+          lock.textContent =
+            "مغلق";
+
+          button.append(lock);
+        }
+
+        area.appendChild(
+          button
+        );
+      });
+  }
+
+
+  /* =======================================================
+     SCENE TRANSITION
+     ======================================================= */
+
+  function transitionToScene(
+    callback,
+    chapterChange = false
+  ) {
+    const transition =
+      $("sceneTransition");
+
+    if (!transition) {
+      callback();
+      return;
+    }
+
+    transition.classList.add(
+      "active"
+    );
+
+    if (chapterChange) {
+      const chapter =
+        getChapter(
+          state.game.chapter
+        );
+
+      setText(
+        "transitionChapter",
+        chapter?.label ||
+        `الفصل ${state.game.chapter}`
+      );
+
+      setText(
+        "transitionTitle",
+        chapter?.title ||
+        "ظلال المجهول"
+      );
+    }
+
+    setTimeout(() => {
+      callback();
+
+      setTimeout(() => {
+        transition.classList.remove(
+          "active"
+        );
+      }, 450);
+    }, 450);
+  }
+
+
+  /* =======================================================
+     END SCREEN
+     ======================================================= */
+
+  function renderEndScreen(
+    chapter,
+    reward,
+    hasNext
+  ) {
+    showScreen(
+      "endScreen"
+    );
+
+    setText(
+      "finalChapter",
+      formatNumber(chapter)
+    );
+
+    setText(
+      "finalCoins",
+      formatNumber(reward)
+    );
+
+    setText(
+      "finalAchievements",
+      formatNumber(
+        state.achievements.length
+      )
+    );
+
+    setText(
+      "endTitle",
+      hasNext
+        ? "انتهى الفصل..."
+        : "نهاية الرحلة"
+    );
+
+    setText(
+      "endText",
+      hasNext
+        ? "لكن الحقيقة لم تظهر كاملة بعد."
+        : "لقد وصلت إلى نهاية هذا الجزء من القصة."
+    );
+
+    const icon =
+      $("endIcon");
+
+    if (icon) {
+      icon.className =
+        hasNext
+          ? "end-icon icon-spark"
+          : "end-icon icon-trophy";
+    }
+
+    playEffect(
+      hasNext
+        ? "light"
+        : "supernatural",
+      {
+        duration: 1200
+      }
+    );
+  }
+
+
+  /* =======================================================
+     INVENTORY UI
+     ======================================================= */
+
+  function renderInventory() {
+    const content =
+      $("inventoryContent");
+
+    if (!content) return;
+
+    if (!state.inventory.length) {
+      content.innerHTML = `
+        <div class="empty-state">
+          <span class="icon-bag"></span>
+          <p>الحقيبة فارغة</p>
+        </div>
+      `;
+
+      return;
+    }
+
+    content.innerHTML =
+      state.inventory
+        .map(item => {
+          const id =
+            typeof item === "string"
+              ? item
+              : item.id;
+
+          const name =
+            typeof item === "string"
+              ? item
+              : item.name || id;
+
+          const icon =
+            typeof item === "string"
+              ? "icon-item"
+              : item.icon || "icon-item";
+
+          const description =
+            typeof item === "string"
+              ? ""
+              : item.description || "";
+
+          return `
+            <div class="inventory-item">
+              <span class="inventory-item-icon ${escapeHTML(icon)}"></span>
+              <div class="inventory-item-info">
+                <strong>${escapeHTML(name)}</strong>
+                <small>${escapeHTML(description)}</small>
+              </div>
+            </div>
+          `;
+        })
+        .join("");
+  }
+
+
+  /* =======================================================
+     ACHIEVEMENTS UI
+     ======================================================= */
+
+  function renderAchievements() {
+    setText(
+      "achievementUnlocked",
+      state.achievements.length
+    );
+
+    setText(
+      "achievementTotal",
+      ACHIEVEMENTS.length
+    );
+
+    const content =
+      $("achievementsContent");
+
+    if (!content) return;
+
+    content.innerHTML =
+      ACHIEVEMENTS
+        .map(achievement => {
+          const unlocked =
+            state.achievements.includes(
+              achievement.id
+            );
+
+          return `
+            <div class="achievement-item ${unlocked ? "unlocked" : "locked"}">
+              <span class="achievement-icon ${escapeHTML(achievement.icon)}"></span>
+
+              <div class="achievement-info">
+                <strong>
+                  ${escapeHTML(achievement.title)}
+                </strong>
+
+                <small>
+                  ${escapeHTML(achievement.description)}
+                </small>
+              </div>
+            </div>
+          `;
+        })
+        .join("");
+  }
+
+
+  /* =======================================================
+     JOURNAL UI
+     ======================================================= */
+
+  function renderJournal() {
+    const content =
+      $("journalContent");
+
+    if (!content) return;
+
+    if (!state.journal.length) {
+      content.innerHTML = `
+        <div class="empty-state">
+          <span class="icon-journal"></span>
+          <p>دفترك مازال فارغاً.</p>
+        </div>
+      `;
+
+      return;
+    }
+
+    content.innerHTML =
+      [...state.journal]
+        .reverse()
+        .map(entry => `
+          <article class="journal-entry">
+            <h3>
+              ${escapeHTML(
+                entry.title ||
+                "ملاحظة"
+              )}
+            </h3>
+
+            <p>
+              ${escapeHTML(
+                entry.text ||
+                ""
+              )}
+            </p>
+          </article>
+        `)
+        .join("");
+  }
+
+
+  /* =======================================================
+     UI STATE
+     ======================================================= */
+
+  function updateBottomUI() {
+    setText(
+      "inventoryCount",
+      state.inventory.length
+    );
+
+    setText(
+      "achievementCount",
+      state.achievements.length
+    );
+
+    setText(
+      "inventoryCount",
+      state.inventory.length
+    );
+  }
+
+
+  function updateSettingsUI() {
+    const sound =
+      $("sfxToggle");
+
+    const music =
+      $("musicToggle");
+
+    const motion =
+      $("motionToggle");
+
+    if (sound) {
+      sound.checked =
+        !!state.settings.sound;
+    }
+
+    if (music) {
+      music.checked =
+        !!state.settings.music;
+    }
+
+    if (motion) {
+      motion.checked =
+        !!state.settings.motion;
+    }
+  }
+
+
+  /* =======================================================
+     CONTINUE BUTTON
+     ======================================================= */
+
+  function updateContinueButton() {
+    const btn =
+      $("continueBtn");
+
+    if (!btn) return;
+
+    if (
+      state.game.active
+    ) {
+      btn.style.display =
+        "flex";
+    } else {
+      btn.style.display =
+        "none";
+    }
+  }
+
+
+  /* =======================================================
+     MODALS
+     ======================================================= */
+
+  function openOverlay(id) {
+    const overlay =
+      $(id);
+
+    if (!overlay) return;
+
+    overlay.classList.add(
+      "active"
+    );
+  }
+
+
+  function closeOverlay(id) {
+    const overlay =
+      $(id);
+
+    if (!overlay) return;
+
+    overlay.classList.remove(
+      "active"
+    );
+  }
+
+
+  function closeAllOverlays() {
+    document
+      .querySelectorAll(
+        ".overlay.active"
+      )
+      .forEach(el =>
+        el.classList.remove(
+          "active"
+        )
+      );
+  }
+
+
+  /* =======================================================
+     CINEMATIC EVENTS
+     ======================================================= */
+
+  function cinematic(
+    title,
+    text,
+    label = "ظلال المجهول"
+  ) {
+    const overlay =
+      $("cinematicOverlay");
+
+    if (!overlay) return;
+
+    setText(
+      "cinematicLabel",
+      label
+    );
+
+    setText(
+      "cinematicTitle",
+      title
+    );
+
+    setText(
+      "cinematicText",
+      text
+    );
+
+    overlay.classList.add(
+      "active"
+    );
+
+    playEffect(
+      "fade",
+      {
+        duration: 700
+      }
+    );
+  }
+
+
+  /* =======================================================
+     INPUT HELPERS
+     ======================================================= */
+
+  function findChoiceFromButton(button) {
+    const scene =
+      Game.current();
+
+    if (!scene) return null;
+
+    const choices =
+      scene.choices.length
+        ? scene.choices
+        : [
+            {
+              id: "continue",
+              text: "متابعة",
+              next:
+                state.game.sceneIndex + 1
+            }
+          ];
+
+    const index =
+      safeNumber(
+        button.dataset.index,
+        0
+      );
+
+    return normalizeChoice(
+      choices[index],
+      index
+    );
+  }
+
+
+  /* =======================================================
+     INITIAL UI REFRESH
+     ======================================================= */
+
+  function refreshUI() {
+    updateContinueButton();
+    updateSettingsUI();
+    updateBottomUI();
+
+    if (
+      state.game.active
+    ) {
+      renderScene();
+    }
+  }
+
+
+  /* =======================================================
+     PUBLIC API
+     ======================================================= */
+
+  window.SHADOWS = {
+    state,
+
+    getState() {
+      return state;
+    },
+
+    save: saveState,
+
+    reset: resetState,
+
+    on,
+
+    emit,
+
+    Game,
+
+    Audio: AudioEngine,
+
+    Effects: window.Effects || null,
+
+    addXP,
+
+    addCoins,
+
+    spendCoins,
+
+    addItem,
+
+    removeItem,
+
+    hasItem,
+
+    addJournal,
+
+    setFlag,
+
+    getFlag,
+
+    notify,
+
+    cinematic,
+
+    checkAchievements,
+
+    renderScene,
+
+    renderInventory,
+
+    renderAchievements,
+
+    renderJournal
+  };
+
+
+  /* =======================================================
+     DOM EVENTS
+     ======================================================= */
+
+  function bindEvents() {
+
+    $("continueBtn")?.addEventListener(
+      "click",
+      () => {
+        AudioEngine.click();
+        Game.continueGame();
+      }
+    );
+
+
+    $("newGameBtn")?.addEventListener(
+      "click",
+      () => {
+        AudioEngine.click();
+        Game.newGame();
+      }
+    );
+
+
+    $("howToPlayBtn")?.addEventListener(
+      "click",
+      () => {
+        AudioEngine.click();
+        openOverlay(
+          "howToPlayOverlay"
+        );
+      }
+    );
+
+
+    $("closeHowToPlayBtn")?.addEventListener(
+      "click",
+      () => {
+        closeOverlay(
+          "howToPlayOverlay"
+        );
+      }
+    );
+
+
+    $("tutorialOkBtn")?.addEventListener(
+      "click",
+      () => {
+        closeOverlay(
+          "howToPlayOverlay"
+        );
+      }
+    );
+
+
+    $("menuBtn")?.addEventListener(
+      "click",
+      () => {
+        AudioEngine.click();
+
+        Game.pause();
+
+        openOverlay(
+          "menuOverlay"
+        );
+      }
+    );
+
+
+    $("closeMenuBtn")?.addEventListener(
+      "click",
+      () => {
+        closeOverlay(
+          "menuOverlay"
+        );
+
+        Game.resume();
+      }
+    );
+
+
+    $("inventoryBtn")?.addEventListener(
+      "click",
+      () => {
+        AudioEngine.click();
+        renderInventory();
+        openOverlay(
+          "inventoryOverlay"
+        );
+      }
+    );
+
+
+    $("closeInventoryBtn")?.addEventListener(
+      "click",
+      () => {
+        closeOverlay(
+          "inventoryOverlay"
+        );
+      }
+    );
+
+
+    $("achievementsBtn")?.addEventListener(
+      "click",
+      () => {
+        AudioEngine.click();
+        renderAchievements();
+        openOverlay(
+          "achievementsOverlay"
+        );
+      }
+    );
+
+
+    $("closeAchievementsBtn")?.addEventListener(
+      "click",
+      () => {
+        closeOverlay(
+          "achievementsOverlay"
+        );
+      }
+    );
+
+
+    $("journalBtn")?.addEventListener(
+      "click",
+      () => {
+        AudioEngine.click();
+        renderJournal();
+        openOverlay(
+          "journalOverlay"
+        );
+      }
+    );
+
+
+    $("closeJournalBtn")?.addEventListener(
+      "click",
+      () => {
+        closeOverlay(
+          "journalOverlay"
+        );
+      }
+    );
+
+
+    $("menuInventoryBtn")?.addEventListener(
+      "click",
+      () => {
+        closeOverlay(
+          "menuOverlay"
+        );
+
+        renderInventory();
+
+        openOverlay(
+          "inventoryOverlay"
+        );
+      }
+    );
+
+
+    $("menuAchievementsBtn")?.addEventListener(
+      "click",
+      () => {
+        closeOverlay(
+          "menuOverlay"
+        );
+
+        renderAchievements();
+
+        openOverlay(
+          "achievementsOverlay"
+        );
+      }
+    );
+
+
+    $("menuJournalBtn")?.addEventListener(
+      "click",
+      () => {
+        closeOverlay(
+          "menuOverlay"
+        );
+
+        renderJournal();
+
+        openOverlay(
+          "journalOverlay"
+        );
+      }
+    );
+
+
+    $("menuSettingsBtn")?.addEventListener(
+      "click",
+      () => {
+        closeOverlay(
+          "menuOverlay"
+        );
+
+        updateSettingsUI();
+
+        openOverlay(
+          "settingsOverlay"
+        );
+      }
+    );
+
+
+    $("closeSettingsBtn")?.addEventListener(
+      "click",
+      () => {
+        closeOverlay(
+          "settingsOverlay"
+        );
+      }
+    );
+
+
+    $("settingsDoneBtn")?.addEventListener(
+      "click",
+      () => {
+        closeOverlay(
+          "settingsOverlay"
+        );
+
+        saveState();
+      }
+    );
+
+
+    $("saveGameBtn")?.addEventListener(
+      "click",
+      () => {
+        saveState();
+
+        notify(
+          "تم حفظ تقدمك",
+          "icon-spark"
+        );
+
+        closeOverlay(
+          "menuOverlay"
+        );
+
+        Game.resume();
+      }
+    );
+
+
+    $("exitToTitleBtn")?.addEventListener(
+      "click",
+      () => {
+        saveState();
+
+        closeAllOverlays();
+
+        state.game.paused = false;
+
+        showScreen(
+          "startScreen"
+        );
+
+        updateContinueButton();
+      }
+    );
+
+
+    $("restartFromEnd")?.addEventListener(
+      "click",
+      () => {
+        AudioEngine.click();
+
+        Game.newGame();
+      }
+    );
+
+
+    $("endToTitleBtn")?.addEventListener(
+      "click",
+      () => {
+        showScreen(
+          "startScreen"
+        );
+
+        updateContinueButton();
+      }
+    );
+
+
+    $("soundBtn")?.addEventListener(
+      "click",
+      () => {
+        state.settings.sound =
+          !state.settings.sound;
+
+        saveState();
+
+        updateSettingsUI();
+
+        const icon =
+          $("soundIcon");
+
+        if (icon) {
+          icon.className =
+            state.settings.sound
+              ? "icon-volume"
+              : "icon-volume-off";
+        }
+
+        if (state.settings.sound) {
+          AudioEngine.click();
+        }
+      }
+    );
+
+
+    $("sfxToggle")?.addEventListener(
+      "change",
+      event => {
+        state.settings.sound =
+          !!event.target.checked;
+
+        saveState();
+      }
+    );
+
+
+    $("musicToggle")?.addEventListener(
+      "change",
+      event => {
+        state.settings.music =
+          !!event.target.checked;
+
+        saveState();
+
+        emit(
+          "musicChanged",
+          {
+            enabled:
+              state.settings.music
+          }
+        );
+      }
+    );
+
+
+    $("motionToggle")?.addEventListener(
+      "change",
+      event => {
+        state.settings.motion =
+          !!event.target.checked;
+
+        saveState();
+
+        try {
+          window.Effects?.setMotion?.(
+            state.settings.motion
+          );
+        } catch {}
+      }
+    );
+
+
+    $("cinematicContinueBtn")?.addEventListener(
+      "click",
+      () => {
+        closeOverlay(
+          "cinematicOverlay"
+        );
+      }
+    );
+
+
+    $("skipTextBtn")?.addEventListener(
+      "click",
+      () => {
+        typingToken++;
+
+        const scene =
+          Game.current();
+
+        if (scene) {
+          setText(
+            "storyText",
+            scene.text
+          );
+        }
+      }
+    );
+
+
+    $("choices")?.addEventListener(
+      "click",
+      event => {
+        const button =
+          event.target.closest(
+            ".choice-button"
+          );
+
+        if (!button) return;
+
+        if (
+          button.classList.contains(
+            "locked"
+          )
+        ) {
+          AudioEngine.danger();
+
+          playEffect(
+            "shake",
+            {
+              duration: 350
+            }
+          );
+
+          notify(
+            "هذا الاختيار مغلق",
+            "icon-settings"
+          );
+
+          return;
+        }
+
+        const choice =
+          findChoiceFromButton(
+            button
+          );
+
+        if (!choice) return;
+
+        button.classList.add(
+          "selected"
+        );
+
+        Game.choose(choice);
+      });
+  }
+
+
+  /* =======================================================
+     KEYBOARD
+     ======================================================= */
+
+  function bindKeyboard() {
+    document.addEventListener(
+      "keydown",
+      event => {
+        if (
+          !state.game.active ||
+          state.game.paused
+        ) {
+          return;
+        }
+
+        if (
+          ["1", "2", "3", "4"].includes(
+            event.key
+          )
+        ) {
+          const index =
+            Number(event.key) - 1;
+
+          const button =
+            document.querySelector(
+              `.choice-button[data-index="${index}"]`
+            );
+
+          if (button) {
+            button.click();
+          }
+        }
+
+        if (
+          event.key === "Escape"
+        ) {
+          openOverlay(
+            "menuOverlay"
+          );
+
+          Game.pause();
+        }
+      }
+    );
+  }
+
+
+  /* =======================================================
+     VISIBILITY
+     ======================================================= */
+
+  function bindVisibility() {
+    document.addEventListener(
+      "visibilitychange",
+      () => {
+        if (
+          document.hidden &&
+          state.game.active
+        ) {
+          Game.pause();
+          saveState();
+        }
+      }
+    );
+  }
+
+
+  /* =======================================================
+     BOOT
+     ======================================================= */
+
+  function boot() {
+    bindEvents();
+    bindKeyboard();
+    bindVisibility();
+
+    try {
+      window.Effects?.init?.();
+      window.Effects?.setMotion?.(
+        state.settings.motion
+      );
+    } catch {}
+
+    updateSettingsUI();
+    updateContinueButton();
+
+    if (
+      state.game.active
+    ) {
+      showScreen(
+        "startScreen"
+      );
+    } else {
+      showScreen(
+        "startScreen"
+      );
+    }
+
+    checkAchievements();
+
+    emit("ready");
+  }
+
 
   if (
     document.readyState ===
     "loading"
   ) {
-
     document.addEventListener(
       "DOMContentLoaded",
-      bootPart2,
+      boot,
       {
         once: true
       }
     );
-
   } else {
-
-    bootPart2();
+    boot();
   }
+
+})();
+
+/* =========================================================
+   ظلال المجهول — SHADOWS OF THE UNKNOWN
+   script.js — ULTRA V6
+   PART 2 / 2
+   تكملة مباشرة للجزء الأول
+   ========================================================= */
+
+
+/* =======================================================
+   PLAYER PROFILE
+   ======================================================= */
+
+function renderPlayerProfile() {
+  const player = state.player;
+
+  const name =
+    player.name ||
+    "المحقق";
+
+  const level =
+    safeNumber(player.level, 1);
+
+  const xp =
+    safeNumber(player.xp, 0);
+
+  const required =
+    xpRequired(level);
+
+  const percent =
+    clamp(
+      (xp / required) * 100,
+      0,
+      100
+    );
+
+  document
+    .querySelectorAll(
+      "[data-player-name]"
+    )
+    .forEach(el => {
+      el.textContent = name;
+    });
+
+  document
+    .querySelectorAll(
+      "[data-player-level]"
+    )
+    .forEach(el => {
+      el.textContent =
+        formatNumber(level);
+    });
+
+  document
+    .querySelectorAll(
+      "[data-player-xp]"
+    )
+    .forEach(el => {
+      el.textContent =
+        `${formatNumber(xp)} / ${formatNumber(required)}`;
+    });
+
+  document
+    .querySelectorAll(
+      "[data-xp-progress]"
+    )
+    .forEach(el => {
+      el.style.width =
+        `${percent}%`;
+    });
+}
+
+
+/* =======================================================
+   SAVE / LOAD UI
+   ======================================================= */
+
+function hasSaveGame() {
+  return !!(
+    state.game.active ||
+    state.history.length ||
+    state.completedChapters.length
+  );
+}
+
+
+function prepareContinue() {
+  const btn =
+    $("continueBtn");
+
+  if (!btn) return;
+
+  btn.style.display =
+    hasSaveGame()
+      ? "flex"
+      : "none";
+}
+
+
+/* =======================================================
+   DAILY SYSTEM
+   ======================================================= */
+
+function getTodayKey() {
+  const date =
+    new Date();
+
+  return [
+    date.getFullYear(),
+    String(
+      date.getMonth() + 1
+    ).padStart(2, "0"),
+    String(
+      date.getDate()
+    ).padStart(2, "0")
+  ].join("-");
+}
+
+
+function updateDaily() {
+  const today =
+    getTodayKey();
+
+  if (
+    state.daily.date !== today
+  ) {
+    state.daily = {
+      date: today,
+      completed: false,
+      rewardClaimed: false
+    };
+
+    saveState();
+  }
+}
+
+
+function completeDaily() {
+  updateDaily();
+
+  if (
+    state.daily.completed
+  ) {
+    return false;
+  }
+
+  state.daily.completed =
+    true;
+
+  if (
+    !state.daily.rewardClaimed
+  ) {
+    state.daily.rewardClaimed =
+      true;
+
+    addCoins(75);
+    addXP(50);
+
+    notify(
+      "أكملت تحدي اليوم",
+      "icon-trophy"
+    );
+  }
+
+  saveState();
+
+  return true;
+}
+
+
+/* =======================================================
+   CHAPTER UNLOCKING
+   ======================================================= */
+
+function unlockChapter(chapter) {
+  chapter =
+    safeNumber(
+      chapter,
+      1
+    );
+
+  if (
+    state.unlockedChapters.includes(
+      chapter
+    )
+  ) {
+    return false;
+  }
+
+  state.unlockedChapters.push(
+    chapter
+  );
+
+  state.unlockedChapters =
+    [...new Set(
+      state.unlockedChapters
+    )].sort(
+      (a, b) => a - b
+    );
+
+  saveState();
+
+  notify(
+    `تم فتح الفصل ${chapter}`,
+    "icon-chapter",
+    3000
+  );
+
+  emit(
+    "chapterUnlocked",
+    {
+      chapter
+    }
+  );
+
+  checkAchievements();
+
+  return true;
+}
+
+
+/* =======================================================
+   CHAPTER PROGRESS
+   ======================================================= */
+
+function getChapterProgress(
+  chapterId = state.game.chapter
+) {
+  const chapter =
+    getChapter(chapterId);
+
+  if (!chapter) {
+    return {
+      current: 0,
+      total: 0,
+      percent: 0
+    };
+  }
+
+  const total =
+    getScenes(chapter).length;
+
+  const current =
+    clamp(
+      state.game.chapter === chapterId
+        ? state.game.sceneIndex + 1
+        : 0,
+      0,
+      total
+    );
+
+  return {
+    current,
+    total,
+    percent:
+      total
+        ? Math.round(
+            (current / total) * 100
+          )
+        : 0
+  };
+}
+
+
+/* =======================================================
+   SCENE EVENTS
+   ======================================================= */
+
+function processSceneData(scene) {
+  if (!scene) return;
+
+  if (scene.flag) {
+    setFlag(
+      scene.flag,
+      scene.flagValue ?? true
+    );
+  }
+
+  if (
+    scene.flags &&
+    typeof scene.flags === "object"
+  ) {
+    Object.keys(
+      scene.flags
+    ).forEach(key => {
+      setFlag(
+        key,
+        scene.flags[key]
+      );
+    });
+  }
+
+  if (scene.item) {
+    addItem(
+      scene.item
+    );
+  }
+
+  if (scene.journal) {
+    addJournal(
+      scene.journal
+    );
+  }
+
+  if (scene.reward) {
+    applyReward(
+      scene.reward
+    );
+  }
+
+  if (scene.coins) {
+    addCoins(
+      safeNumber(scene.coins)
+    );
+  }
+
+  if (scene.xp) {
+    addXP(
+      safeNumber(scene.xp)
+    );
+  }
+}
+
+
+/* =======================================================
+   ENHANCED SCENE RENDER
+   ======================================================= */
+
+const originalRenderScene =
+  renderScene;
+
+renderScene = function () {
+  const scene =
+    Game.current();
+
+  if (!scene) {
+    Game.finishChapter();
+    return;
+  }
+
+  processSceneData(
+    scene
+  );
+
+  originalRenderScene();
+
+  renderPlayerProfile();
+  prepareContinue();
+};
+
+
+/* =======================================================
+   SCENE VISUAL STATE
+   ======================================================= */
+
+function applySceneClasses(scene) {
+  const area =
+    $("sceneArea");
+
+  if (!area) return;
+
+  [
+    "danger-mode",
+    "dark-mode",
+    "light-event",
+    "fog-event",
+    "wind-event",
+    "rain-event",
+    "shadow-event"
+  ].forEach(cls => {
+    area.classList.remove(
+      cls
+    );
+  });
+
+  const effects =
+    Array.isArray(scene.effects)
+      ? scene.effects
+      : [scene.effects];
+
+  effects
+    .filter(Boolean)
+    .forEach(effect => {
+      const type =
+        typeof effect === "string"
+          ? effect
+          : effect.type;
+
+      if (!type) return;
+
+      const cls =
+        `${type}-event`;
+
+      if (
+        [
+          "light",
+          "fog",
+          "wind",
+          "rain",
+          "shadow"
+        ].includes(type)
+      ) {
+        area.classList.add(
+          cls
+        );
+      }
+
+      if (
+        [
+          "danger",
+          "darkness"
+        ].includes(type)
+      ) {
+        area.classList.add(
+          type === "danger"
+            ? "danger-mode"
+            : "dark-mode"
+        );
+      }
+    });
+}
+
+
+/* =======================================================
+   EFFECT-AWARE RENDER PATCH
+   ======================================================= */
+
+const baseRenderVisual =
+  renderSceneVisual;
+
+renderSceneVisual =
+  function (scene) {
+    baseRenderVisual(scene);
+    applySceneClasses(scene);
+  };
+
+
+/* =======================================================
+   CINEMATIC STORY SUPPORT
+   ======================================================= */
+
+function runCinematic(scene) {
+  if (!scene) return;
+
+  const cinematicData =
+    scene.cinematic;
+
+  if (!cinematicData) {
+    return;
+  }
+
+  if (
+    typeof cinematicData === "string"
+  ) {
+    cinematic(
+      "لحظة...",
+      cinematicData
+    );
+
+    return;
+  }
+
+  cinematic(
+    cinematicData.title ||
+      "لحظة غامضة",
+
+    cinematicData.text ||
+      "",
+
+    cinematicData.label ||
+      "ظلال المجهول"
+  );
+}
+
+
+/* =======================================================
+   EFFECT EVENT SUPPORT
+   ======================================================= */
+
+function processSpecialEvent(scene) {
+  if (!scene) return;
+
+  const event =
+    scene.event ||
+    scene.storyEvent ||
+    scene.specialEvent;
+
+  if (!event) return;
+
+  if (
+    typeof event === "string"
+  ) {
+    playEffect(
+      event
+    );
+
+    return;
+  }
+
+  if (
+    typeof event === "object"
+  ) {
+    playEffect(
+      event.type ||
+        event.name ||
+        "fade",
+      event
+    );
+  }
+}
+
+
+/* =======================================================
+   GAME START PATCH
+   ======================================================= */
+
+const originalStart =
+  Game.start.bind(Game);
+
+Game.start =
+  function (
+    chapter = 1,
+    scene = 0
+  ) {
+    const result =
+      originalStart(
+        chapter,
+        scene
+      );
+
+    if (result) {
+      updateDaily();
+      renderPlayerProfile();
+
+      setTimeout(() => {
+        const current =
+          Game.current();
+
+        if (current) {
+          runCinematic(
+            current
+          );
+
+          processSpecialEvent(
+            current
+          );
+        }
+      }, 300);
+    }
+
+    return result;
+  };
+
+
+/* =======================================================
+   CHOICE FEEDBACK
+   ======================================================= */
+
+on(
+  "choiceMade",
+  ({ choice }) => {
+    state.game.correctChoices++;
+
+    if (choice.xp) {
+      addXP(
+        safeNumber(choice.xp)
+      );
+    }
+
+    if (choice.coins) {
+      addCoins(
+        safeNumber(choice.coins)
+      );
+    }
+
+    if (
+      choice.effects?.length
+    ) {
+      choice.effects.forEach(
+        effect => {
+          if (
+            typeof effect === "string"
+          ) {
+            playEffect(
+              effect
+            );
+          } else if (
+            effect &&
+            typeof effect === "object"
+          ) {
+            playEffect(
+              effect.type ||
+                effect.name,
+              effect
+            );
+          }
+        }
+      );
+    }
+
+    checkAchievements();
+    saveState();
+  }
+);
+
+
+/* =======================================================
+   GAME START EVENT
+   ======================================================= */
+
+on(
+  "gameStarted",
+  () => {
+    const scene =
+      Game.current();
+
+    if (!scene) return;
+
+    updateBottomUI();
+    renderPlayerProfile();
+
+    setTimeout(() => {
+      runCinematic(
+        scene
+      );
+
+      processSpecialEvent(
+        scene
+      );
+    }, 250);
+  }
+);
+
+
+/* =======================================================
+   CHAPTER EVENTS
+   ======================================================= */
+
+on(
+  "chapterUnlocked",
+  ({ chapter }) => {
+    playEffect(
+      "light",
+      {
+        duration: 1100
+      }
+    );
+
+    notify(
+      `الفصل ${chapter} أصبح متاحاً`,
+      "icon-chapter",
+      3200
+    );
+  }
+);
+
+
+on(
+  "chapterFinished",
+  ({ nextChapter }) => {
+    if (nextChapter) {
+      unlockChapter(
+        nextChapter
+      );
+    }
+
+    renderPlayerProfile();
+  }
+);
+
+
+/* =======================================================
+   LEVEL UP
+   ======================================================= */
+
+on(
+  "levelUp",
+  ({ level }) => {
+    playEffect(
+      "supernatural",
+      {
+        duration: 1200
+      }
+    );
+
+    cinematic(
+      `المستوى ${level}`,
+      "أنت تقترب أكثر من الحقيقة...",
+      "تطور المحقق"
+    );
+  }
+);
+
+
+/* =======================================================
+   INVENTORY EVENTS
+   ======================================================= */
+
+on(
+  "itemAdded",
+  () => {
+    renderInventory();
+    updateBottomUI();
+    checkAchievements();
+  }
+);
+
+
+on(
+  "itemRemoved",
+  () => {
+    renderInventory();
+    updateBottomUI();
+  }
+);
+
+
+/* =======================================================
+   ACHIEVEMENT EVENTS
+   ======================================================= */
+
+on(
+  "achievement",
+  () => {
+    renderAchievements();
+    updateBottomUI();
+
+    playEffect(
+      "light",
+      {
+        duration: 800
+      }
+    );
+  }
+);
+
+
+/* =======================================================
+   SETTINGS
+   ======================================================= */
+
+function syncSettings() {
+  updateSettingsUI();
+
+  try {
+    window.Effects?.setMotion?.(
+      !!state.settings.motion
+    );
+  } catch {}
+
+  const soundIcon =
+    $("soundIcon");
+
+  if (soundIcon) {
+    soundIcon.className =
+      state.settings.sound
+        ? "icon-volume"
+        : "icon-volume-off";
+  }
+}
+
+
+/* =======================================================
+   MUSIC
+   ======================================================= */
+
+function setupMusic() {
+  const music =
+    $("bgMusic");
+
+  if (!music) return;
+
+  music.loop = true;
+
+  music.volume = 0.22;
+
+  const updateMusic =
+    () => {
+      if (
+        state.settings.music
+      ) {
+        music.play().catch(
+          () => {}
+        );
+      } else {
+        music.pause();
+      }
+    };
+
+  document.addEventListener(
+    "click",
+    updateMusic,
+    {
+      once: true
+    }
+  );
+
+  on(
+    "musicChanged",
+    updateMusic
+  );
+}
+
+
+/* =======================================================
+   AUDIO UNLOCK
+   ======================================================= */
+
+function unlockAudio() {
+  try {
+    AudioEngine.ensure();
+  } catch {}
+
+  const music =
+    $("bgMusic");
+
+  if (
+    music &&
+    state.settings.music
+  ) {
+    music.play().catch(
+      () => {}
+    );
+  }
+}
+
+
+document.addEventListener(
+  "pointerdown",
+  unlockAudio,
+  {
+    once: true
+  }
+);
+
+
+/* =======================================================
+   LOADING SCREEN
+   ======================================================= */
+
+function finishLoading() {
+  const loading =
+    $("loadingScreen");
+
+  if (!loading) return;
+
+  const progress =
+    $("loadingProgress");
+
+  const status =
+    $("loadingStatus");
+
+  if (progress) {
+    progress.style.width =
+      "100%";
+  }
+
+  if (status) {
+    status.textContent =
+      "اكتمل التحميل";
+  }
+
+  setTimeout(() => {
+    loading.classList.add(
+      "hidden"
+    );
+  }, 450);
+}
+
+
+function animateLoading() {
+  const progress =
+    $("loadingProgress");
+
+  const status =
+    $("loadingStatus");
+
+  if (!progress) {
+    finishLoading();
+    return;
+  }
+
+  const messages = [
+    "إيقاظ الذاكرة...",
+    "فتح بوابة المجهول...",
+    "تجهيز الظلال...",
+    "استدعاء القصة...",
+    "تهيئة العالم...",
+    "الاستعداد..."
+  ];
+
+  let value = 0;
+  let index = 0;
+
+  const timer =
+    setInterval(() => {
+      value += random(8, 17);
+
+      value =
+        Math.min(
+          value,
+          100
+        );
+
+      progress.style.width =
+        `${value}%`;
+
+      if (
+        status &&
+        value % 2 === 0
+      ) {
+        status.textContent =
+          messages[
+            Math.min(
+              index++,
+              messages.length - 1
+            )
+          ];
+      }
+
+      if (value >= 100) {
+        clearInterval(timer);
+
+        finishLoading();
+      }
+    }, 120);
+}
+
+
+/* =======================================================
+   AUTO SAVE
+   ======================================================= */
+
+setInterval(
+  () => {
+    if (
+      state.game.active
+    ) {
+      state.game.elapsed =
+        Math.max(
+          0,
+          Math.floor(
+            (
+              Date.now() -
+              state.game.startedAt
+            ) / 1000
+          )
+        );
+    }
+
+    saveState();
+  },
+  15000
+);
+
+
+/* =======================================================
+   BEFORE EXIT
+   ======================================================= */
+
+window.addEventListener(
+  "beforeunload",
+  () => {
+    saveState();
+  }
+);
+
+
+/* =======================================================
+   STARTUP
+   ======================================================= */
+
+function finalBoot() {
+  updateDaily();
+  syncSettings();
+  setupMusic();
+
+  renderPlayerProfile();
+
+  prepareContinue();
+
+  animateLoading();
+
+  if (
+    !state.game.active
+  ) {
+    showScreen(
+      "startScreen"
+    );
+  }
+
+  emit(
+    "engineReady",
+    {
+      version: 6
+    }
+  );
+}
+
+
+if (
+  document.readyState ===
+  "loading"
+) {
+  document.addEventListener(
+    "DOMContentLoaded",
+    finalBoot,
+    {
+      once: true
+    }
+  );
+} else {
+  finalBoot();
+}
+
+
+/* =======================================================
+   FINAL GLOBAL API
+   ======================================================= */
+
+window.SHADOWS_ULTRA = {
+  version: "ULTRA V6",
+
+  state,
+
+  Game,
+
+  Audio: AudioEngine,
+
+  Effects:
+    window.Effects || null,
+
+  achievements:
+    ACHIEVEMENTS,
+
+  save:
+    saveState,
+
+  reset:
+    resetState,
+
+  notify,
+
+  cinematic,
+
+  addXP,
+
+  addCoins,
+
+  spendCoins,
+
+  addItem,
+
+  removeItem,
+
+  hasItem,
+
+  addJournal,
+
+  setFlag,
+
+  getFlag,
+
+  unlockChapter,
+
+  getChapterProgress,
+
+  completeDaily,
+
+  renderScene,
+
+  renderInventory,
+
+  renderAchievements,
+
+  renderJournal,
+
+  renderPlayerProfile
+};
 
 })();
