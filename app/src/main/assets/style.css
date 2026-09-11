@@ -4193,3 +4193,165 @@ button:focus-visible{
 /* =========================================================
    END
    ========================================================= */
+
+/* =========================================================
+   PUZZLE MODAL — SHADOWS OF THE UNKNOWN
+   ========================================================= */
+
+.puzzle-modal{
+    position:fixed;
+    inset:0;
+    z-index:3000;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:18px;
+    opacity:0;
+    visibility:hidden;
+    pointer-events:none;
+    transition:opacity .22s ease, visibility .22s ease;
+}
+
+.puzzle-modal.active{
+    opacity:1;
+    visibility:visible;
+    pointer-events:auto;
+}
+
+.puzzle-modal.hidden{
+    display:flex;
+}
+
+.puzzle-backdrop{
+    position:absolute;
+    inset:0;
+    background:rgba(4,6,10,.82);
+    backdrop-filter:blur(8px);
+}
+
+.puzzle-card{
+    position:relative;
+    width:min(520px,100%);
+    max-height:min(720px,90vh);
+    overflow:auto;
+    padding:28px 22px 22px;
+    border:1px solid rgba(255,255,255,.12);
+    border-radius:24px;
+    background:linear-gradient(145deg,rgba(25,29,38,.98),rgba(10,12,17,.98));
+    box-shadow:0 28px 90px rgba(0,0,0,.55);
+    color:inherit;
+    direction:rtl;
+    transform:translateY(14px) scale(.98);
+    transition:transform .22s ease;
+}
+
+.puzzle-modal.active .puzzle-card{
+    transform:translateY(0) scale(1);
+}
+
+.puzzle-close{
+    position:absolute;
+    top:10px;
+    left:12px;
+    width:38px;
+    height:38px;
+    border:0;
+    border-radius:50%;
+    background:rgba(255,255,255,.07);
+    color:inherit;
+    font-size:25px;
+    cursor:pointer;
+}
+
+.puzzle-kicker{
+    display:inline-flex;
+    padding:5px 10px;
+    border-radius:999px;
+    background:rgba(255,255,255,.07);
+    font-size:12px;
+    opacity:.75;
+}
+
+.puzzle-title{
+    margin:12px 0 8px;
+    font-size:24px;
+}
+
+.puzzle-description{
+    margin:0;
+    line-height:1.8;
+    opacity:.88;
+}
+
+.puzzle-clue{
+    margin-top:14px;
+    padding:12px 14px;
+    border-radius:14px;
+    background:rgba(255,255,255,.055);
+    line-height:1.7;
+    font-size:14px;
+}
+
+.puzzle-question{
+    margin:18px 0 12px;
+    font-weight:800;
+    line-height:1.7;
+}
+
+.puzzle-options{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:9px;
+}
+
+.puzzle-option{
+    width:100%;
+    min-height:48px;
+    padding:11px 14px;
+    border:1px solid rgba(255,255,255,.11);
+    border-radius:14px;
+    background:rgba(255,255,255,.045);
+    color:inherit;
+    text-align:right;
+    font:inherit;
+    cursor:pointer;
+    transition:transform .16s ease, background .16s ease, border-color .16s ease;
+}
+
+.puzzle-option:hover,
+.puzzle-option:focus-visible{
+    transform:translateY(-1px);
+    background:rgba(255,255,255,.09);
+    border-color:rgba(255,255,255,.22);
+    outline:none;
+}
+
+.puzzle-message{
+    min-height:24px;
+    margin:13px 0 0;
+    line-height:1.6;
+    font-size:14px;
+}
+
+.puzzle-message.success{
+    font-weight:700;
+}
+
+.puzzle-message.fail{
+    font-weight:700;
+}
+
+@media (max-width:520px){
+    .puzzle-modal{
+        padding:10px;
+    }
+
+    .puzzle-card{
+        padding:25px 15px 16px;
+        border-radius:20px;
+    }
+
+    .puzzle-title{
+        font-size:20px;
+    }
+}
