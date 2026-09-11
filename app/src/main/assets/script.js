@@ -423,6 +423,43 @@
 
     }
 
+    function getSceneGlobal(sceneId) {
+
+        const target = String(sceneId ?? "");
+
+        if (!target) {
+            return null;
+        }
+
+        for (const chapter of getChapters()) {
+
+            const scene = getScenes(chapter).find(
+                item =>
+                    String(
+                        item.id ??
+                        item.scene ??
+                        item.key
+                    ) === target
+            );
+
+            if (scene) {
+                return {
+                    scene,
+                    chapter: safeNumber(
+                        chapter.id ??
+                        chapter.chapter ??
+                        chapter.number,
+                        1
+                    )
+                };
+            }
+
+        }
+
+        return null;
+
+    }
+
     function firstScene(
         chapterNumber
     ) {
@@ -1430,13 +1467,39 @@
         const data =
             getGameData();
 
-        return (
-            Array.isArray(
+        if (Array.isArray(data.achievements)) {
+            return data.achievements;
+        }
+
+        if (
+            data.achievements &&
+            typeof data.achievements === "object"
+        ) {
+
+            return Object.entries(
                 data.achievements
-            )
-                ? data.achievements
-                : DEFAULT_ACHIEVEMENTS
-        );
+            ).map(([id, achievement]) => ({
+
+                id,
+
+                title:
+                    achievement.title ??
+                    achievement.name ??
+                    id,
+
+                description:
+                    achievement.description ??
+                    "",
+
+                icon:
+                    achievement.icon ??
+                    "🏆"
+
+            }));
+
+        }
+
+        return DEFAULT_ACHIEVEMENTS;
 
     }
 
@@ -1632,6 +1695,103 @@
 
         }
 
+        const flags = state.flags || {};
+        const solved = Array.isArray(state.puzzlesSolved)
+            ? state.puzzlesSolved.length
+            : 0;
+
+        if (
+            flags.foundPhotograph ||
+            flags.sawMemory1
+        ) {
+            unlockAchievement("photographer");
+        }
+
+        if (flags.foundDiary || flags.knowsNumber0317) {
+            unlockAchievement("detective");
+            unlockAchievement("code_breaker");
+        }
+
+        if (flags.foundBasement) {
+            unlockAchievement("basement");
+        }
+
+        if (flags.heardTape) {
+            unlockAchievement("listener");
+        }
+
+        if (solved >= 5) {
+            unlockAchievement("puzzle_master");
+        }
+
+        if (flags.knowsTruth || flags.finalTruth) {
+            unlockAchievement("truth_seeker");
+        }
+
+        if (
+            flags.sawMemory1 ||
+            flags.sawMemory2 ||
+            flags.sawMemory3 ||
+            flags.sawMemory4 ||
+            flags.sawMemory5 ||
+            flags.sawMemory6
+        ) {
+            unlockAchievement("memory");
+        }
+
+        const memoryCount = [
+            "sawMemory1",
+            "sawMemory2",
+            "sawMemory3",
+            "sawMemory4",
+            "sawMemory5",
+            "sawMemory6"
+        ].filter(key => !!flags[key]).length;
+
+        if (memoryCount >= 4) {
+            unlockAchievement("complete_memory");
+        }
+
+        if (state.inventory.length >= 8) {
+            unlockAchievement("collector");
+        }
+
+        if (
+            flags.trustedLian ||
+            flags.trustedYoussef ||
+            flags.trustedDoctor ||
+            flags.trustedStranger
+        ) {
+            unlockAchievement("trust");
+        }
+
+        if (flags.openedSecretRoom) {
+            unlockAchievement("secret_room");
+        }
+
+        if (flags.discoveredArchive) {
+            unlockAchievement("archive");
+        }
+
+        if (
+            flags.secretPath ||
+            flags.sawMemory6
+        ) {
+            unlockAchievement("shadow");
+        }
+
+        if (state.chapter >= 20) {
+            unlockAchievement("survivor");
+        }
+
+        if (state.flags.trueEndingReached) {
+            unlockAchievement("true_ending");
+        }
+
+        if (state.flags.secretEndingReached) {
+            unlockAchievement("secret_ending");
+        }
+
     }
 
     /* =====================================================
@@ -1741,6 +1901,8 @@
 
             condition:
                 choice.condition ??
+                choice.requires ??
+                choice.require ??
                 null
 
         };
@@ -2112,6 +2274,262 @@
     }
 
     /* =====================================================
+       18.5 — PUZZLE ENGINE
+       ===================================================== */
+
+    function getPuzzles() {
+
+        const data = getGameData();
+
+        if (
+            data.puzzles &&
+            typeof data.puzzles === "object"
+        ) {
+            return data.puzzles;
+        }
+
+        return {};
+
+    }
+
+    function getPuzzle(id) {
+
+        if (!id) {
+            return null;
+        }
+
+        const puzzles = getPuzzles();
+        const puzzle = puzzles[id];
+
+        return puzzle && typeof puzzle === "object"
+            ? puzzle
+            : null;
+
+    }
+
+    function isPuzzleSolved(id) {
+
+        return Array.isArray(state.puzzlesSolved) &&
+            state.puzzlesSolved.includes(String(id));
+
+    }
+
+    function ensurePuzzleModal() {
+
+        let modal = $("puzzleModal");
+
+        if (modal) {
+            return modal;
+        }
+
+        modal = document.createElement("div");
+        modal.id = "puzzleModal";
+        modal.className = "puzzle-modal hidden";
+        modal.setAttribute("aria-hidden", "true");
+
+        modal.innerHTML = `
+            <div class="puzzle-backdrop" data-puzzle-close></div>
+            <section class="puzzle-card" role="dialog" aria-modal="true"
+                     aria-labelledby="puzzleTitle">
+                <button type="button" class="puzzle-close"
+                        aria-label="إغلاق" data-puzzle-close>×</button>
+                <div class="puzzle-kicker">لغز</div>
+                <h2 id="puzzleTitle" class="puzzle-title"></h2>
+                <p id="puzzleDescription" class="puzzle-description"></p>
+                <div id="puzzleClue" class="puzzle-clue"></div>
+                <p id="puzzleQuestion" class="puzzle-question"></p>
+                <div id="puzzleOptions" class="puzzle-options"></div>
+                <p id="puzzleMessage" class="puzzle-message" aria-live="polite"></p>
+            </section>
+        `;
+
+        document.body.appendChild(modal);
+
+        modal.querySelectorAll("[data-puzzle-close]").forEach(
+            element => element.addEventListener(
+                "click",
+                () => closePuzzle()
+            )
+        );
+
+        return modal;
+
+    }
+
+    function openPuzzle(puzzleId, choice) {
+
+        const puzzle = getPuzzle(puzzleId);
+
+        if (!puzzle) {
+            notify("تعذر تحميل اللغز", "⚠");
+            return false;
+        }
+
+        const modal = ensurePuzzleModal();
+
+        const title = $("puzzleTitle");
+        const description = $("puzzleDescription");
+        const clue = $("puzzleClue");
+        const question = $("puzzleQuestion");
+        const options = $("puzzleOptions");
+        const message = $("puzzleMessage");
+
+        if (title) title.textContent = puzzle.title || "لغز";
+        if (description) description.textContent = puzzle.description || "";
+        if (clue) clue.textContent = puzzle.clue ? `💡 ${puzzle.clue}` : "";
+        if (question) question.textContent = puzzle.question || "";
+        if (message) message.textContent = "";
+
+        if (options) {
+
+            options.innerHTML = "";
+
+            (Array.isArray(puzzle.options) ? puzzle.options : [])
+                .forEach((option, index) => {
+
+                    const button = document.createElement("button");
+
+                    button.type = "button";
+                    button.className = "puzzle-option";
+                    button.textContent = option;
+                    button.dataset.answer = String(option);
+
+                    button.addEventListener(
+                        "click",
+                        () => solvePuzzle(
+                            puzzle,
+                            choice,
+                            option
+                        )
+                    );
+
+                    options.appendChild(button);
+
+                });
+
+        }
+
+        modal.classList.remove("hidden");
+        modal.classList.add("active");
+        modal.setAttribute("aria-hidden", "false");
+
+        return true;
+
+    }
+
+    function closePuzzle() {
+
+        const modal = $("puzzleModal");
+
+        if (!modal) {
+            return;
+        }
+
+        modal.classList.remove("active");
+        modal.classList.add("hidden");
+        modal.setAttribute("aria-hidden", "true");
+
+    }
+
+    function normalizePuzzleAnswer(value) {
+
+        return String(value ?? "")
+            .trim()
+            .replace(/\s+/g, " ")
+            .toLocaleLowerCase("ar");
+
+    }
+
+    function solvePuzzle(puzzle, choice, selected) {
+
+        const correct =
+            normalizePuzzleAnswer(selected) ===
+            normalizePuzzleAnswer(puzzle.answer);
+
+        const message = $("puzzleMessage");
+
+        if (!correct) {
+
+            state.statistics.wrongChoices++;
+
+            if (message) {
+                message.textContent =
+                    puzzle.failText || "إجابة غير صحيحة. حاول مرة أخرى.";
+                message.className =
+                    "puzzle-message fail";
+            }
+
+            playEffect(
+                puzzle.effectFail || "shake",
+                { duration: 500 }
+            );
+
+            AudioEngine.danger();
+            saveState();
+
+            return false;
+
+        }
+
+        const puzzleId = String(puzzle.id);
+
+        if (!Array.isArray(state.puzzlesSolved)) {
+            state.puzzlesSolved = [];
+        }
+
+        if (!state.puzzlesSolved.includes(puzzleId)) {
+
+            state.puzzlesSolved.push(puzzleId);
+            state.statistics.correctChoices++;
+
+            if (puzzle.reward) {
+                applyReward(puzzle.reward);
+            }
+
+        }
+
+        if (message) {
+            message.textContent =
+                puzzle.successText || "تم حل اللغز.";
+            message.className =
+                "puzzle-message success";
+        }
+
+        playEffect(
+            puzzle.effectSuccess || "light",
+            { duration: 650 }
+        );
+
+        AudioEngine.success();
+
+        saveState();
+
+        setTimeout(() => {
+
+            closePuzzle();
+
+            const current = Game.current();
+
+            if (!current) {
+                return;
+            }
+
+            state.statistics.choices++;
+
+            addHistory(current, normalizeChoice(choice));
+
+            processChoice(normalizeChoice(choice));
+
+            checkAchievements();
+            saveState();
+
+        }, 500);
+
+        return true;
+
+    }
+
+        /* =====================================================
        19 — GAME OBJECT
        ===================================================== */
 
@@ -2231,6 +2649,7 @@
 
         newGame() {
 
+            closePuzzle();
             resetState();
 
             state.started =
@@ -2299,6 +2718,20 @@
 
             }
 
+            if (
+                current.puzzle &&
+                !isPuzzleSolved(current.puzzle)
+            ) {
+
+                openPuzzle(
+                    current.puzzle,
+                    normalized
+                );
+
+                return;
+
+            }
+
             state.statistics.choices++;
 
             addHistory(
@@ -2320,13 +2753,10 @@
             sceneId
         ) {
 
-            const scene =
-                getScene(
-                    state.chapter,
-                    sceneId
-                );
+            const found =
+                getSceneGlobal(sceneId);
 
-            if (!scene) {
+            if (!found || !found.scene) {
 
                 notify(
                     "المشهد غير موجود",
@@ -2337,8 +2767,41 @@
 
             }
 
+            const targetChapter = found.chapter;
+
+            if (
+                targetChapter !== state.chapter
+            ) {
+
+                const previousChapter = state.chapter;
+
+                if (
+                    targetChapter > previousChapter &&
+                    !state.completedChapters.includes(previousChapter)
+                ) {
+
+                    state.completedChapters.push(previousChapter);
+                    state.statistics.chapters++;
+
+                    addXP(100);
+                    addCoins(50);
+
+                }
+
+                if (
+                    !state.unlockedChapters.includes(targetChapter)
+                ) {
+
+                    state.unlockedChapters.push(targetChapter);
+
+                }
+
+                state.chapter = targetChapter;
+
+            }
+
             transitionToScene(
-                scene
+                found.scene
             );
 
             return true;
@@ -2494,6 +2957,74 @@
         }
 
     };
+
+    function applyEffectsBundle(effects) {
+
+        if (!effects || typeof effects !== "object") {
+            return;
+        }
+
+        if (effects.flags && typeof effects.flags === "object") {
+
+            Object.entries(effects.flags).forEach(
+                ([key, value]) => setFlag(key, value)
+            );
+
+        }
+
+        if (effects.setFlags && typeof effects.setFlags === "object") {
+
+            Object.entries(effects.setFlags).forEach(
+                ([key, value]) => setFlag(key, value)
+            );
+
+        }
+
+        if (effects.reward) {
+            applyReward(effects.reward);
+        }
+
+        if (effects.rewards) {
+            applyReward(effects.rewards);
+        }
+
+        if (effects.item) {
+            addItem(effects.item);
+        }
+
+        if (Array.isArray(effects.items)) {
+            effects.items.forEach(addItem);
+        }
+
+        if (effects.journal) {
+            addJournal(effects.journal);
+        }
+
+        if (effects.damage) {
+            state.health = clamp(
+                state.health - safeNumber(effects.damage, 0),
+                0,
+                100
+            );
+        }
+
+        if (effects.heal) {
+            state.health = clamp(
+                state.health + safeNumber(effects.heal, 0),
+                0,
+                100
+            );
+        }
+
+        if (effects.xp) {
+            addXP(effects.xp);
+        }
+
+        if (effects.coins) {
+            addCoins(effects.coins);
+        }
+
+    }
 
     /* =====================================================
        20 — PROCESS CHOICE
@@ -2684,6 +3215,10 @@
             choice.effects
         ) {
 
+            applyEffectsBundle(
+                choice.effects
+            );
+
             storyEffects(
                 {
                     effects:
@@ -2773,6 +3308,50 @@
         processSceneData(
             scene
         );
+
+        if (scene.ending) {
+
+            const endingFlag =
+                scene.endingType === "true"
+                    ? "trueEndingReached"
+                    : scene.endingType === "secret"
+                        ? "secretEndingReached"
+                        : null;
+
+            if (
+                endingFlag &&
+                !state.flags[endingFlag]
+            ) {
+
+                setFlag(
+                    endingFlag,
+                    true
+                );
+
+                state.statistics.endings++;
+
+            } else if (
+                !endingFlag &&
+                !state.flags[
+                    `endingReached_${scene.id}`
+                ]
+            ) {
+
+                setFlag(
+                    `endingReached_${scene.id}`,
+                    true
+                );
+
+                state.statistics.endings++;
+
+            }
+
+            saveState();
+            checkAchievements();
+            renderEndScreen(scene);
+            return;
+
+        }
 
         saveState();
 
@@ -3520,7 +4099,7 @@
        29 — END SCREEN
        ===================================================== */
 
-    function renderEndScreen() {
+    function renderEndScreen(endingScene = null) {
 
         showScreen(
             "endScreen"
@@ -3544,6 +4123,7 @@
         if (title) {
 
             title.textContent =
+                endingScene?.title ||
                 "نهاية الرحلة";
 
         }
@@ -3551,6 +4131,7 @@
         if (text) {
 
             text.textContent =
+                endingScene?.text ||
                 "لقد وصلت إلى نهاية الفصول المتاحة.";
 
         }
