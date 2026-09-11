@@ -32,7 +32,6 @@ jobs:
       - name: Prepare Android project
         run: |
           rm -rf app/src/main/java
-          rm -rf app/src/main/assets
 
           mkdir -p app/src/main/java/com/shadowsunknown/game
           mkdir -p app/src/main/assets
@@ -51,16 +50,32 @@ jobs:
           echo "Icon found successfully:"
           ls -lh app/src/main/res/drawable/app_icon.png
 
-      - name: Copy game files
+      - name: Verify game files
         run: |
-          cp index.html app/src/main/assets/index.html
-          cp style.css app/src/main/assets/style.css
-          cp script.js app/src/main/assets/script.js
-          cp data.js app/src/main/assets/data.js
+          echo "=============================="
+          echo "CHECKING GAME FILES"
+          echo "=============================="
 
-          if [ -d "assets" ]; then
-            cp -r assets/. app/src/main/assets/
-          fi
+          REQUIRED_FILES=(
+            "index.html"
+            "style.css"
+            "script.js"
+            "data.js"
+            "effects.js"
+          )
+
+          for FILE in "${REQUIRED_FILES[@]}"; do
+            if [ ! -f "app/src/main/assets/$FILE" ]; then
+              echo "ERROR: Missing game file:"
+              echo "app/src/main/assets/$FILE"
+              exit 1
+            fi
+
+            echo "FOUND: $FILE"
+          done
+
+          echo ""
+          echo "All required game files found successfully."
 
       - name: Create settings.gradle
         run: |
